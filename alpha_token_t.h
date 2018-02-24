@@ -24,4 +24,7 @@ public:
 
 	unsigned int get_tokcnt();
 
+	char* get_token_cat();
+
+	void toString();
 };

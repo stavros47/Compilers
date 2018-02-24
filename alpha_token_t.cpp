@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "alpha_token_t.h"
 
@@ -30,3 +31,9 @@ unsigned int alpha_token_t::get_tokcnt(){
 	return token_counter;
 }
 
+char* alpha_token_t::get_token_cat(){
+}
+
+void alpha_token_t::toString(){
+	printf("%d: #%d \"%s\" %s\n",this->lineno,alpha_token_t::token_counter,alpha_token_t::get_token_content(),alpha_token_t::get_token_cat());
+}
