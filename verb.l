@@ -17,36 +17,36 @@ void parse_string();
 %option yylineno
 
 keyword         "if"|"else"|"while"|"for"|"function"|"return"|"break"|"continue"|"nil"|"local"|"and"|"not"|"or"|"true"|"false"
-operand		([\>\<\!\=]=)|(((\+){2})|((\-){2}))|([\+\-\=\*\/\%\>\<])
+operator	([\>\<\!\=]=)|(((\+){2})|((\-){2}))|([\+\-\=\*\/\%\>\<])
 intconst	[0-9]+
 realconst	([0-9]*)(\.){1}([0-9]+)
 string		"\""
 punctuation	\{|\}|\[|\]|\(|\)|\;|\,|\:|\::|\.|\..
-comment		"//".*
+line_comment	"//".*
 id		[a-zA-Z][a-zA-Z_0-9]*
 space		[\r\t\v\n ]
 
-%x COMMENT
+%x BLOCK_COMMENT
 
 %%
 
 
-"/*"		BEGIN(COMMENT);
-<COMMENT>[^*]* 
-<COMMENT>"*"+[^*/]* 
-<COMMENT>"*"+"/"	BEGIN(INITIAL);
+"/*"		BEGIN(BLOCK_COMMENT);
+<BLOCK_COMMENT>[^*]* 
+<BLOCK_COMMENT>"*"+[^*/]* 
+<BLOCK_COMMENT>"*"+"/"	BEGIN(INITIAL);
 
 {keyword} {insert(alpha_token_t::KEYWORD);}
-{operand} {}
-{realconst} {fprintf(stderr,"RealConst with value: %s\n",yytext);}
-{intconst} {fprintf(stderr,"Intconst with value: %s\n",yytext);}
-{punctuation} {fprintf(stderr,"Punctuation with value: %s\n",yytext);}
+{operator} {insert(alpha_token_t::OPERATOR);}
+{realconst} {insert(alpha_token_t::REALCONST);}
+{intconst} {insert(alpha_token_t::INTCONST);}
+{punctuation} {insert(alpha_token_t::PUNCTUATION);}
 {string} {parse_string();}
-{comment} {fprintf(stderr,"Comment with value: %s\n",yytext);}
-
+{line_comment} {insert(alpha_token_t::COMMENT);}
 {id} {insert(alpha_token_t::IDENT);}
 {space} {}
 . {fprintf(stderr,"Cannot match character: %s with any rule\n",yytext);}
+
 %%
 
 
@@ -67,6 +67,7 @@ int main(int argc,char** argv)
 	print_vector();
 	return 0;
 }
+
 void parse_string(){
 	std::vector<char> buffer;
 	int c,errchar=2;
@@ -108,9 +109,8 @@ void parse_string(){
                 printf("%c",buffer[i]);
         }
 
-//	printf("%s\n",yytext);
-
 }	
+
 int insert(alpha_token_t::token_cat category){
 	alpha_token_t tmp = alpha_token_t(yylineno,strdup(yytext),category);
 	

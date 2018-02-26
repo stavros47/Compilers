@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "alpha_token_t.h"
 
@@ -23,8 +24,11 @@ unsigned int alpha_token_t::get_lineno(){
 }
 
 void alpha_token_t::set_content(char* new_token_content){
-//	strncpy(this->token_content,new_token_content,strlen(new_token_content));
-	this->token_content = new_token_content;
+	if(new_token_content == NULL){
+		fprintf(stderr,"token content raised an error at file %s\n",__FILE__);
+		exit(-1);
+	}
+	strncpy(this->token_content,new_token_content,strlen(new_token_content));
 }
 
 char* alpha_token_t::get_content(){
@@ -53,9 +57,10 @@ const char* alpha_token_t::get_cat_asString(){
 		case alpha_token_t::KEYWORD : type ="KEYWORD";break;
 		case alpha_token_t::OPERATOR: type = "OPERATOR"; break;
 		case alpha_token_t::INTCONST: type = "INTCONST";break;
-		case alpha_token_t::DOUBLECONST: type = "DOUBLECONST";break;
+		case alpha_token_t::REALCONST: type = "DOUBLECONST";break;
 		case alpha_token_t::STRING: type = "STRING";break;
 		case alpha_token_t::IDENT: type = "IDENT";break;
+		case alpha_token_t::PUNCTUATION: type = "PUNCTUATION";break;
 		case alpha_token_t::COMMENT: type = "COMMENT";break;
 		default: type = NULL;break;
 	}

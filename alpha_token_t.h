@@ -1,6 +1,6 @@
 class alpha_token_t {
 public:
-	enum token_cat {KEYWORD,OPERATOR,INTCONST,DOUBLECONST,STRING,IDENT,COMMENT};
+	enum token_cat {KEYWORD,OPERATOR,INTCONST,REALCONST,STRING,IDENT,PUNCTUATION,COMMENT};
 
 private:
 	enum keyword_cat {IF,ELSE,WHILE,FOR,FUNCTION,RETURN,BREAK,CONTINUE,AND,NOT,OR,LOCAL,FALSE,NIL};
@@ -16,6 +16,7 @@ private:
 	keyword_cat keyword_special;
 	operand_cat operand_special;
 	punctuation_cat punctuation_special;
+
 public:
 	alpha_token_t(unsigned int,char*,token_cat);
 

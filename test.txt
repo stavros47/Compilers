@@ -1,4 +1,5 @@
-while
-"gamosou tnin"
-
-"re pelleeee"
+while( x != 5){
+	if(x>10){
+		x=x*2;
+	}
+}
