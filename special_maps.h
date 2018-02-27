@@ -1,6 +1,7 @@
 #include <map>
+#include <string.h>
 
-        std::map<const char*,const char*> punctuation_special = {
+        std::map<std::string,std::string> punctuation_special = {
 		{"{","LCURLY"},
 		{"}","RCURLY"},
 		{"[","LSQUARE"},
@@ -15,7 +16,7 @@
 		{"..","DOTDOT"}
 	};
 
-        std::map<const char*,const char*> operator_special = {
+        std::map<std::string,std::string> operator_special = {
 		{"=","EQUAL"},
 		{"+","PLUS"},
 		{"-","MINUS"},
@@ -31,7 +32,7 @@
 		{"<=","LESS_EQUAL"}
 	};
 
-        std::map<const char*,const char*> keyword_special={
+        std::map<std::string,std::string> keyword_special={
 		{"while","WHILE"},
 		{"if","IF"},
 		{"else","ELSE"},

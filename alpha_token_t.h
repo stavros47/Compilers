@@ -5,19 +5,11 @@ public:
 
 	alpha_token_t(unsigned int,const char*,token_cat);
 
-	void set_lineno(int);
-
 	unsigned int get_lineno();
-
-	void set_order(unsigned int);
 
 	unsigned int get_order();
 
-	void set_content(const char*);
-
 	const char* get_content();
-
-	void set_cat(token_cat);
 
 	token_cat get_cat();
 

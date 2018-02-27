@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
-
+#include <fstream>
 #define YY_DECL	int alpha_yylex(void* yylval)
 
 std::vector<alpha_token_t> instance;
@@ -61,7 +61,18 @@ int main(int argc,char** argv)
 	}
 
 	alpha_yylex(&instance);
-	print_vector();
+
+	if(argc > 2){
+		std::ofstream outFile;
+		outFile.open(argv[2]);
+		outFile <<"\n------------------------------ Lexical Analysis ------------------------------\n\n";
+		outFile.close();
+	}else{
+		printf("\n------------------------------ Lexical Analysis ------------------------------\n\n");
+	        for(int i=0;i<instance.size();i++){
+			instance[i].toString();
+	        }
+	}
 	return 0;
 }
 

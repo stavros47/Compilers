@@ -1,2 +1,12 @@
-//kati edo /*kati allo
-pame katv me enter*/
+if
+and
++ - or
+while == +
+not
+function
+;
+:
+::
+{
+}
+(

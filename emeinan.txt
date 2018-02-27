@@ -1,0 +1,3 @@
+special gia ta COMMENTS
+content gia ta inline comments
+print to output file(ofstream)-c++ input
