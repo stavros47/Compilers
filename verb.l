@@ -1,15 +1,17 @@
 %{
 
 #include "alpha_token_t.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <vector>
 
 #define YY_DECL	int alpha_yylex(void* yylval)
 
 std::vector<alpha_token_t> instance;
+int start;
 int insert(alpha_token_t::token_cat);
 void print_vector();
-void parse_block_comment();
+void parse_block_comment(int);
 void parse_string();
 
 %}
@@ -33,10 +35,10 @@ space		[\r\t\v\n ]
 %%
 
 
-"/*"		BEGIN(BLOCK_COMMENT);printf("%s",yytext);
-<BLOCK_COMMENT>[^*]* printf("%s",yytext);
-<BLOCK_COMMENT>"*"+[^*/]* printf("%s",yytext);
-<BLOCK_COMMENT>"*"+"/"	parse_block_comment();BEGIN(INITIAL);
+"/*"		BEGIN(BLOCK_COMMENT);start=yylineno;
+<BLOCK_COMMENT>[^*]* 
+<BLOCK_COMMENT>"*"+[^*/]* 
+<BLOCK_COMMENT>"*"+"/"	parse_block_comment(start);BEGIN(INITIAL);
 
 {keyword} {insert(alpha_token_t::KEYWORD);}
 {operator} {insert(alpha_token_t::OPERATOR);}
@@ -68,9 +70,20 @@ int main(int argc,char** argv)
 	return 0;
 }
 
-void	parse_block_comment(){
-	printf("%s",yytext);
+void parse_block_comment(int start){
+	char* content = (char*)malloc(sizeof(9));
+	char* tmpchar = (char*)malloc(sizeof(4));
 
+	sprintf(content,"%d",start);
+	sprintf(tmpchar,"%d",yylineno);
+	strcat(content,"-");
+	strcat(content,tmpchar);
+
+	alpha_token_t tmp = alpha_token_t(start,strdup(content),alpha_token_t::COMMENT);
+        instance.push_back(tmp);
+
+	free(content);
+	free(tmpchar);
 }
 
 void parse_string(){
@@ -110,16 +123,16 @@ void parse_string(){
                 exit(-1);
         }
 
-        for(int i=0;i<buffer.size();i++){
-                printf("%c",buffer[i]);
-        }
-
+	char* content = (char*)malloc(sizeof(buffer)) ;
+	std::copy(buffer.begin(),buffer.end(),content);
+	alpha_token_t tmp = alpha_token_t(yylineno,content,alpha_token_t::STRING);
+        instance.push_back(tmp);
 }
 
 int insert(alpha_token_t::token_cat category){
         alpha_token_t tmp = alpha_token_t(yylineno,strdup(yytext),category);
-
         instance.push_back(tmp);
+
         return 0;
 }
 

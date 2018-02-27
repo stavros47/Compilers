@@ -10,11 +10,11 @@ alpha_token_t::alpha_token_t(unsigned int line,const char* content,alpha_token_t
 	this->lineno =line;
 	this->token_content = content;
 	this->token_category = category;
-	this->token_special_category= find_special(this->get_cat_asString(),this->get_content());
+//	this->token_special_category= find_special(this->get_cat_asString(),this->get_content());
 	this->order = ++alpha_token_t::token_counter;
 }
 
-alpha_token_t::~alpha_token_t(){
+alpha_token_t::~alpha_token_t(){///////////////////////////////////////////
 };
 
 void alpha_token_t::set_lineno(int new_lineno){
@@ -74,7 +74,7 @@ const char* alpha_token_t::get_special_category(){
 	return this->token_special_category;
 }
 void alpha_token_t::toString(){
-	printf("%d: #%d \"%s\" %s %s\n",this->lineno,this->order,this->get_content(),this->get_cat_asString(),this->get_special_category());
+	printf("%d: #%d \"%s\" %s\n",this->lineno,this->order,this->get_content(),this->get_cat_asString());
 }
 
 const char* alpha_token_t::find_special(const char* category,const char* content){
@@ -82,18 +82,12 @@ const char* alpha_token_t::find_special(const char* category,const char* content
 
         if(!strcmp(category,"KEYWORD")){
                 special = keyword_special.find(content)->second;
-                printf("content: .%s.\n",content);
-                printf("special: %s\n",keyword_special[content]);
         }
         else if(!strcmp(category,"OPERATOR")){
                 special = operator_special[content];
-                printf("content: %s\n",content);
-                printf("special: %s\n",operator_special[content]);
         }
         else if(!strcmp(category,"PUNCTUATION")){
                 special = punctuation_special[content];
-                printf("content: %s\n",content);
-                printf("special: %s\n",punctuation_special[content]);
         }
         else if((!strcmp(category,"INTCONST")) || (!strcmp(category,"DOUBLECONST"))
                 || (!strcmp(category,"STRING")) || (!strcmp(category,"IDENT"))
