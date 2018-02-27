@@ -11,7 +11,7 @@ std::vector<alpha_token_t> instance;
 int start;
 int insert(alpha_token_t::token_cat);
 void print_vector();
-void parse_block_comment(int);
+void parse_block_comment();
 void parse_string();
 
 %}
@@ -38,7 +38,11 @@ space		[\r\t\v\n ]
 "/*"		BEGIN(BLOCK_COMMENT);start=yylineno;
 <BLOCK_COMMENT>[^*]* 
 <BLOCK_COMMENT>"*"+[^*/]* 
-<BLOCK_COMMENT>"*"+"/"	parse_block_comment(start);BEGIN(INITIAL);
+<BLOCK_COMMENT>"*"+"/"	parse_block_comment();BEGIN(INITIAL);
+<BLOCK_COMMENT><<EOF>> {
+		perror("unterminated comment");
+		yyterminate();
+		}
 
 {keyword} {insert(alpha_token_t::KEYWORD);}
 {operator} {insert(alpha_token_t::OPERATOR);}
@@ -70,7 +74,7 @@ int main(int argc,char** argv)
 	return 0;
 }
 
-void parse_block_comment(int start){
+void parse_block_comment(){
 	char* content = (char*)malloc(sizeof(9));
 	char* tmpchar = (char*)malloc(sizeof(4));
 

@@ -1,11 +1,12 @@
+#include <string.h>
 #include <map>
 
-/*        std::map<char*,const char*> punctuation_special = {
+/*        std::map<char*, char*> punctuation_special = {
 		{"\/\/","LINE_COMMENT"},
 		{"/*","BLOCK_COMMNET"}
 	};
 */
-        const char* find_special(const char*,const char*);
+//        const char* find_special(const char*,const char*);
 
         std::map<const char*,const char*> punctuation_special = {
 		{"{","LCURLY"},

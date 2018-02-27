@@ -1,16 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "alpha_token_t.h"
 #include "special_maps.h"
 
 int alpha_token_t::token_counter(0);
 
-alpha_token_t::alpha_token_t(unsigned int line,const char* content,alpha_token_t::token_cat category){
+alpha_token_t::alpha_token_t(unsigned int line,char* content,alpha_token_t::token_cat category){
 	this->lineno =line;
 	this->token_content = content;
 	this->token_category = category;
-//	this->token_special_category= find_special(this->get_cat_asString(),this->get_content());
+	this->token_special_category= find_special(this->get_cat_asString(),this->get_content());
 	this->order = ++alpha_token_t::token_counter;
 }
 
@@ -33,7 +32,7 @@ unsigned int alpha_token_t::get_lineno(){
 	strncpy(this->token_content,new_token_content,strlen(new_token_content));
 }*/
 
-const char* alpha_token_t::get_content(){
+char* alpha_token_t::get_content(){
 	return this->token_content;
 }
 
@@ -74,15 +73,23 @@ const char* alpha_token_t::get_special_category(){
 	return this->token_special_category;
 }
 void alpha_token_t::toString(){
-	printf("%d: #%d \"%s\" %s\n",this->lineno,this->order,this->get_content(),this->get_cat_asString());
+	printf("%d: #%d \"%s\" %s %s\n",this->lineno,this->order,this->get_content(),this->get_cat_asString(),this->token_special_category);
 }
 
 const char* alpha_token_t::find_special(const char* category,const char* content){
-        const char* special;
+	const char* special;
 
         if(!strcmp(category,"KEYWORD")){
-                special = keyword_special.find(content)->second;
-        }
+                special = keyword_special["while"];
+
+/*		auto search = keyword_special.find(lala);
+		if(search!=keyword_special.end()){
+			special = search->second;
+		}else{
+			fprintf(stderr,"wrong file\n");
+			exit(-1);
+		}
+  */      }
         else if(!strcmp(category,"OPERATOR")){
                 special = operator_special[content];
         }

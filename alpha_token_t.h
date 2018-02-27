@@ -1,8 +1,9 @@
+#include <string.h>
 class alpha_token_t {
 public:
 	enum token_cat {KEYWORD,OPERATOR,INTCONST,REALCONST,STRING,IDENT,PUNCTUATION,COMMENT};
 
-	alpha_token_t(unsigned int,const char*,token_cat);
+	alpha_token_t(unsigned int,char*,token_cat);
 
 	~alpha_token_t();
 
@@ -16,7 +17,7 @@ public:
 
 	void set_content(char*);
 
-	const char* get_content();
+	char* get_content();
 
 	void set_cat(token_cat);
 
@@ -35,7 +36,7 @@ private:
 	static int token_counter;
 	unsigned int lineno;
 	unsigned int order;
-	const char* token_content;
+	char* token_content;
 	token_cat token_category;
 	const char* token_special_category;
 
