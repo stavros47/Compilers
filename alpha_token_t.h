@@ -3,9 +3,7 @@ class alpha_token_t {
 public:
 	enum token_cat {KEYWORD,OPERATOR,INTCONST,REALCONST,STRING,IDENT,PUNCTUATION,COMMENT};
 
-	alpha_token_t(unsigned int,char*,token_cat);
-
-	~alpha_token_t();
+	alpha_token_t(unsigned int,const char*,token_cat);
 
 	void set_lineno(int);
 
@@ -15,9 +13,9 @@ public:
 
 	unsigned int get_order();
 
-	void set_content(char*);
+	void set_content(const char*);
 
-	char* get_content();
+	const char* get_content();
 
 	void set_cat(token_cat);
 
@@ -36,7 +34,7 @@ private:
 	static int token_counter;
 	unsigned int lineno;
 	unsigned int order;
-	char* token_content;
+	const char* token_content;
 	token_cat token_category;
 	const char* token_special_category;
 

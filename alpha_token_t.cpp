@@ -5,16 +5,13 @@
 
 int alpha_token_t::token_counter(0);
 
-alpha_token_t::alpha_token_t(unsigned int line,char* content,alpha_token_t::token_cat category){
+alpha_token_t::alpha_token_t(unsigned int line,const char* content,alpha_token_t::token_cat category){
 	this->lineno =line;
 	this->token_content = content;
 	this->token_category = category;
-	this->token_special_category= find_special(this->get_cat_asString(),this->get_content());
+	this->token_special_category= find_special(this->get_cat_asString(),content);
 	this->order = ++alpha_token_t::token_counter;
 }
-
-alpha_token_t::~alpha_token_t(){///////////////////////////////////////////
-};
 
 void alpha_token_t::set_lineno(int new_lineno){
 	this->lineno = new_lineno;
@@ -32,7 +29,7 @@ unsigned int alpha_token_t::get_lineno(){
 	strncpy(this->token_content,new_token_content,strlen(new_token_content));
 }*/
 
-char* alpha_token_t::get_content(){
+const char* alpha_token_t::get_content(){
 	return this->token_content;
 }
 
@@ -80,7 +77,7 @@ const char* alpha_token_t::find_special(const char* category,const char* content
 	const char* special;
 
         if(!strcmp(category,"KEYWORD")){
-                special = keyword_special["while"];
+                special = keyword_special[content];
 
 /*		auto search = keyword_special.find(lala);
 		if(search!=keyword_special.end()){

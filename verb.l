@@ -27,28 +27,19 @@ realconst	([0-9]*)(\.){1}([0-9]+)
 string		"\""
 punctuation	\{|\}|\[|\]|\(|\)|\;|\,|\:|\::|\.|\..
 line_comment	"//".*
+block_comment	"/*"
 id		[a-zA-Z][a-zA-Z_0-9]*
 space		[\r\t\v\n ]
 
-%x BLOCK_COMMENT
-
 %%
 
-
-"/*"		BEGIN(BLOCK_COMMENT);start=yylineno;
-<BLOCK_COMMENT>[^*]* 
-<BLOCK_COMMENT>"*"+[^*/]* 
-<BLOCK_COMMENT>"*"+"/"	parse_block_comment();BEGIN(INITIAL);
-<BLOCK_COMMENT><<EOF>> {
-		perror("unterminated comment");
-		yyterminate();
-		}
 
 {keyword} {insert(alpha_token_t::KEYWORD);}
 {operator} {insert(alpha_token_t::OPERATOR);}
 {realconst} {insert(alpha_token_t::REALCONST);}
 {intconst} {insert(alpha_token_t::INTCONST);}
 {punctuation} {insert(alpha_token_t::PUNCTUATION);}
+{block_comment}	{parse_block_comment();}
 {string} {parse_string();}
 {line_comment} {insert(alpha_token_t::COMMENT);}
 {id} {insert(alpha_token_t::IDENT);}
@@ -75,10 +66,35 @@ int main(int argc,char** argv)
 }
 
 void parse_block_comment(){
-	char* content = (char*)malloc(sizeof(9));
-	char* tmpchar = (char*)malloc(sizeof(4));
+        int c,begin_line=yylineno,open=1;
 
-	sprintf(content,"%d",start);
+        while((c=yyinput())!=EOF){
+		if(c=='/'){
+			if((c=yyinput())=='*'){
+				open++;
+			}else{
+				unput(c);
+			}
+		}else if(c=='*'){
+			if((c=yyinput())=='/'){
+				open--;
+			}else
+				unput(c);
+		}
+
+		if(!open) break;
+	}
+
+	
+	if(open){
+		fprintf(stderr,"unterminated block comment\n");
+		exit(-1);
+	}
+
+	char* content = (char*)malloc(sizeof(16));
+	char* tmpchar = (char*)malloc(sizeof(16));
+
+	sprintf(content,"%d",begin_line);
 	sprintf(tmpchar,"%d",yylineno);
 	strcat(content,"-");
 	strcat(content,tmpchar);
@@ -91,45 +107,59 @@ void parse_block_comment(){
 }
 
 void parse_string(){
-        std::vector<char> buffer;
-        int c,errchar=2;
+        int c,errchar=2,index=0,buffersize=64;
+	char* buffer = (char*)malloc(sizeof(char)*buffersize);
+
+	if(!buffer){
+		fprintf(stderr,"error alocating memory\n");
+		exit(-1);
+	}
 
         while((c=yyinput())!=EOF){
+		if(index>=buffersize){	
+			buffersize+=buffersize;
+			buffer = (char*)realloc(buffer,buffersize);
+			if(!buffer){
+				fprintf(stderr,"error alocating memory\n");
+				exit(-1);
+			}
+		}
+
                 if(c=='"'){
                         errchar=0;
                         break;
                 }
-                if(c=='\\'){
+
+		if(c=='\\'){
                         c=yyinput();
 
                         if(c=='n'){
-                                buffer.push_back('\n');
+                                buffer[index]='\n';
                         }else if(c=='t'){
-                                buffer.push_back('\t');
+                                buffer[index]='\t';
                         }else if(c=='\\'){
-                                buffer.push_back('\\');
+                                buffer[index]='\\';
                         }else if(c=='"'){
-                                buffer.push_back('"');
+                                buffer[index]='"';
                         }else{
                                 errchar=1;
                                 fprintf(stderr,"ERROR:string at line: %d contains invalid char(\\)<-- ...seriously?\n",yylineno);
                                 exit(-1);
                         }
                 }else{
-                        buffer.push_back(c);
+                        buffer[index]=c;
                 }
 
+		index++;
         }
 
-        buffer.insert(buffer.end(),'\0');
+        buffer[index]='\0';
         if(errchar==2){
                 fprintf(stderr,"ERROR:string at line: %d reached the end of string and (\") not found<-- ...seriously?\n",yylineno);
                 exit(-1);
         }
 
-	char* content = (char*)malloc(sizeof(buffer)) ;
-	std::copy(buffer.begin(),buffer.end(),content);
-	alpha_token_t tmp = alpha_token_t(yylineno,content,alpha_token_t::STRING);
+	alpha_token_t tmp = alpha_token_t(yylineno,buffer,alpha_token_t::STRING);
         instance.push_back(tmp);
 }
 
@@ -141,6 +171,7 @@ int insert(alpha_token_t::token_cat category){
 }
 
 void print_vector(){
+	printf("\n------------------------------ Lexical Analysis ------------------------------\n\n");
         for(int i=0;i<instance.size();i++){
                 instance[i].toString();
         }
