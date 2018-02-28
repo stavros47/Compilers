@@ -1,18 +1,16 @@
 %{
 
 #include "alpha_token_t.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <vector>
 #include <fstream>
+
 #define YY_DECL	int alpha_yylex(void* yylval)
 
 std::vector<alpha_token_t> instance;
 int start;
 int insert(alpha_token_t::token_cat);
-void print_vector();
 void parse_block_comment();
 void parse_string();
+void parse_line_comment();
 
 %}
 
@@ -41,7 +39,7 @@ space		[\r\t\v\n ]
 {punctuation} {insert(alpha_token_t::PUNCTUATION);}
 {block_comment}	{parse_block_comment();}
 {string} {parse_string();}
-{line_comment} {insert(alpha_token_t::COMMENT);}
+{line_comment} {parse_line_comment();}
 {id} {insert(alpha_token_t::IDENT);}
 {space} {}
 . {fprintf(stderr,"UNDEFINED CHARACTER:Cannot match character: %s with any rule\n",yytext);}
@@ -62,22 +60,26 @@ int main(int argc,char** argv)
 
 	alpha_yylex(&instance);
 
-	if(argc > 2){
-		std::ofstream outFile;
-		outFile.open(argv[2]);
-		outFile <<"\n------------------------------ Lexical Analysis ------------------------------\n\n";
-		outFile.close();
-	}else{
-		printf("\n------------------------------ Lexical Analysis ------------------------------\n\n");
-	        for(int i=0;i<instance.size();i++){
-			instance[i].toString();
-	        }
+	if(argc>1){
+		freopen(argv[2],"w",stdout);
 	}
+
+	std::cout<<"\n------------------------------ Lexical Analysis ------------------------------\n\n";
+	for(int i=0;i<instance.size();i++)
+		std::cout<<instance[i].toString();
+
 	return 0;
 }
 
+void parse_line_comment(){
+	alpha_token_t tmp = alpha_token_t(yylineno,"//",alpha_token_t::COMMENT);
+        instance.push_back(tmp);
+	
+}
+
 void parse_block_comment(){
-        int c,begin_line=yylineno,open=1;
+        int c,open=1;
+	start = yylineno;
 
         while((c=yyinput())!=EOF){
 		if(c=='/'){
@@ -105,7 +107,7 @@ void parse_block_comment(){
 	char* content = (char*)malloc(sizeof(16));
 	char* tmpchar = (char*)malloc(sizeof(16));
 
-	sprintf(content,"%d",begin_line);
+	sprintf(content,"%d",start);
 	sprintf(tmpchar,"%d",yylineno);
 	strcat(content,"-");
 	strcat(content,tmpchar);
@@ -125,7 +127,7 @@ void parse_string(){
 		fprintf(stderr,"error alocating memory\n");
 		exit(-1);
 	}
-
+	start=yylineno;
         while((c=yyinput())!=EOF){
 		if(index>=buffersize){	
 			buffersize+=buffersize;
@@ -170,7 +172,7 @@ void parse_string(){
                 exit(-1);
         }
 
-	alpha_token_t tmp = alpha_token_t(yylineno,buffer,alpha_token_t::STRING);
+	alpha_token_t tmp = alpha_token_t(start,buffer,alpha_token_t::STRING);
         instance.push_back(tmp);
 }
 
@@ -181,11 +183,5 @@ int insert(alpha_token_t::token_cat category){
         return 0;
 }
 
-void print_vector(){
-	printf("\n------------------------------ Lexical Analysis ------------------------------\n\n");
-        for(int i=0;i<instance.size();i++){
-                instance[i].toString();
-        }
-}
 
 

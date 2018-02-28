@@ -1,4 +1,8 @@
-#include <string.h>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <sstream>
+
 class alpha_token_t {
 public:
 	enum token_cat {KEYWORD,OPERATOR,INTCONST,REALCONST,STRING,IDENT,PUNCTUATION,COMMENT};
@@ -19,7 +23,7 @@ public:
 
 	const char* find_special(const char*,const char*);
 
-	void toString();
+	std::string toString();
 
 private:
 

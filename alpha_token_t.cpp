@@ -1,6 +1,3 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "alpha_token_t.h"
 #include "special_maps.h"
 
@@ -62,10 +59,16 @@ const char* alpha_token_t::find_special(const char* category,const char* content
         }
         else if(!strcmp(category,"PUNCTUATION")){
 		special = punctuation_special[content];
-        }
+        }else if((!strcmp(category,"COMMENT"))){
+		if(!strcmp("//",content)){
+			special = "LINE_COMMENT";
+			this->token_content = "";
+		}else{
+			special = "BLOCK_COMMENT";
+		}
+	}
         else if((!strcmp(category,"INTCONST")) || (!strcmp(category,"DOUBLECONST"))
-                || (!strcmp(category,"STRING")) || (!strcmp(category,"IDENT"))
-                || (!strcmp(category,"COMMENT"))){
+                || (!strcmp(category,"STRING")) || (!strcmp(category,"IDENT"))){
 		special = content;
         }
         else{
@@ -76,6 +79,16 @@ const char* alpha_token_t::find_special(const char* category,const char* content
         return strdup(special.c_str());
 }
 
-void alpha_token_t::toString(){
-	printf("%d: #%d \"%s\" %s %s\n",this->lineno,this->order,this->get_content(),this->get_cat_asString(),this->token_special_category);
+std::string alpha_token_t::toString(){
+	std::ostringstream buffer;
+
+	buffer << this->lineno << ": #" << this->order << " \"" << this->get_content() << "\" " << this->get_cat_asString()<<" ";
+	if(!strcmp(this->get_cat_asString(),"STRING") || !strcmp(this->get_cat_asString(),"IDENT")){
+		buffer << "\""<< this->token_special_category<<"\" ";
+	}else{
+		buffer << this->token_special_category;
+	}
+	buffer<<std::endl;
+
+	return buffer.str();
 }

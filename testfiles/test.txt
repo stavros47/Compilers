@@ -1,12 +1,23 @@
-if
-and
-+ - or
-while == +
-not
-function
-;
-:
-::
-{
+//line comment
+//second
+comment
+
+/* psixanagkastikos */
+	/*lalalal tab
+foooo */
+
+"lalalal
+asdas"
+
+while(x!=6){
+	if(str=="HELLO WORLD\n!!!"){
+		//check str 
+		x+=x;
+	}else{
+	/*if not
+		str
+		*/
+	x-=x;
+	}
 }
-(
+
