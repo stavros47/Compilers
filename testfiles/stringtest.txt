@@ -1,5 +1,0 @@
-"lala\nok"
-"lala
-ok"
-"lala \t ok"
-"lala 	 ok"

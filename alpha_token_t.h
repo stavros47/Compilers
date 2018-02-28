@@ -26,12 +26,10 @@ public:
 	std::string toString();
 
 private:
-
 	static int token_counter;
 	unsigned int lineno;
 	unsigned int order;
 	const char* token_content;
 	token_cat token_category;
 	const char* token_special_category;
-
 };

@@ -27,6 +27,10 @@ alpha_token_t::token_cat alpha_token_t::get_cat(){
 	return this->token_category;
 }
 
+const char* alpha_token_t::get_special_category(){
+	return this->token_special_category;
+}
+
 const char* alpha_token_t::get_cat_asString(){
 	const char* type;
 	switch (this->alpha_token_t::get_cat()){
@@ -43,10 +47,6 @@ const char* alpha_token_t::get_cat_asString(){
 	return type;
 }
 
-const char* alpha_token_t::get_special_category(){
-	return this->token_special_category;
-}
-
 const char* alpha_token_t::find_special(const char* category,const char* content){
 
 	std::string special;
@@ -60,9 +60,8 @@ const char* alpha_token_t::find_special(const char* category,const char* content
         else if(!strcmp(category,"PUNCTUATION")){
 		special = punctuation_special[content];
         }else if((!strcmp(category,"COMMENT"))){
-		if(!strcmp("//",content)){
+		if(!strcmp("",content)){
 			special = "LINE_COMMENT";
-			this->token_content = "";
 		}else{
 			special = "BLOCK_COMMENT";
 		}

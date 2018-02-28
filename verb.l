@@ -10,7 +10,6 @@ int start;
 int insert(alpha_token_t::token_cat);
 void parse_block_comment();
 void parse_string();
-void parse_line_comment();
 
 %}
 
@@ -21,9 +20,9 @@ void parse_line_comment();
 keyword         "if"|"else"|"while"|"for"|"function"|"return"|"break"|"continue"|"nil"|"local"|"and"|"not"|"or"|"true"|"false"
 operator	([\>\<\!\=]=)|(((\+){2})|((\-){2}))|([\+\-\=\*\/\%\>\<])
 intconst	[0-9]+
-realconst	([0-9]*)(\.){1}([0-9]+)
 string		"\""
-punctuation	\{|\}|\[|\]|\(|\)|\;|\,|\:|\::|\.|\..
+punctuation	\{|\}|\[|\]|\(|\)|\;|\,|\:|\::|\..|\.
+realconst	([0-9]*)(\.){1}([0-9]+)
 line_comment	"//".*
 block_comment	"/*"
 id		[a-zA-Z][a-zA-Z_0-9]*
@@ -31,15 +30,14 @@ space		[\r\t\v\n ]
 
 %%
 
-
 {keyword} {insert(alpha_token_t::KEYWORD);}
 {operator} {insert(alpha_token_t::OPERATOR);}
+{punctuation} {insert(alpha_token_t::PUNCTUATION);}
 {realconst} {insert(alpha_token_t::REALCONST);}
 {intconst} {insert(alpha_token_t::INTCONST);}
-{punctuation} {insert(alpha_token_t::PUNCTUATION);}
 {block_comment}	{parse_block_comment();}
 {string} {parse_string();}
-{line_comment} {parse_line_comment();}
+{line_comment} {yytext=(char*)"";insert(alpha_token_t::COMMENT);}
 {id} {insert(alpha_token_t::IDENT);}
 {space} {}
 . {fprintf(stderr,"UNDEFINED CHARACTER:Cannot match character: %s with any rule\n",yytext);}
@@ -68,13 +66,8 @@ int main(int argc,char** argv)
 	for(int i=0;i<instance.size();i++)
 		std::cout<<instance[i].toString();
 
+	fclose(stdout);
 	return 0;
-}
-
-void parse_line_comment(){
-	alpha_token_t tmp = alpha_token_t(yylineno,"//",alpha_token_t::COMMENT);
-        instance.push_back(tmp);
-	
 }
 
 void parse_block_comment(){
@@ -104,21 +97,14 @@ void parse_block_comment(){
 		exit(-1);
 	}
 
-	char* content = (char*)malloc(sizeof(16));
-	char* tmpchar = (char*)malloc(sizeof(16));
+	std::ostringstream buffer;
 
-	sprintf(content,"%d",start);
-	sprintf(tmpchar,"%d",yylineno);
-	strcat(content,"-");
-	strcat(content,tmpchar);
+	buffer<< start << "-"	<< yylineno;
 
-	alpha_token_t tmp = alpha_token_t(start,strdup(content),alpha_token_t::COMMENT);
+	alpha_token_t tmp = alpha_token_t(start,strdup(buffer.str().c_str()),alpha_token_t::COMMENT);
         instance.push_back(tmp);
 
-	free(content);
-	free(tmpchar);
 }
-
 void parse_string(){
         int c,errchar=2,index=0,buffersize=64;
 	char* buffer = (char*)malloc(sizeof(char)*buffersize);

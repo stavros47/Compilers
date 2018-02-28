@@ -24,6 +24,7 @@
 		{"/","DIV"},
 		{">","GREATER"},
 		{"<","LESS"},
+		{"%","PERCENT"},
 		{"==","EQUAL_EQUAL"},
 		{"!=","NOT_EQUAL"},
 		{"++","PLUS_PLUS"},
@@ -45,6 +46,7 @@
 		{"not","NOT"},
 		{"or","OR"},
 		{"local","LOCAL"},
+		{"true","TRUE"},
 		{"false","FALSE"},
 		{"nil","NIL"}
 	};
