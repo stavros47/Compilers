@@ -14,7 +14,7 @@ void parse_line_comment();
 
 %}
 
-%option outfile = "main.cpp"
+%option outfile = "flex.cpp"
 %option noyywrap
 %option yylineno
 

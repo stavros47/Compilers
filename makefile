@@ -1,7 +1,13 @@
-mygcc: alpha_token_t.cpp main.cpp 
-	g++ alpha_token_t.cpp main.cpp -o al -g -std=c++11
+al: alpha_token_t.o flex.o
+	g++ alpha_token_t.o flex.o -o al
 
-main.cpp: verb.l
+alpha_token_t.o : alpha_token_t.cpp alpha_token_t.h
+	g++ -c alpha_token_t.cpp -std=c++11
+
+flex.cpp: verb.l
 	flex verb.l
+
+flex.o: flex.cpp
+	g++ -c flex.cpp -std=c++11
 clean:
-	rm al main.cpp
+	rm al flex.cpp *.o
