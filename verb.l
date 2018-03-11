@@ -6,7 +6,7 @@
 #define YY_DECL	int alpha_yylex(void* yylval)
 
 std::vector<alpha_token_t> instance;
-int start;
+unsigned int start;
 int insert(alpha_token_t::token_cat);
 void parse_block_comment();
 void parse_string();
@@ -101,8 +101,7 @@ void parse_block_comment(){
 
 	buffer<< start << "-"	<< yylineno;
 
-	alpha_token_t tmp = alpha_token_t(start,strdup(buffer.str().c_str()),alpha_token_t::COMMENT);
-        instance.push_back(tmp);
+        instance.push_back(alpha_token_t{start,buffer.str(),alpha_token_t::COMMENT});
 
 }
 void parse_string(){
@@ -113,6 +112,7 @@ void parse_string(){
 		fprintf(stderr,"error alocating memory\n");
 		exit(-1);
 	}
+
 	start=yylineno;
         while((c=yyinput())!=EOF){
 		if(index>=buffersize){	
@@ -158,14 +158,11 @@ void parse_string(){
                 exit(-1);
         }
 
-	alpha_token_t tmp = alpha_token_t(start,buffer,alpha_token_t::STRING);
-        instance.push_back(tmp);
+        instance.push_back(alpha_token_t{start,buffer,alpha_token_t::STRING});
 }
 
 int insert(alpha_token_t::token_cat category){
-        alpha_token_t tmp = alpha_token_t(yylineno,strdup(yytext),category);
-        instance.push_back(tmp);
-
+	instance.push_back(alpha_token_t{(unsigned)yylineno,strdup(yytext),category});
         return 0;
 }
 

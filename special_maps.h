@@ -1,5 +1,4 @@
 #include <map>
-#include <string.h>
 
         std::map<std::string,std::string> punctuation_special = {
 		{"{","LCURLY"},
