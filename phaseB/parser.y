@@ -1,5 +1,6 @@
 %{
 	#include <stdio.h>
+	#include <string>
 	int yyerror(char* yaccProvidedMessage);
 	int yylex(void);
 
@@ -13,6 +14,11 @@
 
 %token	ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE
 
+%union{
+	int intVal;
+	std::string strVal;
+	double realVal;
+}
 %error-verbose
 
 %right	'='

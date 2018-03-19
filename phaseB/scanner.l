@@ -2,9 +2,8 @@
 %{
 
 #include "parser.hpp"
-#include "alpha_token_t.h"
 #include <fstream>
-
+#include <string>
 #define YY_DECL	int alpha_yylex(void* yylval)
 
 
@@ -32,21 +31,21 @@ space		[\r\t\v ]
 
 
 
-"if"    {return "IF" ;}
-"else"  {return "ELSE" ;}
-"while" {return "WHILE" ;}
-"for"   {return "FOR" ;}
-"function"  {return "FUNCTION" ;}
-"return"    {return "RETURN" ;}
-"break"     {return "BREAK" ;}
-"continue"  {return "CONTINUE" ;}
-"nil"   {return "NIL" ;}
-"local" {return "LOCAL" ;}
-"and"   {return "AND" ;}
-"not"   {return "NOT" ;}
-"or"    {return "OR" ;}
-"true"  {return "TRUE" ;}
-"false" {return "FALSE" ;}
+"if"    {return IF ;}
+"else"  {return ELSE ;}
+"while" {return WHILE ;}
+"for"   {return FOR ;}
+"function"  {return FUNCTION ;}
+"return"    {return RETURN ;}
+"break"     {return BREAK ;}
+"continue"  {return CONTINUE ;}
+"nil"   {return NIL ;}
+"local" {return LOCAL ;}
+"and"   {return AND ;}
+"not"   {return NOT ;}
+"or"    {return OR ;}
+"true"  {return TRUE ;}
+"false" {return FALSE ;}
 ">="     {return ">=" ;}
 "<="     {return "<=" ;}
 "!="     {return "!=" ;}
@@ -75,10 +74,10 @@ space		[\r\t\v ]
 ")"	{return ')';}
 [\n]+	{return '\n';}
 
-{realconst} {yylval.intValue = atof(yytext);return REALCONST;}
-{intconst} {yylval.intValue = atoi(yytext); return INTCONST;}
-{string} {yylval.stringVALUE = parse_string(); return STRING;}
-{id} {yylval.stringVALUE = strdup(yytext); return ID;}
+{realconst} {yylval.intVal = atof(yytext);return REALCONST;}
+{intconst} {yylval.intVal = atoi(yytext); return INTCONST;}
+{string} {yylval.strVal = parse_string(); return STRING;}
+{id} {yylval.strVal = strdup(yytext); return ID;}
 {block_comment} {parse_block_comment();}
 {space} {}
 
