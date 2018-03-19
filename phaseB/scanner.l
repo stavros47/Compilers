@@ -1,5 +1,7 @@
+
 %{
 
+#include "parser.hpp"
 #include "alpha_token_t.h"
 #include <fstream>
 
@@ -9,19 +11,22 @@
 unsigned int start;
 
 void parse_string();
+void parse_block_comment();
 
 %}
 
-%option outfile = "flex.cpp"
+%option outfile = "scanner.cpp"
 %option noyywrap
 %option yylineno
 
 	
 intconst	[0-9]+
+block_comment   "/*"
+line_comment    "//".*
 string		"\""
 realconst	([0-9]*)(\.){1}([0-9]+)
 id		[a-zA-Z][a-zA-Z_0-9]*
-space		[\r\t\v\n ]
+space		[\r\t\v ]
 
 %%
 
@@ -42,12 +47,12 @@ space		[\r\t\v\n ]
 "or"    {return "OR" ;}
 "true"  {return "TRUE" ;}
 "false" {return "FALSE" ;}
-">="     {return '>=' ;}
-"<="     {return '<=' ;}
-"!="     {return '!=' ;}
-"=="     {return '==' ;}
-"++"     {return '++' ;}
-"--"     {return '--' ;}
+">="     {return ">=" ;}
+"<="     {return "<=" ;}
+"!="     {return "!=" ;}
+"=="     {return "==" ;}
+"++"     {return "++" ;}
+"--"     {return "--" ;}
 "+"      {return '+' ;}
 "-"      {return '-' ;}
 "="      {return '=' ;}
@@ -66,47 +71,54 @@ space		[\r\t\v\n ]
 "."      {return '.' ;}
 "{"	 {return '{';}
 "}"	{return '}';}
-"("	{retrun '(';}
+"("	{return '(';}
 ")"	{return ')';}
+[\n]+	{return '\n';}
 
-{realconst} {yylval.intValue = atof(yytext);return REALCONST);}
-{intconst} {yylval.intValue = atoi(yytext); return INTEGER}
-{string} {yylval.stringVALUE = parse_string(); return STRING}
-{id} {yylval.stringVALUE = strdup(yytext); return ID}
+{realconst} {yylval.intValue = atof(yytext);return REALCONST;}
+{intconst} {yylval.intValue = atoi(yytext); return INTCONST;}
+{string} {yylval.stringVALUE = parse_string(); return STRING;}
+{id} {yylval.stringVALUE = strdup(yytext); return ID;}
+{block_comment} {parse_block_comment();}
 {space} {}
 
 . {fprintf(stderr,"UNDEFINED CHARACTER:Cannot match character: %s with any rule\n",yytext);}
 
 %%
 
-int main(int argc,char** argv)
-{
-	if(argc > 1){
-		if(!(yyin = fopen(argv[1],"r"))){
-			fprintf(stderr,"Cannot read file: %s\n",argv[1]);
-			return 1;
-		}
-	}
-	else{
-		yyin=stdin;
-	}
+void parse_block_comment(){
+        int c,open=1;
+        start = yylineno;
 
-	alpha_yylex(&instance);
+        while((c=yyinput())!=EOF){
+                if(c=='/'){
+                        if((c=yyinput())=='*'){
+                                open++;
+                        }else{
+                                unput(c);
+                        }
+                }else if(c=='*'){
+                        if((c=yyinput())=='/'){
+                                open--;
+                        }else
+                                unput(c);
+                }
 
-	if(argc>1){
-		freopen(argv[2],"w",stdout);
-	}
+                if(!open) break;
+        }
 
-	std::cout<<"\n------------------------------ Lexical Analysis ------------------------------\n\n";
-	for(int i=0;i<instance.size();i++)
-		std::cout<<instance[i].toString();
 
-	fclose(stdout);
-	return 0;
+        if(open){
+                fprintf(stderr,"unterminated block comment\n");
+                exit(-1);
+        }
+
+        std::ostringstream buffer;
+
+        buffer<< start << "-"   << yylineno;
 }
 
-
-void parse_string(){
+std::string parse_string(){
         int c,errchar=2,index=0,buffersize=64;
 	char* buffer = (char*)malloc(sizeof(char)*buffersize);
 
@@ -160,7 +172,7 @@ void parse_string(){
                 exit(-1);
         }
 
-        return std::STRING buffer
+        return buffer;
 }
 
 

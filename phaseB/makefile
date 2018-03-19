@@ -1,13 +1,11 @@
-al: alpha_token_t.o flex.o
-	g++ alpha_token_t.o flex.o -o al
+al: scanner.cpp parser.cpp
+	g++ scanner.cpp parser.cpp -o al
 
-alpha_token_t.o : alpha_token_t.cpp alpha_token_t.h
-	g++ -c alpha_token_t.cpp -std=c++11
+scanner.cpp : scanner.l
+	flex scanner.l
 
-flex.cpp: verb.l
-	flex verb.l
+parser.cpp: parser.y
+	bison --yacc --defines --output=parser.cpp parser.y
 
-flex.o: flex.cpp
-	g++ -c flex.cpp -std=c++11
 clean:
-	rm al flex.cpp *.o
+	rm parser.cpp scanner.cpp parser.hpp
