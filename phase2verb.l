@@ -64,6 +64,10 @@ space		[\r\t\v\n ]
 "::"     {return "::" ;}
 ".."     {return ".." ;}
 "."      {return '.' ;}
+"{"	 {return '{';}
+"}"	{return '}';}
+"("	{retrun '(';}
+")"	{return ')';}
 
 {realconst} {yylval.intValue = atof(yytext);return REALCONST);}
 {intconst} {yylval.intValue = atoi(yytext); return INTEGER}
