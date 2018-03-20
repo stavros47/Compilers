@@ -37,11 +37,11 @@
 %%
 
 program:	stmts
-		|
+		|		
 		;
 
 stmts:		stmts stmt
-		| stmt
+		|stmt
 		;
 
 stmt:		expr';'
@@ -56,7 +56,7 @@ stmt:		expr';'
 		| ';'
 		;
 
-expr:	assignexpr
+expr:		assignexpr
 		| expr op expr
 		| term
 		;
@@ -83,6 +83,7 @@ primary:	lvalue
 		| '('funcdef')'
 		| const
 		;
+
 lvalue:		ID
 		| LOCAL ID
 		| SCOPE ID
