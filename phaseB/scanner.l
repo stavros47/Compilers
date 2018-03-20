@@ -48,7 +48,7 @@ space		[\r\t\v ]
 ">="     {return GREATER_EQUAL ;}
 "<="     {return LESS_EQUAL ;}
 "!="     {return NOT_EQUAL ;}
-"=="     {return EQUAL ;}
+"=="     {return EQUAL_EQUAL ;}
 "++"     {return PLUS_PLUS ;}
 "--"     {return MINUS_MINUS ;}
 "+"      {return '+' ;}

@@ -12,25 +12,21 @@
 
 %start program
 
+%token	ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE SCOPE
+%token NOT_EQUAL EQUAL_EQUAL DOT_DOT GREATER_EQUAL LESS_EQUAL MINUS_MINUS
+
 %union{
 	int intVal;
 	char* strVal;
 	double realVal;
 }
-
-%token ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE
-%token GREATER_EQUAL LESS_EQUAL NOT_EQUAL EQUAL MINUS_MINUS PLUS_PLUS DOT_DOT SCOPE
 %error-verbose
-
-%type <intVal> INTCONST
-%type <realVal> REALCONST
-%type <strVal> STRING ID
 
 %right	'='
 %left 	OR
 %left	AND
-%nonassoc  EQUAL_EQUAL NOT_EQUAL
-%nonassoc '>' GREATER_THAN '<' LESS_THAN
+%nonassoc EQUAL_EQUAL NOT_EQUAL
+%nonassoc '>' GREATER_EQUAL '<' LESS_EQUAL
 %left	'+' '-'
 %left	'*' '/' '%'
 %right 	NOT PLUS_PLUS MINUS_MINUS UMINUS
@@ -60,21 +56,21 @@ stmt:		expr';'
 		| ';'
 		;
 
-expr:		assignexpr
+expr:	assignexpr
 		| expr op expr
 		| term
 		;
 
-op:		'+' | '-' | '*' | '/' | '%' | '>'| ">=" | '<' | "<=" | "==" | "!=" | AND | OR
+op:		'+' | '-' | '*' | '/' | '%' | '>'| GREATER_EQUAL | '<' | LESS_EQUAL | MINUS_MINUS | NOT_EQUAL | AND | OR | PLUS_PLUS |EQUAL_EQUAL
 		;
 
 term:		'('expr')'
 		| '-'expr %prec UMINUS
 		| NOT expr
-		| "++"lvalue
-		| lvalue"++"
-		| "--"lvalue
-		| lvalue"--"
+		| PLUS_PLUS lvalue
+		| lvalue PLUS_PLUS
+		| MINUS_MINUS lvalue
+		| lvalue MINUS_MINUS
 		| primary
 		;
 
@@ -89,7 +85,7 @@ primary:	lvalue
 		;
 lvalue:		ID
 		| LOCAL ID
-		| "::" ID
+		| SCOPE ID
 		| member
 		;
 
@@ -99,7 +95,7 @@ member:		lvalue'.'ID
 		| call '[' expr ']'
 		;
 
-call: 		call '(' elist ')'
+call: 	  call '(' elist ')'
 		| lvalue callsuffix
 		| '(' funcdef')' '(' elist ')'
 		;
@@ -112,20 +108,24 @@ callsuffix:	normcall
 normcall:	'(' elist')'
 		;
 
-methodcall:	".."ID '(' elist ')'
+methodcall:	DOT_DOT ID '(' elist ')'
 		;
 
-
-elist:		elist exprs
-		| expr
+elist: 	elist exprs
+		|expr
 		;
 
-exprs:		',' expr
+exprs: ',' expr
 		;
+		
+objectdef: '['objectdefs']'
+			|'['']'
+			;		
 
-objectdef:	elist
+objectdefs:	elist
 		| indexed
 		;
+
 
 indexed:	indexed indexeds
 		| indexedelem
@@ -138,10 +138,12 @@ indexeds: ',' indexedelem
 indexedelem:	'{' expr ':' expr '}'
 		;
 
-block:		'{' [stmts] '}'
+block:		'{' stmts '}'
+			|'{' '}'
 		;
 
-funcdef:	FUNCTION [ID] '('idlist')' block
+funcdef:	FUNCTION ID '('idlist')' block
+			|FUNCTION '('idlist')' block
 		;
 
 const:		INTCONST | REALCONST | STRING | NIL | TRUE | FALSE 
@@ -164,8 +166,9 @@ whilestmt:	WHILE '(' expr ')' stmt
 forstmt:	FOR '(' elist';'expr';'elist ')'stmt
 		;
 
-returnstmt:	RETURN [expr]';'
-		;
+returnstmt:	RETURN expr';'
+			|RETURN ';'
+			;
 %%
 
 int yyerror(const char* yaccProvidedMessage){
