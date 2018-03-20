@@ -1,7 +1,7 @@
 %{
 	#include <stdio.h>
 	#include <string>
-	int yyerror(char* yaccProvidedMessage);
+	int yyerror(const char* yaccProvidedMessage);
 	int yylex(void);
 
 	extern int yylineno;
@@ -12,24 +12,29 @@
 
 %start program
 
-%token	ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE
-
 %union{
 	int intVal;
-	std::string strVal;
+	char* strVal;
 	double realVal;
 }
+
+%token ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE
+%token GREATER_EQUAL LESS_EQUAL NOT_EQUAL EQUAL MINUS_MINUS PLUS_PLUS DOT_DOT SCOPE
 %error-verbose
+
+%type <intVal> INTCONST
+%type <realVal> REALCONST
+%type <strVal> STRING ID
 
 %right	'='
 %left 	OR
 %left	AND
-%nonassoc "==" "!="
-%nonassoc '>' ">=" '<' "<="
+%nonassoc  EQUAL_EQUAL NOT_EQUAL
+%nonassoc '>' GREATER_THAN '<' LESS_THAN
 %left	'+' '-'
 %left	'*' '/' '%'
-%right 	NOT "++" "--" UMINUS
-%left	'.' ".."
+%right 	NOT PLUS_PLUS MINUS_MINUS UMINUS
+%left	'.' DOT_DOT
 %left	'[' ']'
 %left	'(' ')'
 
@@ -163,28 +168,22 @@ returnstmt:	RETURN [expr]';'
 		;
 %%
 
-int myerror(){
-	fprintf(stderr,"geia sou nikolas\n")';'
-	fprintf(stdout,"NIKOLAAS,how is your day?\n")';'
-	return 0';'
-}
-
-int yyerror(char* yaccProvidedMessage){
-	fprintf(stderr,"%s: at line %d,before token: %s\n",yaccProvidedMessage,yylineno,yytext)';'
-	fprintf(stderr,"INPUT NOT VALID\n")';'
+int yyerror(const char* yaccProvidedMessage){
+	fprintf(stderr,"%s: at line %d,before token: %s\n",yaccProvidedMessage,yylineno,yytext);
+	fprintf(stderr,"INPUT NOT VALID\n");
 }
 
 int main(int argc,char** argv){
 	if(argc > 1){
 		if(!(yyin = fopen(argv[1],"r"))){
-			fprintf(stderr,"Cannot read file: %s\n",argv[1])';'
-			return 1';'
+			fprintf(stderr,"Cannot read file: %s\n",argv[1]);
+			return 1;
 		}
 	}else
-		yyin = stdin';'
+		yyin = stdin;
 
 
 
-yyparse()';'
-return 0';'
+yyparse();
+return 0;
 }

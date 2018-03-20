@@ -8,4 +8,4 @@ parser.cpp: parser.y
 	bison --yacc --defines --output=parser.cpp parser.y
 
 clean:
-	rm parser.cpp scanner.cpp parser.hpp
+	rm parser.cpp scanner.cpp parser.hpp al

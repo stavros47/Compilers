@@ -4,12 +4,11 @@
 #include "parser.hpp"
 #include <fstream>
 #include <string>
-#define YY_DECL	int alpha_yylex(void* yylval)
-
+/*#define YY_DECL	int alpha_yylex(void* yylval)*/
 
 unsigned int start;
 
-void parse_string();
+char* parse_string();
 void parse_block_comment();
 
 %}
@@ -46,12 +45,12 @@ space		[\r\t\v ]
 "or"    {return OR ;}
 "true"  {return TRUE ;}
 "false" {return FALSE ;}
-">="     {return ">=" ;}
-"<="     {return "<=" ;}
-"!="     {return "!=" ;}
-"=="     {return "==" ;}
-"++"     {return "++" ;}
-"--"     {return "--" ;}
+">="     {return GREATER_EQUAL ;}
+"<="     {return LESS_EQUAL ;}
+"!="     {return NOT_EQUAL ;}
+"=="     {return EQUAL ;}
+"++"     {return PLUS_PLUS ;}
+"--"     {return MINUS_MINUS ;}
 "+"      {return '+' ;}
 "-"      {return '-' ;}
 "="      {return '=' ;}
@@ -65,8 +64,8 @@ space		[\r\t\v ]
 ";"      {return ';' ;}
 ","      {return ',' ;}
 ":"      {return ':' ;}
-"::"     {return "::" ;}
-".."     {return ".." ;}
+"::"     {return SCOPE ;}
+".."     {return DOT_DOT ;}
 "."      {return '.' ;}
 "{"	 {return '{';}
 "}"	{return '}';}
@@ -74,7 +73,7 @@ space		[\r\t\v ]
 ")"	{return ')';}
 [\n]+	{return '\n';}
 
-{realconst} {yylval.intVal = atof(yytext);return REALCONST;}
+{realconst} {yylval.realVal = atof(yytext);return REALCONST;}
 {intconst} {yylval.intVal = atoi(yytext); return INTCONST;}
 {string} {yylval.strVal = parse_string(); return STRING;}
 {id} {yylval.strVal = strdup(yytext); return ID;}
@@ -112,12 +111,12 @@ void parse_block_comment(){
                 exit(-1);
         }
 
-        std::ostringstream buffer;
+/*        std::ostringstream buffer;
 
-        buffer<< start << "-"   << yylineno;
+        buffer<< start << "-"   << yylineno;*/
 }
 
-std::string parse_string(){
+char* parse_string(){
         int c,errchar=2,index=0,buffersize=64;
 	char* buffer = (char*)malloc(sizeof(char)*buffersize);
 
