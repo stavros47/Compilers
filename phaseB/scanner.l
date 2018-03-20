@@ -24,7 +24,7 @@ line_comment    "//".*
 string		"\""
 realconst	([0-9]*)(\.){1}([0-9]+)
 id		[a-zA-Z][a-zA-Z_0-9]*
-space		[\r\t\v ]
+space		[\r\t\v\n ]
 
 %%
 
@@ -51,6 +51,8 @@ space		[\r\t\v ]
 "=="     {return EQUAL_EQUAL ;}
 "++"     {return PLUS_PLUS ;}
 "--"     {return MINUS_MINUS ;}
+"::"     {return SCOPE ;}
+".."     {return DOT_DOT ;}
 "+"      {return '+' ;}
 "-"      {return '-' ;}
 "="      {return '=' ;}
@@ -64,20 +66,18 @@ space		[\r\t\v ]
 ";"      {return ';' ;}
 ","      {return ',' ;}
 ":"      {return ':' ;}
-"::"     {return SCOPE ;}
-".."     {return DOT_DOT ;}
 "."      {return '.' ;}
 "{"	 {return '{';}
 "}"	{return '}';}
 "("	{return '(';}
 ")"	{return ')';}
-[\n]+	{return '\n';}
 
 {realconst} {yylval.realVal = atof(yytext);return REALCONST;}
 {intconst} {yylval.intVal = atoi(yytext); return INTCONST;}
 {string} {yylval.strVal = parse_string(); return STRING;}
 {id} {yylval.strVal = strdup(yytext); return ID;}
 {block_comment} {parse_block_comment();}
+{line_comment} {}
 {space} {}
 
 . {fprintf(stderr,"UNDEFINED CHARACTER:Cannot match character: %s with any rule\n",yytext);}
