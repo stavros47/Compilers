@@ -13,7 +13,7 @@
 
 %start program
 
-%expect 3
+%expect 1
 
 %token	ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE SCOPE
 %token NOT_EQUAL EQUAL_EQUAL DOT_DOT GREATER_EQUAL LESS_EQUAL MINUS_MINUS
@@ -73,11 +73,9 @@ op:		'+' expr 		{std::cout<<"op <- + expr"<<std::endl;}
 		| GREATER_EQUAL expr	{std::cout<<"op <- >= expr"<<std::endl;}
 		| '<' expr		{std::cout<<"op <- < expr"<<std::endl;}
 		| LESS_EQUAL expr	{std::cout<<"op <- <= expr"<<std::endl;}
-		| MINUS_MINUS expr	{std::cout<<"op <- -- expr"<<std::endl;}
 		| NOT_EQUAL expr 	{std::cout<<"op <- != expr"<<std::endl;}
 		| AND expr		{std::cout<<"op <- && expr"<<std::endl;}
 		| OR expr		{std::cout<<"op <- || expr"<<std::endl;}
-		| PLUS_PLUS expr	{std::cout<<"op <- ++ expr"<<std::endl;}
 		| EQUAL_EQUAL expr	{std::cout<<"op <- == expr"<<std::endl;}
 		;
 
