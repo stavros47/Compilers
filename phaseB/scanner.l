@@ -3,8 +3,6 @@
 
 #include "parser.hpp"
 #include <fstream>
-#include <string>
-/*#define YY_DECL	int alpha_yylex(void* yylval)*/
 
 unsigned int start;
 

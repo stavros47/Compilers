@@ -2,11 +2,45 @@
 #define SYMTABLE_H
 #include "symtable.h"
 
+Symbol* construct_Symbol(std::string newName,int newType,int newLineno,int newScope){
+	Symbol* tmp = (Symbol*)malloc(sizeof(Symbol));
+        tmp->name=newName;
+        tmp->type=(Type)newType;
+        tmp->lineno=newLineno;
+        tmp->scope=newScope;
+        tmp->hidden=false;
+        tmp->scopeNext=NULL;
+        tmp->next=NULL;
+	return tmp;
+}
+
+std::string getTypeasString(Symbol* sym){
+        switch(sym->type){
+                case 0: return "UNDEFINED";break;
+                case 1: return "VARIABLE";break;
+                case 2: return "FUNC_ARG";break;
+                case 3: return "LIB_FUNC";break;
+                case 4: return "USER_FUNC";break;
+        }
+}
+
+std::string sym_toString(Symbol* sym){
+        std::ostringstream buffer;
+
+        buffer<<sym->name<<" | ";
+        buffer<<getTypeasString(sym)<<" | ";
+        buffer<<sym->lineno<<" | ";
+        buffer<<sym->scope<<" | ";
+        buffer<<((sym->hidden) ? "hidden" : "not hidden")<<" | ";
+
+        return buffer.str();
+}
+
 
 HashTable::HashTable(){
-	totalScope=SCOPE_SIZE;
+	maxscopesize=SCOPE_SIZE;
 	SymTable = (Symbol**)malloc(sizeof(Symbol*)*HASH_SIZE);
-	ScopeHead = (Symbol**)malloc(sizeof(Symbol*)*totalScope);
+	ScopeHead = (Symbol**)malloc(sizeof(Symbol*)*maxscopesize);
 }
 
 unsigned int HashTable::hashfunc(std::string name){
@@ -27,9 +61,9 @@ void HashTable::insert(Symbol* ptr){
 		SymTable[pos]=ptr;
 	}
 
-	if(ptr->scope>=totalScope){
-		totalScope+=SCOPE_SIZE;
-		ScopeHead = (Symbol**)realloc(ScopeHead,totalScope*sizeof(Symbol*));
+	if(ptr->scope>=maxscopesize){
+		maxscopesize+=SCOPE_SIZE;
+		ScopeHead = (Symbol**)realloc(ScopeHead,maxscopesize*sizeof(Symbol*));
 		if(!ScopeHead){
 			fprintf(stderr,"reallocation error in file: %s at line:%d\n",__FILE__,__LINE__);
                         exit(-1);
@@ -81,7 +115,7 @@ std::string HashTable::toString(){
 	for(int i=0;i<509;i++){
 		iter=SymTable[i];
 		while(iter!=NULL){
-			buffer<<toString(iter)<<std::endl;
+			buffer<<sym_toString(iter)<<std::endl;
 			iter=iter->next;
 		}
 	}
@@ -96,7 +130,7 @@ std::string HashTable::scopetoString(int scope){
 	iter = ScopeHead[scope];
 
 	while(iter!=NULL){
-		buffer<<toString(iter)<<std::endl;
+		buffer<<sym_toString(iter)<<std::endl;
 		iter=iter->scopeNext;
 	}
 	return buffer.str();

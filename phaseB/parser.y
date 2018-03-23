@@ -1,14 +1,15 @@
 %{
-	#include <stdio.h>
-	#include <iostream>
-	#include <string>
+	#include "symtable.h"
+
 	int yyerror(const char* yaccProvidedMessage);
 	int yylex(void);
 
 	extern int yylineno;
 	extern char* yytext;
 	extern FILE* yyin;
- 
+
+	int currScope;
+	HashTable SymTable; 
 %}
 
 %start program
@@ -17,11 +18,11 @@
 
 %token	ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE SCOPE
 %token NOT_EQUAL EQUAL_EQUAL DOT_DOT GREATER_EQUAL LESS_EQUAL MINUS_MINUS
-
 %union{
 	int intVal;
 	char* strVal;
 	double realVal;
+	struct Symbol *node;
 }
 
 
@@ -37,6 +38,10 @@
 %left	'[' ']'
 %left	'(' ')'
 
+
+%type <intVal> INTCONST
+%type <realVal> REALCONST
+%type <strVal> ID STRING
 %%
 
 program:	stmts	{std::cout<<"Program <- stmts"<<std::endl;}
