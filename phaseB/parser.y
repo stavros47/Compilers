@@ -161,10 +161,10 @@ lvalue:		ID		{
 					if(!tmp){
 						tmp=SymTable.insert(newSym);
 					}else{
-						if(tmp->scope!=currScope || tmp->hidden){
+						if(tmp->hidden){
 							tmp=SymTable.insert(newSym);
-						}else{
-							buffer<<"LOCAL variable "<<$2<<" already defined here:" << tmp->lineno<<std::endl;
+						}else if(tmp->type==3){
+							buffer<<"Library functions cannot be shadowed:"<<$2<<" already defined here:" << tmp->lineno<<std::endl;
 						}
 					}
 
