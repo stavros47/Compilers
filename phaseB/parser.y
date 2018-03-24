@@ -397,7 +397,7 @@ int main(int argc,char** argv){
 
 	std::cout<<SymTable.allscopestoString()<<std::endl; 
 	
-	buffer<< "Error Log: \n\n"
+	
 	std::cout<<buffer.str();
 
 return 0;
