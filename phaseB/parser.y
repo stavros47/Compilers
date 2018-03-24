@@ -3,7 +3,7 @@
 
 	int yyerror(const char* yaccProvidedMessage);
 	int yylex(void);
-	int suffixNum = 1;
+	int suffixNum = 0;
 	extern int yylineno;
 	extern char* yytext;
 	extern FILE* yyin;
@@ -363,10 +363,23 @@ int main(int argc,char** argv){
 	}else
 		yyin = stdin;
 
+	SymTable.insert(construct_Symbol("print",3,0,0));
+	SymTable.insert(construct_Symbol("input",3,0,0));
+	SymTable.insert(construct_Symbol("objectmemberkeys",3,0,0));
+	SymTable.insert(construct_Symbol("objecttotalmembers",3,0,0));
+	SymTable.insert(construct_Symbol("objectcopy",3,0,0));
+	SymTable.insert(construct_Symbol("totalarguments",3,0,0));
+	SymTable.insert(construct_Symbol("argument",3,0,0));
+	SymTable.insert(construct_Symbol("typeof",3,0,0));
+	SymTable.insert(construct_Symbol("strtonum",3,0,0));
+	SymTable.insert(construct_Symbol("sqrt",3,0,0));
+	SymTable.insert(construct_Symbol("cos",3,0,0));
+	SymTable.insert(construct_Symbol("sin",3,0,0));
+
 	yyparse();
 
 
-	std::cout<<SymTable.toString()<<std::endl;
+	std::cout<<SymTable.allscopestoString()<<std::endl;
 	
 	std::cout<<buffer.str();
 

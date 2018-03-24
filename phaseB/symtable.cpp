@@ -27,11 +27,11 @@ std::string getTypeasString(Symbol* sym){
 std::string sym_toString(Symbol* sym){
         std::ostringstream buffer;
 
-        buffer<<sym->name<<" | ";
-        buffer<<getTypeasString(sym)<<" | ";
-        buffer<<sym->lineno<<" | ";
-        buffer<<sym->scope<<" | ";
-        buffer<<((sym->hidden) ? "hidden" : "not hidden")<<" | ";
+        buffer<<"\""<<sym->name<<"\" ";
+        buffer<<"["<<getTypeasString(sym)<<"] ";
+        buffer<<"(line:"<<sym->lineno<<") ";
+        buffer<<"(scope:"<<sym->scope<<") ";
+        buffer<<((sym->hidden) ? "[hidden]" : "[not hidden]");
 
         return buffer.str();
 }
@@ -162,7 +162,8 @@ std::string HashTable::allscopestoString(){
 	std::ostringstream buffer;
 	
 	for(int i=0;i<8 && ScopeHead[i]!=NULL;i++){
-		buffer<<i<<":\n"<<scopetoString(i)<<std::endl;
+		buffer<<"---------------      Scope #"<<i<<"      ---------------"<<std::endl;
+		buffer<<scopetoString(i)<<std::endl;
 	}
 
 	return buffer.str();
