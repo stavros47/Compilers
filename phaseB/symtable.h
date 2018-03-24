@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-enum Type {UNDEFINED,VARIABLE,FUNC_ARG,LIBRARY_FUNC,PROGRAM_FUNC};
+enum Type {GLOBAL_VAR,LOCAL_VAR,FUNC_ARG,LIBRARY_FUNC,PROGRAM_FUNC};
 
 struct Symbol{
 	std::string name;
@@ -35,9 +35,11 @@ class HashTable{
 		HashTable(int);
 
 		unsigned int hashfunc(std::string);
-		void insert(Symbol*);
+		Symbol* insert(Symbol*);
 		Symbol* lookup(std::string);
 		Symbol* lookup(std::string,int);
+		Symbol* lookup(std::string,int,int);
+		void hideScope(int);
 		std::string toString();
 		std::string scopetoString(int);
 		std::string allscopestoString();

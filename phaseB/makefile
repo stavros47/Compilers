@@ -1,5 +1,5 @@
 al: scanner.cpp parser.cpp symtable.cpp	symtable.h
-	g++ scanner.cpp parser.cpp symtable.cpp -o al
+	g++ -std=c++11 scanner.cpp parser.cpp symtable.cpp -o al
 
 scanner.cpp : scanner.l
 	flex scanner.l

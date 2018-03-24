@@ -3,13 +3,14 @@
 
 	int yyerror(const char* yaccProvidedMessage);
 	int yylex(void);
-
+	int suffixNum = 1;
 	extern int yylineno;
 	extern char* yytext;
 	extern FILE* yyin;
 
-	int currScope;
+	int currScope=0;
 	HashTable SymTable; 
+	std::ostringstream buffer;
 %}
 
 %start program
@@ -18,6 +19,7 @@
 
 %token	ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE SCOPE
 %token NOT_EQUAL EQUAL_EQUAL DOT_DOT GREATER_EQUAL LESS_EQUAL MINUS_MINUS
+
 %union{
 	int intVal;
 	char* strVal;
@@ -42,6 +44,7 @@
 %type <intVal> INTCONST
 %type <realVal> REALCONST
 %type <strVal> ID STRING
+%type <node> lvalue 
 %%
 
 program:	stmts	{std::cout<<"Program <- stmts"<<std::endl;}
@@ -87,14 +90,39 @@ op:		'+' expr 		{std::cout<<"op <- + expr"<<std::endl;}
 term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 		| '-'expr %prec UMINUS	{std::cout<<"term <- - expr (UMINUS)"<<std::endl;}
 		| NOT expr		{std::cout<<"term <- ! expr"<<std::endl;}
-		| PLUS_PLUS lvalue	{std::cout<<"term <- ++ lvalue"<<std::endl;}
-		| lvalue PLUS_PLUS	{std::cout<<"term <- lvalue ++"<<std::endl;}	
-		| MINUS_MINUS lvalue	{std::cout<<"term <- -- lvalue"<<std::endl;}
-		| lvalue MINUS_MINUS	{std::cout<<"term <- lvalue --"<<std::endl;}
+		| PLUS_PLUS lvalue	{
+						if($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC){
+							buffer<<"Line "<<yylineno<<": Invalid operation  with function type\n";
+						}
+						std::cout<<"term <- ++ lvalue"<<std::endl;					
+					}
+		| lvalue PLUS_PLUS	{
+						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
+							buffer<<"Line "<<yylineno<<": Invalid operation with function type\n";
+						}
+						std::cout<<"term <- lvalue ++"<<std::endl;
+					}	
+		| MINUS_MINUS lvalue	{
+						if($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC){
+							buffer<<"Line "<<yylineno<<": Invalid operation with function type!\n";
+						}
+						std::cout<<"term <- -- lvalue"<<std::endl;
+					}
+		| lvalue MINUS_MINUS	{
+						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
+							buffer<<"Line "<<yylineno<<": Invalid operation with function type!\n";
+						}
+						std::cout<<"term <- lvalue --"<<std::endl;
+					}
 		| primary		{std::cout<<"term <- primary"<<std::endl;}
 		;
 
-assignexpr:	lvalue '=' expr		{std::cout<<"assignexpr <- lvalue = expr"<<std::endl;}
+assignexpr:	lvalue '=' expr		{
+						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
+							buffer<<"Line "<<yylineno<<": Invalid operation with function type!\n";
+						}	
+						std::cout<<"assignexpr <- lvalue = expr"<<std::endl;
+					}
 		;
 
 primary:	lvalue			{std::cout<<"primary <- lvalue"<<std::endl;}
@@ -104,16 +132,64 @@ primary:	lvalue			{std::cout<<"primary <- lvalue"<<std::endl;}
 		| const			{std::cout<<"primary <- const"<<std::endl;}
 		;
 
-lvalue:		ID			{std::cout<<"lvalue <- ID"<<std::endl;}
-		| LOCAL ID		{std::cout<<"lvalue <- LOCAL ID"<<std::endl;}
-		| SCOPE ID		{std::cout<<"lvalue <- SCOPE ID"<<std::endl;}
-		| member		{std::cout<<"lvalue <- member"<<std::endl;}
+lvalue:		ID		{
+					Symbol* tmp;
+					Symbol* newSym=construct_Symbol($1,(currScope) ? 1 : 0,yylineno,currScope);
+
+						tmp = SymTable.lookup($1,currScope,1);
+
+					if(!tmp){
+						tmp=SymTable.insert(newSym);
+					}else{
+						if(!(tmp->type==LIBRARY_FUNC || (tmp->type==PROGRAM_FUNC && tmp->hidden))){
+							if(((tmp->scope==currScope && tmp->hidden) ||
+							 (tmp->scope!=0 && tmp->scope!=currScope)) && 
+							((tmp=SymTable.lookup($1,0))==NULL)){
+									tmp=SymTable.insert(newSym);
+							}
+						}
+					}
+
+					$$=tmp;
+					std::cout<<"lvalue <- ID"<<std::endl;
+				}
+		| LOCAL ID	{
+					Symbol* tmp;
+					Symbol* newSym=construct_Symbol($2,1,yylineno,currScope);
+					tmp = SymTable.lookup($2,currScope);
+
+					if(!tmp){
+						tmp=SymTable.insert(newSym);
+					}else{
+						if(tmp->scope!=currScope || tmp->hidden){
+							tmp=SymTable.insert(newSym);
+						}else{
+							buffer<<"LOCAL variable "<<$2<<" already defined here:" << tmp->lineno<<std::endl;
+						}
+					}
+
+					$$=tmp;
+
+					std::cout<<"lvalue <- LOCAL ID"<<std::endl;
+				}
+		| SCOPE ID	{
+					Symbol* tmp;
+					tmp=SymTable.lookup($2,0);
+
+					if(tmp==NULL){
+						buffer<<"line "<< yylineno <<" : Global variable "<<$2<<" not found"<<std::endl;
+					}
+
+					$$=tmp;
+					std::cout<<"lvalue <- SCOPE ID"<<std::endl;
+				}
+		| member	{std::cout<<"lvalue <- member"<<std::endl;}
 		;
 
 member:		lvalue'.'ID		{std::cout<<"member <- lvalue.ID"<<std::endl;}
 		| lvalue '['expr']'	{std::cout<<"member <- lvalue [expr]"<<std::endl;}
 		| call '.' ID		{std::cout<<"member <- call.ID"<<std::endl;}
-		| call '[' expr ']'	{std::cout<<"member <- call[ID]"<<std::endl;}
+		| call '[' expr ']'	{std::cout<<"member <- call[expr]"<<std::endl;}
 		;
 
 call: 		call '(' elist ')'		{std::cout<<"call <- call ( elist )"<<std::endl;}
@@ -159,12 +235,52 @@ indexeds: 	',' indexedelem	{std::cout<<"indexeds <- , indexedelem"<<std::endl;}
 indexedelem:	'{' expr ':' expr '}'	{std::cout<<"indexedelem <- { expr : expr }"<<std::endl;}
 		;
 
-block:		'{' stmts '}'	{std::cout<<"block <- { stmts }"<<std::endl;}
-		| '{' '}'	{std::cout<<"block <- { }"<<std::endl;}
+block:		'{' 	{currScope++;}
+		stmts 
+		'}'	{
+				SymTable.hideScope(currScope);
+				currScope--;
+				std::cout<<"block <- { stmts }"<<std::endl;
+			}	
+		|'{'	{currScope++;} 
+		'}'	{	
+				SymTable.hideScope(currScope);
+				currScope--;std::cout<<"block <- { }"<<std::endl;
+			}
 		;
 
-funcdef:	FUNCTION ID '('idlist')' block	{std::cout<<"funcdef <- FUNCTION ID (idlist) block"<<std::endl;}
-		|FUNCTION '('idlist')' block	{std::cout<<"funcdef <- FUNCTION (idlist) block"<<std::endl;}
+funcdef:	FUNCTION ID 	{ 
+					Symbol* tmp;
+					Symbol* newSym=construct_Symbol($2,4,yylineno,currScope);
+					tmp = SymTable.lookup($2,currScope);
+
+					if(tmp==NULL){
+						if((tmp = SymTable.lookup($2,0))!=NULL && tmp->type == LIBRARY_FUNC){
+							buffer << "ERROR: Library Function\n";
+						}else{
+							tmp=SymTable.insert(newSym);						
+						}
+					}
+					else{
+						buffer << "Error: redefinition\n";		
+					}
+				}
+		'('		{currScope++;}
+		idlist
+		')'		{currScope--;} 
+		block		{std::cout<<"funcdef <- FUNCTION ID (idlist) block"<<std::endl;}
+		|FUNCTION 	{
+					Symbol* tmp;
+					std::string funcName = "$f";
+					funcName += std::to_string(suffixNum++);
+					Symbol* newSym=construct_Symbol(funcName,4,yylineno,currScope);
+				
+					tmp=SymTable.insert(newSym);
+				} 
+		'('		{currScope++;}
+		idlist
+		')'		{currScope--;} 
+		block		{std::cout<<"funcdef <- FUNCTION (idlist) block"<<std::endl;}
 		;
 
 const:		INTCONST 	{std::cout<<"const <- INTCONST"<<std::endl;}
@@ -176,11 +292,46 @@ const:		INTCONST 	{std::cout<<"const <- INTCONST"<<std::endl;}
 		;
 
 idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
-		|ID 		{std::cout<<"idlist <- (empty)"<<std::endl;}
-		|
+		|ID 		{
+					Symbol* tmp;
+					Symbol* newSym=construct_Symbol($1,2,yylineno,currScope);
+
+					tmp = SymTable.lookup($1,currScope);
+
+					if(tmp==NULL){
+						tmp=SymTable.insert(newSym);
+					}else{
+						if(tmp->hidden){
+							tmp=SymTable.insert(newSym);
+						}else if(tmp->type == LIBRARY_FUNC){
+							buffer << "Line " << yylineno << ": is a Library Function.\n"; 
+						}else{
+							buffer << "Line " << yylineno << ": Already defined.\n";
+						}
+                            		}			
+					std::cout<<"idlist <- ID "<<std::endl;
+				}
+		|		{std::cout<<"idlist <- (empty)"<<std::endl;}
 		;
 
-idlists: 	',' ID		{std::cout<<"idlists <- , ID"<<std::endl;}
+idlists: 	',' ID		{
+					Symbol* tmp;
+					Symbol* newSym=construct_Symbol($2,2,yylineno,currScope);
+					tmp = SymTable.lookup($2,currScope);
+					if(tmp==NULL){
+						tmp=SymTable.insert(newSym);
+					}else{
+						if(tmp->hidden){
+							tmp=SymTable.insert(newSym);
+						}
+						else if(tmp->type == LIBRARY_FUNC){
+							buffer << "Line " << yylineno << ": is a Library Function.\n"; 
+						}else{
+							buffer << "Line " << yylineno << ": Already defined.\n";
+						}
+					}
+					std::cout<<"idlists <- , ID"<<std::endl;
+				}
 		;
 
 ifstmt:		ifstmt ELSE stmt 	{std::cout<<"ifstmt <- ifstmt ELSE stmt"<<std::endl;}
@@ -212,8 +363,12 @@ int main(int argc,char** argv){
 	}else
 		yyin = stdin;
 
+	yyparse();
 
 
-yyparse();
+	std::cout<<SymTable.toString()<<std::endl;
+	
+	std::cout<<buffer.str();
+
 return 0;
 }

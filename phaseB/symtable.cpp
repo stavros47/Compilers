@@ -16,8 +16,8 @@ Symbol* construct_Symbol(std::string newName,int newType,int newLineno,int newSc
 
 std::string getTypeasString(Symbol* sym){
         switch(sym->type){
-                case 0: return "UNDEFINED";break;
-                case 1: return "VARIABLE";break;
+                case 0: return "GLOBAL";break;
+                case 1: return "LOCAL";break;
                 case 2: return "FUNC_ARG";break;
                 case 3: return "LIB_FUNC";break;
                 case 4: return "USER_FUNC";break;
@@ -51,11 +51,10 @@ unsigned int HashTable::hashfunc(std::string name){
 	return hash%HASH_SIZE;
 }
 
-void HashTable::insert(Symbol* ptr){
+Symbol* HashTable::insert(Symbol* ptr){
 	int pos=hashfunc(ptr->name);
-	
 	if(SymTable[pos]==NULL){
-		SymTable[pos]=ptr;		
+		SymTable[pos]=ptr;
 	}else{
 		ptr->next=SymTable[pos];
 		SymTable[pos]=ptr;
@@ -77,6 +76,8 @@ void HashTable::insert(Symbol* ptr){
 		ptr->scopeNext=ScopeHead[ptr->scope];
 		ScopeHead[ptr->scope]=ptr;
 	}
+
+	return ptr;
 }
 
 Symbol* HashTable::lookup(std::string name){
@@ -95,6 +96,10 @@ Symbol* HashTable::lookup(std::string name){
 }
 
 Symbol* HashTable::lookup(std::string name,int scope){
+	return lookup(name,scope,0);
+}
+
+Symbol* HashTable::lookup(std::string name,int scope,int flag){
 	Symbol* iter;
 	iter = ScopeHead[scope];
 
@@ -105,15 +110,32 @@ Symbol* HashTable::lookup(std::string name,int scope){
                 iter=iter->scopeNext;
 	}
 
+	if(flag){
+		for(int i=scope-1;i>=0;i--){
+			return lookup(name,scope-1,1);
+		}
+	}
+
 	return NULL;
+}
+
+void HashTable::hideScope(int scope){
+	Symbol* iter;
+	iter=ScopeHead[scope];
+
+	while(iter){
+		iter->hidden=true;
+		iter=iter->scopeNext;
+	}
 }
 
 std::string HashTable::toString(){
 	Symbol* iter;
 	std::ostringstream buffer;
 	
-	for(int i=0;i<509;i++){
+	for(int i=0;i<733;i++){
 		iter=SymTable[i];
+		if(iter!=NULL)buffer<<"Position:"<<i<<std::endl;
 		while(iter!=NULL){
 			buffer<<sym_toString(iter)<<std::endl;
 			iter=iter->next;

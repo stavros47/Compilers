@@ -1,8 +1,6 @@
-
 %{
 
 #include "parser.hpp"
-#include <fstream>
 
 unsigned int start;
 
@@ -108,10 +106,6 @@ void parse_block_comment(){
                 fprintf(stderr,"unterminated block comment\n");
                 exit(-1);
         }
-
-/*        std::ostringstream buffer;
-
-        buffer<< start << "-"   << yylineno;*/
 }
 
 char* parse_string(){
