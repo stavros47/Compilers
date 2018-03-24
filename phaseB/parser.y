@@ -92,25 +92,30 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 		| NOT expr		{std::cout<<"term <- ! expr"<<std::endl;}
 		| PLUS_PLUS lvalue	{
 						if($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC){
-							buffer<<"Line "<<yylineno<<": Invalid operation  with function type\n";
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Invalid use of prefix operator ++ : " << $2->name << " refers to a function type."<<std::endl;
 						}
 						std::cout<<"term <- ++ lvalue"<<std::endl;					
 					}
 		| lvalue PLUS_PLUS	{
 						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
-							buffer<<"Line "<<yylineno<<": Invalid operation with function type\n";
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Invalid use of suffix operator ++ : " << $1->name << " refers to a function type."<<std::endl;
 						}
 						std::cout<<"term <- lvalue ++"<<std::endl;
 					}	
 		| MINUS_MINUS lvalue	{
 						if($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC){
-							buffer<<"Line "<<yylineno<<": Invalid operation with function type!\n";
-						}
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Invalid use of prefix operator -- : " << $2->name << " refers to a function type.\n";
+						}	
 						std::cout<<"term <- -- lvalue"<<std::endl;
 					}
 		| lvalue MINUS_MINUS	{
 						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
-							buffer<<"Line "<<yylineno<<": Invalid operation with function type!\n";
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Invalid use of suffix operator -- : " << $1->name << " refers to a function type.\n";
+							
 						}
 						std::cout<<"term <- lvalue --"<<std::endl;
 					}
@@ -119,7 +124,8 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 
 assignexpr:	lvalue '=' expr		{
 						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
-							buffer<<"Line "<<yylineno<<": Invalid operation with function type!\n";
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Invalid use of assignment operator = : " << $1->name << " refers to a function type and cannot be assigned a value.\n";
 						}	
 						std::cout<<"assignexpr <- lvalue = expr"<<std::endl;
 					}
@@ -164,7 +170,7 @@ lvalue:		ID		{
 						if(tmp->hidden){
 							tmp=SymTable.insert(newSym);
 						}else if(tmp->type==3){
-							buffer<<"Library functions cannot be shadowed:"<<$2<<" already defined here:" << tmp->lineno<<std::endl;
+							buffer<<"Library functions cannot be shadowed:"<<$2<<" already defined here:" << tmp->lineno<<std::endl; //Invoke
 						}
 					}
 
@@ -177,7 +183,8 @@ lvalue:		ID		{
 					tmp=SymTable.lookup($2,0);
 
 					if(tmp==NULL){
-						buffer<<"line "<< yylineno <<" : Global variable "<<$2<<" not found"<<std::endl;
+						buffer << "Line: "<< yylineno <<" \n\t";
+						buffer<<"Could not find Global variable:  \""<<$2<<"\" ,is not defined"<<std::endl;
 					}
 
 					$$=tmp;
@@ -256,13 +263,20 @@ funcdef:	FUNCTION ID 	{
 
 					if(tmp==NULL){
 						if((tmp = SymTable.lookup($2,0))!=NULL && tmp->type == LIBRARY_FUNC){
-							buffer << "ERROR: Library Function\n";
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Invalid Name:  \""<<$2<<"\". Reserved keyword for a library function"<<std::endl;
 						}else{
 							tmp=SymTable.insert(newSym);						
 						}
 					}
 					else{
-						buffer << "Error: redefinition\n";		
+						if(tmp->type == LIBRARY_FUNC){
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Invalid Name:  \""<<$2<<"\". Reserved keyword for a library function"<<std::endl;
+						}else{
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Function redefinition. "<<$2<<". is already defined at line: "<< tmp->lineno<<std::endl;	
+						}							
 					}
 				}
 		'('		{currScope++;}
@@ -304,9 +318,10 @@ idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
 						if(tmp->hidden){
 							tmp=SymTable.insert(newSym);
 						}else if(tmp->type == LIBRARY_FUNC){
-							buffer << "Line " << yylineno << ": is a Library Function.\n"; 
+							buffer << "Line " << yylineno << ": is a Library Function.\n"; //Invoke
 						}else{
-							buffer << "Line " << yylineno << ": Already defined.\n";
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Variable: "<<$1<<". is already defined at line: "<< tmp->lineno <<std::endl;
 						}
                             		}			
 					std::cout<<"idlist <- ID "<<std::endl;
@@ -325,9 +340,10 @@ idlists: 	',' ID		{
 							tmp=SymTable.insert(newSym);
 						}
 						else if(tmp->type == LIBRARY_FUNC){
-							buffer << "Line " << yylineno << ": is a Library Function.\n"; 
+							buffer << "Line " << yylineno << ": is a Library Function.\n"; //Invoke
 						}else{
-							buffer << "Line " << yylineno << ": Already defined.\n";
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Variable: "<<$2<<" is already defined at line: "<< tmp->lineno <<std::endl;
 						}
 					}
 					std::cout<<"idlists <- , ID"<<std::endl;
@@ -379,8 +395,9 @@ int main(int argc,char** argv){
 	yyparse();
 
 
-	std::cout<<SymTable.allscopestoString()<<std::endl;
+	std::cout<<SymTable.allscopestoString()<<std::endl; 
 	
+	buffer<< "Error Log: \n\n"
 	std::cout<<buffer.str();
 
 return 0;

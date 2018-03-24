@@ -1,0 +1,22 @@
+//Warning: Do not uncomment everything at once! Buffer overflow.
+input(x);
+function print(){
+   
+}
+
+function g(x,y, y) {
+    ::glob;
+}
+function g(x,y) {
+    ::glob;
+}
+//++g;
+//g++;
+//--g;
+//g--;
+//g = x + 2;
+
+
+function f(a,b){
+	local a = local b; 
+}
