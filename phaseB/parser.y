@@ -10,12 +10,12 @@
 
 	int currScope=0;
 	HashTable SymTable; 
-	std::ostringstream buffer;
+	std::fstream buffer;
 %}
 
 %start program
 
-%expect 1
+%expect 1 
 
 %token	ID INTCONST STRING REALCONST IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE NIL LOCAL AND NOT OR TRUE FALSE SCOPE
 %token NOT_EQUAL EQUAL_EQUAL DOT_DOT GREATER_EQUAL LESS_EQUAL MINUS_MINUS
@@ -91,42 +91,60 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 		| '-'expr %prec UMINUS	{std::cout<<"term <- - expr (UMINUS)"<<std::endl;}
 		| NOT expr		{std::cout<<"term <- ! expr"<<std::endl;}
 		| PLUS_PLUS lvalue	{
-						if($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC){
+						if(($2!=NULL) && ($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Invalid use of prefix operator ++ : " << $2->name << " refers to a function type."<<std::endl;
-						}
+						}else if($2==NULL){
+                                                        buffer<<"Line: " <<yylineno<< ":";
+                                                        buffer<<" undeclared variable."<<std::endl;
+                                                }
+
 						std::cout<<"term <- ++ lvalue"<<std::endl;					
 					}
 		| lvalue PLUS_PLUS	{
-						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
+						if(($1!=NULL)&& ($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Invalid use of suffix operator ++ : " << $1->name << " refers to a function type."<<std::endl;
-						}
+						}else if($1==NULL){
+                                                        buffer<<"Line: " <<yylineno<< ":";
+                                                        buffer<<" undeclared variable."<<std::endl;
+                                                }
+
 						std::cout<<"term <- lvalue ++"<<std::endl;
 					}	
 		| MINUS_MINUS lvalue	{
-						if($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC){
+						if(($2!=NULL) && ($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Invalid use of prefix operator -- : " << $2->name << " refers to a function type.\n";
-						}	
+						}else if($2==NULL){
+                                                        buffer<<"Line: " <<yylineno<< ":";
+                                                        buffer<<" undeclared variable."<<std::endl;
+                                                }
+
 						std::cout<<"term <- -- lvalue"<<std::endl;
 					}
 		| lvalue MINUS_MINUS	{
-						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
+						if(($1!=NULL) && ($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Invalid use of suffix operator -- : " << $1->name << " refers to a function type.\n";
-							
-						}
+						}else if($1==NULL){
+                                                        buffer<<"Line: " <<yylineno<< ":";
+                                                        buffer<<" undeclared variable."<<std::endl;
+                                                }
+
 						std::cout<<"term <- lvalue --"<<std::endl;
 					}
 		| primary		{std::cout<<"term <- primary"<<std::endl;}
 		;
 
-assignexpr:	lvalue '=' expr		{
-						if($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC){
-							buffer << "Line: "<< yylineno <<" \n\t";
-							buffer<<"Invalid use of assignment operator = : " << $1->name << " refers to a function type and cannot be assigned a value.\n";
-						}	
+assignexpr:	lvalue	'=' expr	{
+						if(($1!=NULL) && ($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC)){
+                                                        buffer << "Line: "<< yylineno <<"\n\t";
+                                                        buffer<<"Invalid use of assignment operator = : " << $1->name << " refers to a function type and cannot be assigned a value.\n";
+                                                }else if($1==NULL){
+                                                        buffer<<"Line: " <<yylineno<< ":";
+                                                        buffer<<" undeclared variable."<<std::endl;
+                                                }
 						std::cout<<"assignexpr <- lvalue = expr"<<std::endl;
 					}
 		;
@@ -140,11 +158,10 @@ primary:	lvalue			{std::cout<<"primary <- lvalue"<<std::endl;}
 
 lvalue:		ID		{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($1,(currScope) ? 1 : 0,yylineno,currScope);
+					Symbol* newSym=construct_Symbol($1,((currScope) ? 1 : 0),yylineno,currScope);
 
-						tmp = SymTable.lookup($1,currScope,1);
-
-					if(!tmp){
+					tmp = SymTable.lookup($1,currScope,1);
+					if(tmp==NULL){
 						tmp=SymTable.insert(newSym);
 					}else{
 						if(!(tmp->type==LIBRARY_FUNC || (tmp->type==PROGRAM_FUNC && tmp->hidden))){
@@ -162,15 +179,16 @@ lvalue:		ID		{
 		| LOCAL ID	{
 					Symbol* tmp;
 					Symbol* newSym=construct_Symbol($2,1,yylineno,currScope);
-					tmp = SymTable.lookup($2,currScope);
+					tmp = SymTable.lookup($2,currScope,1);
 
 					if(!tmp){
 						tmp=SymTable.insert(newSym);
 					}else{
-						if(tmp->hidden){
+						if(tmp->hidden || (tmp->type!=LIBRARY_FUNC)){
 							tmp=SymTable.insert(newSym);
 						}else if(tmp->type==3){
-							buffer<<"Library functions cannot be shadowed:"<<$2<<" already defined here:" << tmp->lineno<<std::endl; //Invoke
+							buffer << "Line " << yylineno << ":\n\t"<<$2<<" is a Library Function.\n"; 
+							buffer<<"Library functions cannot be shadowed:"<<$2<<" already defined here:" << tmp->lineno<<std::endl; 
 						}
 					}
 
@@ -195,7 +213,7 @@ lvalue:		ID		{
 
 member:		lvalue'.'ID		{std::cout<<"member <- lvalue.ID"<<std::endl;}
 		| lvalue '['expr']'	{std::cout<<"member <- lvalue [expr]"<<std::endl;}
-		| call '.' ID		{std::cout<<"member <- call.ID"<<std::endl;}
+		| call '.' ID		{std::cout<<"member <- calil.ID"<<std::endl;}
 		| call '[' expr ']'	{std::cout<<"member <- call[expr]"<<std::endl;}
 		;
 
@@ -217,13 +235,13 @@ methodcall:	DOT_DOT ID '(' elist ')'	{std::cout<<"methodcall <- ..ID(elist)"<<st
 
 elist: 		elist exprs	{std::cout<<"elist <- elist exprs"<<std::endl;}
 		|expr		{std::cout<<"elist <- expr"<<std::endl;}
+		|
 		;
 
 exprs: 		',' expr	{std::cout<<"exprs <- , expr"<<std::endl;}
 		;
 		
 objectdef: 	'['objectdefs']'	{std::cout<<"objectdef <- [ objectdefs ]"<<std::endl;}
-		|'['']'			{std::cout<<"objectdef <- [ ]"<<std::endl;}
 		;		
 
 objectdefs:	elist		{std::cout<<"objectdefs <- elist"<<std::endl;}
@@ -318,7 +336,7 @@ idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
 						if(tmp->hidden){
 							tmp=SymTable.insert(newSym);
 						}else if(tmp->type == LIBRARY_FUNC){
-							buffer << "Line " << yylineno << ": is a Library Function.\n"; //Invoke
+							buffer << "Line " << yylineno << ":\n\t"<<$1<< " is a Library Function.\n";
 						}else{
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Variable: "<<$1<<". is already defined at line: "<< tmp->lineno <<std::endl;
@@ -340,7 +358,7 @@ idlists: 	',' ID		{
 							tmp=SymTable.insert(newSym);
 						}
 						else if(tmp->type == LIBRARY_FUNC){
-							buffer << "Line " << yylineno << ": is a Library Function.\n"; //Invoke
+							buffer << "Line " << yylineno << ":\n\t"<<$2<< " is a Library Function.\n";
 						}else{
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Variable: "<<$2<<" is already defined at line: "<< tmp->lineno <<std::endl;
@@ -379,6 +397,8 @@ int main(int argc,char** argv){
 	}else
 		yyin = stdin;
 
+	buffer.open("alpha_compiler_Errors.txt",std::ios::out);
+
 	SymTable.insert(construct_Symbol("print",3,0,0));
 	SymTable.insert(construct_Symbol("input",3,0,0));
 	SymTable.insert(construct_Symbol("objectmemberkeys",3,0,0));
@@ -393,12 +413,18 @@ int main(int argc,char** argv){
 	SymTable.insert(construct_Symbol("sin",3,0,0));
 
 	yyparse();
-
-
+	buffer.close();
+	
 	std::cout<<SymTable.allscopestoString()<<std::endl; 
-	
-	
-	std::cout<<buffer.str();
+
+	std::ifstream errors("alpha_compiler_Errors.txt");
+	std::string line;
+	if(errors.is_open()){
+		while(getline(errors,line)){
+			std::cout<<line<<std::endl;
+		}	
+	}
+	remove("alpha_compiler_Errors.txt");
 
 return 0;
 }

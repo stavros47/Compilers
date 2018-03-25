@@ -1,7 +1,8 @@
 #define HASH_SIZE 733
-#define SCOPE_SIZE 8
+#define SCOPE_SIZE 8 
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <stdlib.h>
 #include <assert.h>
@@ -29,8 +30,8 @@ class HashTable{
 	private:
 		Symbol **SymTable;
 		Symbol **ScopeHead;
-		int maxscopesize;
 	public:
+		int maxscopesize;
 		HashTable();
 		HashTable(int);
 

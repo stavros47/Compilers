@@ -59,15 +59,21 @@ Symbol* HashTable::insert(Symbol* ptr){
 		ptr->next=SymTable[pos];
 		SymTable[pos]=ptr;
 	}
-
+	
 	if(ptr->scope>=maxscopesize){
 		maxscopesize+=SCOPE_SIZE;
-		ScopeHead = (Symbol**)realloc(ScopeHead,maxscopesize*sizeof(Symbol*));
-		if(!ScopeHead){
+		Symbol** tmp = (Symbol**)malloc(sizeof(Symbol*)*maxscopesize);
+		if(!tmp){
 			fprintf(stderr,"reallocation error in file: %s at line:%d\n",__FILE__,__LINE__);
                         exit(-1);
 
 		}
+
+		for(int i=0;i<maxscopesize-SCOPE_SIZE;i++){
+			tmp[i] = ScopeHead[i];
+		}
+
+		ScopeHead=tmp;
 	}
 
 	if(ScopeHead[ptr->scope]==NULL){
@@ -150,7 +156,6 @@ std::string HashTable::scopetoString(int scope){
 	std::ostringstream buffer;
 
 	iter = ScopeHead[scope];
-
 	while(iter!=NULL){
 		buffer<<sym_toString(iter)<<std::endl;
 		iter=iter->scopeNext;
@@ -161,9 +166,11 @@ std::string HashTable::scopetoString(int scope){
 std::string HashTable::allscopestoString(){
 	std::ostringstream buffer;
 	
-	for(int i=0;i<8 && ScopeHead[i]!=NULL;i++){
+	for(int i=0;i<maxscopesize;i++){
+		if(ScopeHead[i]==NULL) {continue;}
 		buffer<<"---------------      Scope #"<<i<<"      ---------------"<<std::endl;
 		buffer<<scopetoString(i)<<std::endl;
+
 	}
 
 	return buffer.str();
