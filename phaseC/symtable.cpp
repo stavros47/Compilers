@@ -1,14 +1,13 @@
-#ifndef SYMTABLE_H
-#define SYMTABLE_H
 #include "symtable.h"
 
-Symbol* construct_Symbol(std::string newName,int newType,int newLineno,int newScope,int newRange){
+Symbol* construct_Symbol(std::string newName,int newType,int newLineno,int newScope,scopespace_t newRange,int newOffset){
         Symbol* tmp = new Symbol();
         tmp->name=newName;
         tmp->type=(Type)newType;
         tmp->lineno=newLineno;
         tmp->scope=newScope;
-	tmp->range=newRange;
+		tmp->range=newRange;
+		tmp->offset=newOffset;
         tmp->hidden=false;
         tmp->scopeNext=NULL;
         tmp->next=NULL;
@@ -25,6 +24,14 @@ std::string getTypeasString(Symbol* sym){
         }
 }
 
+std::string getScopeSpaceasString(Symbol* sym){
+		switch(sym->range){
+			case 0: return "Program Variable";break;
+			case 1: return "Function Local";break;
+			case 2: return "Formal Argument";break;
+		}
+}
+
 std::string sym_toString(Symbol* sym){
         std::ostringstream buffer;
 
@@ -32,7 +39,8 @@ std::string sym_toString(Symbol* sym){
         buffer<<"["<<getTypeasString(sym)<<"] ";
         buffer<<"(line:"<<sym->lineno<<") ";
         buffer<<"(scope:"<<sym->scope<<") ";
-	buffer<<"(range:"<<sym->range<<") ";
+		buffer<<"(range:"<<getScopeSpaceasString(sym)<<") ";
+		buffer<<"(offset:"<<sym->offset<<") ";
         buffer<<((sym->hidden) ? "[hidden]" : "[not hidden]");
 
         return buffer.str();
@@ -177,4 +185,6 @@ std::string HashTable::allscopestoString(){
 
 	return buffer.str();
 }
-#endif
+
+
+

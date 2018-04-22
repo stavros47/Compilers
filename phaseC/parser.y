@@ -1,17 +1,23 @@
 %{
 	#include "symtable.h"
 
-	int yyerror(const char* yaccProvidedMessage);
-	int yylex(void);
-	int suffixNum = 0;
-	extern int yylineno;
-	extern char* yytext;
-	extern FILE* yyin;
+	int tempcounter=0;
+	quad*    quads = (quad*) 0;
+	unsigned total=0;
+	unsigned currQuad = 0;
 
-	int currScope=0;
-	int currRange=0;
+	unsigned programVarOffset=0;
+	unsigned functionLocalOffset=0;
+	unsigned formalArgOffset=0;
+
+	unsigned suffixNum = 0;
+	unsigned currScope=0;
+	unsigned currRange=1;
+	unsigned currOffset=0;
 	HashTable SymTable; 
 	std::fstream buffer;
+	std::stack<unsigned> offsetStack;
+
 %}
 
 %start program
@@ -25,7 +31,7 @@
 	int intVal;
 	char* strVal;
 	double realVal;
-	struct Symbol *node;
+	struct expr *node;
 }
 
 
@@ -45,7 +51,7 @@
 %type <intVal> INTCONST
 %type <realVal> REALCONST
 %type <strVal> ID STRING
-%type <node> lvalue 
+%type <node> lvalue member primary assignexpr call term objectdef const expr
 %%
 
 program:	stmts	{std::cout<<"Program <- stmts"<<std::endl;}
@@ -92,10 +98,10 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 		| '-'expr %prec UMINUS	{std::cout<<"term <- - expr (UMINUS)"<<std::endl;}
 		| NOT expr		{std::cout<<"term <- ! expr"<<std::endl;}
 		| PLUS_PLUS lvalue	{
-						if(($2!=NULL) && ($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC)){
+						if(($2->sym!=NULL) && ($2->sym->type == LIBRARY_FUNC || $2->sym->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
-							buffer<<"Invalid use of prefix operator ++ : " << $2->name << " refers to a function type."<<std::endl;
-						}else if($2==NULL){
+							buffer<<"Invalid use of prefix operator ++ : " << $2->sym->name << " refers to a function type."<<std::endl;
+						}else if($2->sym==NULL){
                                                         buffer<<"Line: " <<yylineno<< ":";
                                                         buffer<<" undeclared variable."<<std::endl;
                                                 }
@@ -103,10 +109,10 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 						std::cout<<"term <- ++ lvalue"<<std::endl;					
 					}
 		| lvalue PLUS_PLUS	{
-						if(($1!=NULL)&& ($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC)){
+						if(($1->sym!=NULL)&& ($1->sym->type == LIBRARY_FUNC || $1->sym->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
-							buffer<<"Invalid use of suffix operator ++ : " << $1->name << " refers to a function type."<<std::endl;
-						}else if($1==NULL){
+							buffer<<"Invalid use of suffix operator ++ : " << $1->sym->name << " refers to a function type."<<std::endl;
+						}else if($1->sym==NULL){
                                                         buffer<<"Line: " <<yylineno<< ":\n\t";
                                                         buffer<<"undeclared variable."<<std::endl;
                                                 }
@@ -114,10 +120,10 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 						std::cout<<"term <- lvalue ++"<<std::endl;
 					}	
 		| MINUS_MINUS lvalue	{
-						if(($2!=NULL) && ($2->type == LIBRARY_FUNC || $2->type == PROGRAM_FUNC)){
+						if(($2->sym!=NULL) && ($2->sym->type == LIBRARY_FUNC || $2->sym->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
-							buffer<<"Invalid use of prefix operator -- : " << $2->name << " refers to a function type.\n";
-						}else if($2==NULL){
+							buffer<<"Invalid use of prefix operator -- : " << $2->sym->name << " refers to a function type.\n";
+						}else if($2->sym==NULL){
                                                         buffer<<"Line: " <<yylineno<< ":\n\t";
                                                         buffer<<"undeclared variable."<<std::endl;
                                                 }
@@ -125,10 +131,10 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 						std::cout<<"term <- -- lvalue"<<std::endl;
 					}
 		| lvalue MINUS_MINUS	{
-						if(($1!=NULL) && ($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC)){
+						if(($1->sym!=NULL) && ($1->sym->type == LIBRARY_FUNC || $1->sym->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
-							buffer<<"Invalid use of suffix operator -- : " << $1->name << " refers to a function type.\n";
-						}else if($1==NULL){
+							buffer<<"Invalid use of suffix operator -- : " << $1->sym->name << " refers to a function type.\n";
+						}else if($1->sym==NULL){
                                                         buffer<<"Line: " <<yylineno<< ":\n\t";
                                                         buffer<<"undeclared variable."<<std::endl;
                                                 }
@@ -139,13 +145,19 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 		;
 
 assignexpr:	lvalue	'=' expr	{
-						if(($1!=NULL) && ($1->type == LIBRARY_FUNC || $1->type == PROGRAM_FUNC)){
+						if(($1->sym!=NULL) && ($1->sym->type == LIBRARY_FUNC || $1->sym->type == PROGRAM_FUNC)){
                                                         buffer << "Line: "<< yylineno <<"\n\t";
-                                                        buffer<<"Invalid use of assignment operator = : " << $1->name << " refers to a function type and cannot be assigned a value.\n";
-                                                }else if($1==NULL){
+                                                        buffer<<"Invalid use of assignment operator = : " << $1->sym->name << " refers to a function type and cannot be assigned a value.\n";
+                                                }else if($1->sym==NULL){
                                                         buffer<<"Line: " <<yylineno<< ":\n\t";
                                                         buffer<<"undeclared variable."<<std::endl;
                                                 }
+
+						emit(assign,$3,(expr*)0,$1,0,yylineno);
+
+						$$ = newexpr(assignexpr_e);
+						$$->sym = newtemp();
+						emit(assign,$1,(expr*)0,$$,0,yylineno);
 						std::cout<<"assignexpr <- lvalue = expr"<<std::endl;
 					}
 		;
@@ -159,27 +171,25 @@ primary:	lvalue			{std::cout<<"primary <- lvalue"<<std::endl;}
 
 lvalue:		ID		{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($1,((currScope) ? 1 : 0),yylineno,currScope,currRange);
+					Symbol* newSym=construct_Symbol($1,((currScope) ? 1 : 0),yylineno,currScope,currScopeSpace(),currOffset);
 
 					tmp = SymTable.lookup($1,currScope,1);
 					if(tmp==NULL || (tmp->hidden && tmp->scope==currScope)){
 						tmp=SymTable.insert(newSym);
 					}else{
-						if(!(tmp->range==currRange || tmp->scope==0 
+						if(!((tmp->range==currRange || tmp->range==currRange-1) || tmp->scope==0 
 							|| tmp->type==LIBRARY_FUNC || tmp->type==PROGRAM_FUNC)){
-								buffer<<"range:"<<tmp->range<<" curr:"<<currRange;
 								buffer << "Line: "<< yylineno <<" \n\t";
 								buffer<<"ID:Cannot access "<<$1<<" already defined here: "<< tmp->lineno <<std::endl;
-					
 						}
 					}
 
-					$$=tmp;
+					$$=lvalue_expr(tmp);
 					std::cout<<"lvalue <- ID"<<std::endl;
 				}
 		| LOCAL ID	{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($2,(currScope) ? 1 : 0,yylineno,currScope,currRange);
+					Symbol* newSym=construct_Symbol($2,(currScope) ? 1 : 0,yylineno,currScope,currScopeSpace(),currOffset);
 					tmp = SymTable.lookup($2,currScope,1);
 
 					if(tmp==NULL){
@@ -193,7 +203,7 @@ lvalue:		ID		{
 						}
 					}
 
-					$$=tmp;
+					$$=lvalue_expr(tmp);
 
 					std::cout<<"lvalue <- LOCAL ID"<<std::endl;
 				}
@@ -206,10 +216,10 @@ lvalue:		ID		{
 						buffer<<"Could not find Global variable:  \""<<$2<<"\" ,is not defined"<<std::endl;
 					}
 
-					$$=tmp;
+					$$=lvalue_expr(tmp);
 					std::cout<<"lvalue <- SCOPE ID"<<std::endl;
 				}
-		| member	{$$->type=LOCAL_VAR;std::cout<<"lvalue <- member"<<std::endl;}
+		| member	{$$->sym->type=LOCAL_VAR;std::cout<<"lvalue <- member"<<std::endl;}
 		;
 
 member:		lvalue'.'ID		{std::cout<<"member <- lvalue.ID"<<std::endl;}
@@ -278,7 +288,7 @@ block:		'{' 	{currScope++;}
 
 funcdef:	FUNCTION ID 	{ 
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($2,4,yylineno,currScope,currRange);
+					Symbol* newSym=construct_Symbol($2,4,yylineno,currScope,currScopeSpace(),currOffset);
 					tmp = SymTable.lookup($2,currScope);
 
 					if(tmp==NULL){
@@ -302,23 +312,30 @@ funcdef:	FUNCTION ID 	{
 				}
 		'('		{currScope++;currRange++;}
 		idlist		
-		')'		{currScope--;} 
-		block		{currRange--;std::cout<<"funcdef <- FUNCTION ID (idlist) block"<<std::endl;}
+		')'		{currScope--;currRange++;} 
+		block		{currRange-=2;std::cout<<"funcdef <- FUNCTION ID (idlist) block"<<std::endl;}
 		|FUNCTION 	{
 					Symbol* tmp;
 					std::string funcName = "$f";
 					funcName += std::to_string(suffixNum++);
-					Symbol* newSym=construct_Symbol(funcName,4,yylineno,currScope,currRange);
+					Symbol* newSym=construct_Symbol(funcName,4,yylineno,currScope,currScopeSpace(),currOffset);
 				
 					tmp=SymTable.insert(newSym);
 				} 
 		'('		{currScope++;currRange++;}
 		idlist
-		')'		{currScope--;} 
-		block		{currRange--;std::cout<<"funcdef <- FUNCTION (idlist) block"<<std::endl;}
+		')'		{currScope--;currRange++;} 
+		block		{currRange-=2;std::cout<<"funcdef <- FUNCTION (idlist) block"<<std::endl;}
 		;
 
-const:		INTCONST 	{std::cout<<"const <- INTCONST"<<std::endl;}
+const:		INTCONST 	{
+							expr* e =new expr();
+							e->type=constnum_e;
+							e->numConst=$1;
+							e->next=(expr*)0;
+							$$=e;
+							std::cout<<"const <- INTCONST"<<std::endl;
+						}
 		| REALCONST 	{std::cout<<"const <- REALCONST"<<std::endl;}
 		| STRING 	{std::cout<<"const <- STRING"<<std::endl;}
 		| NIL 		{std::cout<<"const <- NIL"<<std::endl;}
@@ -329,7 +346,7 @@ const:		INTCONST 	{std::cout<<"const <- INTCONST"<<std::endl;}
 idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
 		|ID 		{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($1,2,yylineno,currScope,currRange);
+					Symbol* newSym=construct_Symbol($1,2,yylineno,currScope,currScopeSpace(),currOffset);
 
 					tmp = SymTable.lookup($1,currScope,1);
 
@@ -353,7 +370,7 @@ idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
 
 idlists: 	',' ID		{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($2,2,yylineno,currScope,currRange);
+					Symbol* newSym=construct_Symbol($2,2,yylineno,currScope,currScopeSpace(),currOffset);
 					tmp = SymTable.lookup($2,currScope,1);
 
 					if(tmp==NULL){
@@ -404,18 +421,18 @@ int main(int argc,char** argv){
 
 	buffer.open("alpha_compiler_Errors.txt",std::ios::out);
 
-	SymTable.insert(construct_Symbol("print",3,0,0,0));
-	SymTable.insert(construct_Symbol("input",3,0,0,0));
-	SymTable.insert(construct_Symbol("objectmemberkeys",3,0,0,0));
-	SymTable.insert(construct_Symbol("objecttotalmembers",3,0,0,0));
-	SymTable.insert(construct_Symbol("objectcopy",3,0,0,0));
-	SymTable.insert(construct_Symbol("totalarguments",3,0,0,0));
-	SymTable.insert(construct_Symbol("argument",3,0,0,0));
-	SymTable.insert(construct_Symbol("typeof",3,0,0,0));
-	SymTable.insert(construct_Symbol("strtonum",3,0,0,0));
-	SymTable.insert(construct_Symbol("sqrt",3,0,0,0));
-	SymTable.insert(construct_Symbol("cos",3,0,0,0));
-	SymTable.insert(construct_Symbol("sin",3,0,0,0));
+	SymTable.insert(construct_Symbol("print",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("input",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("objectmemberkeys",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("objecttotalmembers",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("objectcopy",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("totalarguments",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("argument",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("typeof",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("strtonum",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("sqrt",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("cos",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("sin",3,0,0,programVar,0));
 
 	yyparse();
 	buffer.close();
@@ -431,5 +448,9 @@ int main(int argc,char** argv){
 	}
 	remove("alpha_compiler_Errors.txt");
 
+
+	std::cout<<quads[1].result->sym->name<<"\n";
+	//std::cout<<(quads+0)->result->numConst<<"\n";
+	//std::cout<<(quads+1)->result->sym->name<<"\n";
 return 0;
 }
