@@ -39,6 +39,7 @@ Symbol* construct_Symbol(std::string,int,int,int,scopespace_t,int);
 std::string getTypeasString(Symbol*);
 std::string sym_toString(Symbol*);
 std::string getScopeSpaceasString(Symbol*);
+
 class HashTable
 {
   private:
@@ -93,6 +94,7 @@ enum iopcode{
 };
 */
 
+
 struct expr{
 	expr_t type;
 	Symbol* sym;
@@ -120,11 +122,14 @@ void resettemp();
 int currentScope();
 scopespace_t currScopeSpace();
 
+std::string quads_toString();
+std::string expr_toString();
+std::string iopcode_toString();
 unsigned currScopeOffset();
 void incCurrScopeOffset();
 void enterScopeSpace();
 void exitScopeSpace();
-expr *lvalue_expr(Symbol *);
+expr *lvalue_expr(Symbol*);
 expr* newexpr(expr_t);
 
 extern unsigned programVarOffset;

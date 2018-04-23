@@ -6,8 +6,8 @@ Symbol* construct_Symbol(std::string newName,int newType,int newLineno,int newSc
         tmp->type=(Type)newType;
         tmp->lineno=newLineno;
         tmp->scope=newScope;
-		tmp->range=newRange;
-		tmp->offset=newOffset;
+	tmp->range=newRange;
+	tmp->offset=newOffset;
         tmp->hidden=false;
         tmp->scopeNext=NULL;
         tmp->next=NULL;
@@ -39,8 +39,8 @@ std::string sym_toString(Symbol* sym){
         buffer<<"["<<getTypeasString(sym)<<"] ";
         buffer<<"(line:"<<sym->lineno<<") ";
         buffer<<"(scope:"<<sym->scope<<") ";
-		buffer<<"(range:"<<getScopeSpaceasString(sym)<<") ";
-		buffer<<"(offset:"<<sym->offset<<") ";
+	buffer<<"(range:"<<getScopeSpaceasString(sym)<<") ";
+	buffer<<"(offset:"<<sym->offset<<") ";
         buffer<<((sym->hidden) ? "[hidden]" : "[not hidden]");
 
         return buffer.str();

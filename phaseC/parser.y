@@ -10,7 +10,7 @@
 	unsigned functionLocalOffset=0;
 	unsigned formalArgOffset=0;
 
-	unsigned suffixNum = 0;
+	unsigned suffixNum=0;
 	unsigned currScope=0;
 	unsigned currRange=1;
 	unsigned currOffset=0;
@@ -32,6 +32,7 @@
 	char* strVal;
 	double realVal;
 	struct expr *node;
+	struct quad *quad;
 }
 
 
@@ -51,7 +52,8 @@
 %type <intVal> INTCONST
 %type <realVal> REALCONST
 %type <strVal> ID STRING
-%type <node> lvalue member primary assignexpr call term objectdef const expr
+%type <node> lvalue member primary assignexpr call term objectdef const expr 
+%type <quad> op
 %%
 
 program:	stmts	{std::cout<<"Program <- stmts"<<std::endl;}
@@ -75,15 +77,36 @@ stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 		;
 
 expr:		assignexpr	{std::cout<<"expr <- assignexpr"<<std::endl;}
-		| expr op	{std::cout<<"expr <- expr op"<<std::endl;}
+		| expr op	{
+					quads[currQuad-1].result=newexpr(arithexpr_e);
+					quads[currQuad-1].result->sym=newtemp();
+					quads[currQuad-1].arg1 = $1;
+					$$=quads[currQuad-1].result;
+					std::cout<<"expr <- expr op"<<std::endl;
+				}
 		| term		{std::cout<<"expr <- term"<<std::endl;}
 		;
 
-op:		'+' expr 		{std::cout<<"op <- + expr"<<std::endl;}
-		| '-' expr 		{std::cout<<"op <- - expr"<<std::endl;}
-		| '*' expr 		{std::cout<<"op <- * expr"<<std::endl;}	
-		| '/' expr 		{std::cout<<"op <- / expr"<<std::endl;}
-		| '%' expr		{std::cout<<"op <- % expr"<<std::endl;}
+op:		'+' expr 		{
+						emit(add,(expr*)0,$2,(expr*)0,0,yylineno);
+						std::cout<<"op <- + expr"<<std::endl;
+					}
+		| '-' expr 		{
+						emit(sub,(expr*)0,$2,(expr*)0,0,yylineno);
+						std::cout<<"op <- - expr"<<std::endl;
+					}
+		| '*' expr 		{
+						emit(mul,(expr*)0,$2,(expr*)0,0,yylineno);
+						std::cout<<"op <- * expr"<<std::endl;
+					}	
+		| '/' expr 		{	
+						emit(Div,(expr*)0,$2,(expr*)0,0,yylineno);
+						std::cout<<"op <- / expr"<<std::endl;
+					}
+		| '%' expr		{
+						emit(mod,(expr*)0,$2,(expr*)0,0,yylineno);
+						std::cout<<"op <- % expr"<<std::endl;
+					}
 		| '>' expr		{std::cout<<"op <- > expr"<<std::endl;}
 		| GREATER_EQUAL expr	{std::cout<<"op <- >= expr"<<std::endl;}
 		| '<' expr		{std::cout<<"op <- < expr"<<std::endl;}
@@ -329,13 +352,12 @@ funcdef:	FUNCTION ID 	{
 		;
 
 const:		INTCONST 	{
-							expr* e =new expr();
-							e->type=constnum_e;
-							e->numConst=$1;
-							e->next=(expr*)0;
-							$$=e;
-							std::cout<<"const <- INTCONST"<<std::endl;
-						}
+					expr* e =new expr();
+					e->type=constnum_e;
+					e->numConst=$1;
+					$$=e;
+					std::cout<<"const <- INTCONST"<<std::endl;
+				}
 		| REALCONST 	{std::cout<<"const <- REALCONST"<<std::endl;}
 		| STRING 	{std::cout<<"const <- STRING"<<std::endl;}
 		| NIL 		{std::cout<<"const <- NIL"<<std::endl;}
@@ -449,8 +471,6 @@ int main(int argc,char** argv){
 	remove("alpha_compiler_Errors.txt");
 
 
-	std::cout<<quads[1].result->sym->name<<"\n";
-	//std::cout<<(quads+0)->result->numConst<<"\n";
-	//std::cout<<(quads+1)->result->sym->name<<"\n";
+	std::cout<<quads_toString()<<std::endl;
 return 0;
 }

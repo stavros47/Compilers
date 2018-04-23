@@ -76,8 +76,7 @@ unsigned currScopeOffset(){
 
 void incCurrScopeOffset()
 {
-	switch (currScopeSpace())
-	{
+	switch (currScopeSpace()){
 		case programVar: ++programVarOffset;break;
 		case functionLocal:	++functionLocalOffset;break;
 		case formalArg:	++formalArgOffset;break;
@@ -114,6 +113,66 @@ expr* lvalue_expr(Symbol *sym){
 expr* newexpr(expr_t type){
 	expr* e = new expr();
 	e->type = type;
-	
 	return e;
+}
+
+std::string iopcode_toString(iopcode type){
+	switch(type){
+		case 0:	return "assign";
+		case 1: return "add";
+		case 2:	return "sub";
+		case 3:	return "mul";
+		case 4:	return "Div";
+		case 5:	return "mod";
+		case 6:	return "uminus";
+		case 7:	return "And";
+		case 8:	return "Or";
+		case 9:	return "Not";
+		case 10:	return "if_eq";
+		case 11:	return "if_noteq";
+		case 12:	return "if_lesseq";
+		case 13:	return "if_greatereq";
+		case 14:	return "if_less";
+		case 15:	return "ret";
+		case 16:	return "getretval";
+		case 17:	return "funcstart";
+		case 18:	return "funcend";
+		case 19:	return "tablecrate";
+		case 20:	return "tablegetelem";
+		case 21:	return "tablesetelem";
+
+	}
+}
+
+std::string expr_toString(expr* temp){
+	switch(temp->type){
+		case var_e:	return temp->sym->name;
+		case assignexpr_e:	return temp->sym->name;
+		case arithexpr_e: return temp->sym->name;
+		case libraryfunc_e: return temp->sym->name;
+		case programfunc_e: return temp->sym->name;
+		case constnum_e:	return std::to_string((int)temp->numConst);
+		case conststring_e:	return temp->strConst;
+		case constbool_e:	return (temp->boolConst) ? "TRUE" : "FALSE";
+		case nil_e:	return "NULL";
+		default: return "NOT DONE";
+	}
+
+}
+
+std::string quads_toString(){
+	std::ostringstream buffer;
+	buffer<<"#quad\topcode\tresult\targ1\targ2\n";
+	buffer<<"--------------------------------------------------\n";
+	for(int i=0;i<currQuad;i++){
+		buffer<<std::to_string(i)<<":\t";
+		buffer<<iopcode_toString(quads[i].op)<<"\t";
+		if(quads[i].result)	buffer<<expr_toString(quads[i].result);
+		buffer<<"\t";
+		if(quads[i].arg1)	buffer<<expr_toString(quads[i].arg1);
+		buffer<<"\t";
+	        if(quads[i].arg2)	buffer<<expr_toString(quads[i].arg2);
+		buffer<<std::endl;
+	}
+	return buffer.str();
 }
