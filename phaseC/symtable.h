@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 
 enum Type {GLOBAL_VAR,LOCAL_VAR,FUNC_ARG,LIBRARY_FUNC,PROGRAM_FUNC};
 
@@ -77,9 +78,10 @@ enum iopcode{
         uminus,         And,            Or,
         Not,            if_eq,          if_noteq,
         if_lesseq,      if_greatereq,   if_less,
+		if_greater,		call,			param,
         ret,            getretval,      funcstart,
         funcend,        tablecrate,     tablegetelem,
-        tablesetelem
+        tablesetelem,	jump	
 };
 /*
 enum iopcode{
@@ -131,12 +133,14 @@ void enterScopeSpace();
 void exitScopeSpace();
 expr *lvalue_expr(Symbol*);
 expr* newexpr(expr_t);
+expr* newexpr_constbool_e(bool);
+expr* newexpr_constnum_e(double);
 
 extern unsigned programVarOffset;
 extern unsigned functionLocalOffset;
 extern unsigned formalArgOffset;
 
-extern int tempcounter;
+extern unsigned tempcounter;
 extern quad*	quads;
 extern unsigned total;
 extern unsigned currQuad;

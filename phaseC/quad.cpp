@@ -40,16 +40,13 @@ int currentScope(){
 
 scopespace_t currScopeSpace()
 {
-	if (currRange == 1)
-	{
+	if (currRange == 1){
 		return programVar;
 	}
-	else if (currRange % 2 == 0)
-	{
+	else if (currRange % 2 == 0){
 		return formalArg;
 	}
-	else
-	{
+	else{
 		return functionLocal;
 	}
 }
@@ -59,7 +56,8 @@ Symbol* newtemp(){
 	std::string name = newtempname();
 	tmp = SymTable.lookup(name,currScope);
 	if(tmp==NULL){
-		return construct_Symbol(name,((currScope) ? 1: 0),yylineno,currScope,currScopeSpace(), currOffset);
+
+		return SymTable.insert(construct_Symbol(name,((currScope) ? 1: 0),yylineno,currScope,currScopeSpace(), currOffset));
 	}else{
 		return tmp;
 	}
@@ -115,6 +113,20 @@ expr* newexpr(expr_t type){
 	e->type = type;
 	return e;
 }
+expr* newexpr_constbool_e(bool b){
+		expr* e = newexpr(constbool_e);
+		e->boolConst = b;
+		return e;
+
+}
+
+expr* newexpr_constnum_e(double x){
+	expr* e = newexpr(constnum_e);
+	e->numConst = x;
+	return e;
+
+}
+
 
 std::string iopcode_toString(iopcode type){
 	switch(type){
@@ -133,13 +145,17 @@ std::string iopcode_toString(iopcode type){
 		case 12:	return "if_lesseq";
 		case 13:	return "if_greatereq";
 		case 14:	return "if_less";
-		case 15:	return "ret";
-		case 16:	return "getretval";
-		case 17:	return "funcstart";
-		case 18:	return "funcend";
-		case 19:	return "tablecrate";
-		case 20:	return "tablegetelem";
-		case 21:	return "tablesetelem";
+		case 15:	return "if_greater";
+		case 16:	return "call";
+		case 17:	return "param";
+		case 18:	return "ret";
+		case 19:	return "getretval";
+		case 20:	return "funcstart";
+		case 21:	return "funcend";
+		case 22:	return "tablecrate";
+		case 23:	return "tablegetelem";
+		case 24:	return "tablesetelem";
+		case 25:	return "jump";
 
 	}
 }
@@ -151,7 +167,11 @@ std::string expr_toString(expr* temp){
 		case arithexpr_e: return temp->sym->name;
 		case libraryfunc_e: return temp->sym->name;
 		case programfunc_e: return temp->sym->name;
-		case constnum_e:	return std::to_string((int)temp->numConst);
+		case constnum_e:	if((fmod(temp->numConst,1)==0)){
+								return std::to_string((int)temp->numConst);
+							}else {
+								return std::to_string(temp->numConst);
+							}
 		case conststring_e:	return temp->strConst;
 		case constbool_e:	return (temp->boolConst) ? "TRUE" : "FALSE";
 		case nil_e:	return "NULL";
@@ -162,7 +182,7 @@ std::string expr_toString(expr* temp){
 
 std::string quads_toString(){
 	std::ostringstream buffer;
-	buffer<<"#quad\topcode\tresult\targ1\targ2\n";
+	buffer<<"#quad\topcode\t\tresult\targ1\targ2\n";
 	buffer<<"--------------------------------------------------\n";
 	for(int i=0;i<currQuad;i++){
 		buffer<<std::to_string(i)<<":\t";
