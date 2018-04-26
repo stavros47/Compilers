@@ -16,7 +16,7 @@
 	unsigned currOffset=0;
 	HashTable SymTable;
 	std::fstream buffer;
-	std::stack<unsigned> offsetStack;
+	std::stack<unsigned> offsetStack,labelStack;
 
 %}
 
@@ -61,9 +61,9 @@ program:	stmts	{std::cout<<"Program <- stmts"<<std::endl;}
 		|	{std::cout<<"Program <- (empty)"<<std::endl;}
 		;
 
-stmts:		stmts stmt	{tempcounter=0;
+stmts:		stmts stmt	{//tempcounter=0;
 						std::cout<<"stmts <- stmts stmt"<<std::endl;}
-		|stmt		{tempcounter=0;
+		|stmt		{//tempcounter=0;
 					std::cout<<"stmts <- stmt"<<std::endl;}
 		;
 
@@ -81,10 +81,15 @@ stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 
 expr:		assignexpr	{std::cout<<"expr <- assignexpr"<<std::endl;}
 		| expr op	{
-					quads[currQuad-$2].result=newexpr(arithexpr_e);
-					quads[currQuad-$2].result->sym=newtemp();
-					quads[currQuad-$2].arg1 = $1;
-					$$=quads[currQuad-$2].result;
+					if(quads[currQuad-$2].arg1==NULL){
+						quads[currQuad-$2].result=newexpr(arithexpr_e);
+						quads[currQuad-$2].result->sym=newtemp();
+						
+						quads[currQuad-$2].arg1 = $1;
+						$$=quads[currQuad-$2].result;
+					}else{
+						quads[currQuad-$2].result=$1;
+					}
 					std::cout<<"expr <- expr op"<<std::endl;
 				}
 		| term		{std::cout<<"expr <- term"<<std::endl;}
@@ -116,40 +121,91 @@ op:		'+' expr 		{
 						std::cout<<"op <- % expr"<<std::endl;
 					}
 		| '>' expr		{
-						emit(if_greater,(expr*)0,$2,newexpr_constnum_e(currQuad+2),0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,newexpr_constnum_e(currQuad+3),0,yylineno);
+						emit(if_greater,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,newexpr_constnum_e(currQuad+2),0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
 						$$ = 5;
-						std::cout<<"op <- > expr"<<std::endl;}
+						std::cout<<"op <- > expr"<<std::endl;
+					}
 		| GREATER_EQUAL expr	{
-								emit(if_greatereq,(expr*)0,$2,(expr*)0,0,yylineno);
-								std::cout<<"op <- >= expr"<<std::endl;}
+						emit(if_greatereq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
+						expr *e=newexpr(assignexpr_e);
+						e->sym=newtemp();
+						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
+						$$ = 5;
+						std::cout<<"op <- >= expr"<<std::endl;
+					}
 		| '<' expr		{
-						emit(if_less,(expr*)0,$2,(expr*)0,0,yylineno);
-						std::cout<<"op <- < expr"<<std::endl;}
+						emit(if_less,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
+						expr *e=newexpr(assignexpr_e);
+						e->sym=newtemp();
+						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
+						$$ = 5;
+						std::cout<<"op <- < expr"<<std::endl;
+					}
 		| LESS_EQUAL expr	{
-							emit(if_lesseq,(expr*)0,$2,(expr*)0,0,yylineno);
-							std::cout<<"op <- <= expr"<<std::endl;}
+						emit(if_lesseq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
+						expr *e=newexpr(assignexpr_e);
+						e->sym=newtemp();
+						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
+						$$ = 5;
+						std::cout<<"op <- <= expr"<<std::endl;
+					}
 		| NOT_EQUAL expr 	{
-							emit(if_noteq,(expr*)0,$2,(expr*)0,0,yylineno);
-							std::cout<<"op <- != expr"<<std::endl;}
+						emit(if_noteq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
+						expr *e=newexpr(assignexpr_e);
+						e->sym=newtemp();
+						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
+						$$ = 5;
+						std::cout<<"op <- != expr"<<std::endl;
+					}
 		| AND expr		{
 						emit(And,(expr*)0,$2,(expr*)0,0,yylineno);
-						std::cout<<"op <- && expr"<<std::endl;}
+						$$ = 1;
+	
+						std::cout<<"op <- && expr"<<std::endl;
+					}
 		| OR expr		{
 						emit(Or,(expr*)0,$2,(expr*)0,0,yylineno);
-						std::cout<<"op <- || expr"<<std::endl;}
+						$$ = 1;
+						std::cout<<"op <- || expr"<<std::endl;
+					}
 		| EQUAL_EQUAL expr	{
-							emit(if_eq,(expr*)0,$2,(expr*)0,0,yylineno);
-							std::cout<<"op <- == expr"<<std::endl;}
+						emit(if_eq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
+						expr *e=newexpr(assignexpr_e);
+						e->sym=newtemp();
+						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
+						$$ = 5;
+						std::cout<<"op <- == expr"<<std::endl;
+					}
 		;
 
 term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
-		| '-'expr %prec UMINUS	{std::cout<<"term <- - expr (UMINUS)"<<std::endl;}
+		| '-'expr %prec UMINUS	{
+						expr* e = newexpr(arithexpr_e);
+						e->sym = newtemp();
+						emit(uminus,$2,(expr*)0,e,0,yylineno);
+						std::cout<<"term <- - expr (UMINUS)"<<std::endl;
+					}
 		| NOT expr		{std::cout<<"term <- ! expr"<<std::endl;}
 		| PLUS_PLUS lvalue	{
 						if(($2->sym!=NULL) && ($2->sym->type == LIBRARY_FUNC || $2->sym->type == PROGRAM_FUNC)){
@@ -226,15 +282,16 @@ primary:	lvalue			{std::cout<<"primary <- lvalue"<<std::endl;}
 
 lvalue:		ID		{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($1,((currScope) ? 1 : 0),yylineno,currScope,currScopeSpace(),currOffset);
+					Symbol* newSym=construct_Symbol($1,((currScope) ? 1 : 0),yylineno,currScope,currRange,currScopeSpace(),currScopeOffset());
 
 					tmp = SymTable.lookup($1,currScope,1);
 					if(tmp==NULL || (tmp->hidden && tmp->scope==currScope)){
 						tmp=SymTable.insert(newSym);
+						incCurrScopeOffset();
 					}else{
 						if(!((tmp->range==currRange || tmp->range==currRange-1) || tmp->scope==0
 							|| tmp->type==LIBRARY_FUNC || tmp->type==PROGRAM_FUNC)){
-								buffer << "Line: "<< yylineno <<" \n\t";
+								buffer << "Line: "<< yylineno <<"\t"<<tmp->range<<"\t"<<currRange<<" \n\t";
 								buffer<<"ID:Cannot access "<<$1<<" already defined here: "<< tmp->lineno <<std::endl;
 						}
 					}
@@ -244,14 +301,16 @@ lvalue:		ID		{
 				}
 		| LOCAL ID	{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($2,(currScope) ? 1 : 0,yylineno,currScope,currScopeSpace(),currOffset);
+					Symbol* newSym=construct_Symbol($2,(currScope) ? 1 : 0,yylineno,currScope,currRange,currScopeSpace(),currScopeOffset());
 					tmp = SymTable.lookup($2,currScope,1);
 
 					if(tmp==NULL){
 						tmp=SymTable.insert(newSym);
+						incCurrScopeOffset();
 					}else{
 						if((tmp->scope!=currScope || tmp->hidden)  && (tmp->type!=LIBRARY_FUNC)){
 							tmp=SymTable.insert(newSym);
+							incCurrScopeOffset();
 						}else if(tmp->type==LIBRARY_FUNC){
 							buffer << "Line " << yylineno << ":\n\t"<<$2<<" is a Library Function.\n\t";
 							buffer<<"Library functions cannot be shadowed:"<<$2<<" already defined here:" << tmp->lineno<<std::endl;
@@ -343,19 +402,17 @@ block:		'{' 	{currScope++;}
 
 
 
-funcname: ID {$$=$1;}
-			|{
-				std::string funcName = "$f";
-				funcName += std::to_string(suffixNum++);
-				char* fname;
-				strcpy(fname,funcName.c_str());
-				$$=fname;
-			}
+funcname: 		ID {$$=$1;}
+			|	{
+					std::string funcName = "$f";
+					funcName += std::to_string(suffixNum++);
+					$$=const_cast<char*>(funcName.c_str());
+				}
 			;
 
 funcprefix: FUNCTION funcname{
 								Symbol* tmp;
-								Symbol* newSym=construct_Symbol($2,4,yylineno,currScope,currScopeSpace(),currOffset);
+								Symbol* newSym=construct_Symbol($2,4,yylineno,currScope,currRange,currScopeSpace(),currOffset);
 								tmp = SymTable.lookup($2,currScope);
 
 								if(tmp==NULL){
@@ -379,18 +436,40 @@ funcprefix: FUNCTION funcname{
 
 
 								$$=tmp;
-
+								labelStack.push(currQuad);
+								emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+								$$->function.iaddress = nextquadlabel();
 								emit(funcstart,(expr*)0,(expr*)0,lvalue_expr($$),0,yylineno);
-								currScope++;currRange++;
+								currScope++;
+								currRange++;
+								offsetStack.push(formalArgOffset);
+								offsetStack.push(functionLocalOffset);
+								formalArgOffset = 0;
 							}
 			;
-funcargs: '('idlist')'{currScope--;currRange++;}
+funcargs: 		'('idlist')'	{currScope--;currRange++;functionLocalOffset=0;}
 			;
 
-funcbody: block{currRange-=2;std::cout<<"funcdef <- FUNCTION (idlist) block"<<std::endl;}
-		;
+funcbody: 		block		{
+						currRange-=2;
 
-funcdef: funcprefix funcargs funcbody{emit(funcend,(expr*)0,(expr*)0,lvalue_expr($1),0,yylineno);}
+					}
+			;
+
+funcdef: 		funcprefix funcargs funcbody	{
+								$1->function.totallocals = functionLocalOffset;
+								$1->function.totalformals = formalArgOffset;
+								functionLocalOffset = offsetStack.top();
+								offsetStack.pop();
+								formalArgOffset = offsetStack.top();
+								offsetStack.pop();
+
+								emit(funcend,(expr*)0,(expr*)0,lvalue_expr($1),0,yylineno);
+								unsigned labels=labelStack.top();
+								labelStack.pop();
+								patchlabel(labels,currQuad);
+								std::cout<<"funcdef <- FUNCTION (idlist) block"<<std::endl;
+							}
 			;
 
 const:		INTCONST 	{
@@ -415,12 +494,13 @@ const:		INTCONST 	{
 idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
 		|ID 		{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($1,2,yylineno,currScope,currScopeSpace(),currOffset);
+					Symbol* newSym=construct_Symbol($1,2,yylineno,currScope,currRange,currScopeSpace(),currScopeOffset());
 
 					tmp = SymTable.lookup($1,currScope,1);
 
 					if(tmp==NULL){
 						tmp=SymTable.insert(newSym);
+						incCurrScopeOffset();
 					}else{
 						if(tmp->type == LIBRARY_FUNC){
 							buffer << "Line " << yylineno << ":\n\t"<<$1<< " is a Library Function.\n";
@@ -429,9 +509,13 @@ idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
 							buffer<<"Variable: "<<$1<<" is already defined at line: "<< tmp->lineno <<std::endl;
 						}else{
 							tmp=SymTable.insert(newSym);
+							incCurrScopeOffset();
 						}
 
-                            		}
+                    }
+
+				
+
 					std::cout<<"idlist <- ID "<<std::endl;
 				}
 		|		{std::cout<<"idlist <- (empty)"<<std::endl;}
@@ -439,22 +523,24 @@ idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
 
 idlists: 	',' ID		{
 					Symbol* tmp;
-					Symbol* newSym=construct_Symbol($2,2,yylineno,currScope,currScopeSpace(),currOffset);
+					Symbol* newSym=construct_Symbol($2,2,yylineno,currScope,currRange,currScopeSpace(),currScopeOffset());
 					tmp = SymTable.lookup($2,currScope,1);
 
 					if(tmp==NULL){
 						tmp=SymTable.insert(newSym);
+						incCurrScopeOffset();
 					}else{
 						if(tmp->type == LIBRARY_FUNC){
 							buffer << "Line " << yylineno << ":\n\t"<<$2<< " is a Library Function.\n";
 						}else if(tmp->hidden){
 							tmp=SymTable.insert(newSym);
-
+							incCurrScopeOffset();
 						}else{
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Variable: "<<$2<<" is already defined at line: "<< tmp->lineno <<std::endl;
 						}
 					}
+
 					std::cout<<"idlists <- , ID"<<std::endl;
 				}
 		;
@@ -490,18 +576,18 @@ int main(int argc,char** argv){
 
 	buffer.open("alpha_compiler_Errors.txt",std::ios::out);
 
-	SymTable.insert(construct_Symbol("print",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("input",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("objectmemberkeys",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("objecttotalmembers",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("objectcopy",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("totalarguments",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("argument",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("typeof",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("strtonum",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("sqrt",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("cos",3,0,0,programVar,0));
-	SymTable.insert(construct_Symbol("sin",3,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("print",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("input",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("objectmemberkeys",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("objecttotalmembers",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("objectcopy",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("totalarguments",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("argument",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("typeof",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("strtonum",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("sqrt",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("cos",3,0,0,0,programVar,0));
+	SymTable.insert(construct_Symbol("sin",3,0,0,0,programVar,0));
 
 	yyparse();
 	buffer.close();

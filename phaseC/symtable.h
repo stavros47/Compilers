@@ -22,21 +22,29 @@ enum Type {GLOBAL_VAR,LOCAL_VAR,FUNC_ARG,LIBRARY_FUNC,PROGRAM_FUNC};
 
 enum scopespace_t {programVar,	functionLocal,	formalArg};
 
+struct function{
+	unsigned iaddress;
+	unsigned totallocals;
+	unsigned totalformals;
+};
+
 struct Symbol{
 	std::string name;
 	Type type;
 	int lineno;
 	int scope;
-	scopespace_t range;
+	int range;
+	scopespace_t scopespace;
 	int offset;
 	bool hidden;
+	struct function function;
 	struct Symbol* next;
 	struct Symbol* scopeNext;
 };
 
 typedef struct Symbol Symbol;
 
-Symbol* construct_Symbol(std::string,int,int,int,scopespace_t,int);
+Symbol* construct_Symbol(std::string,int,int,int,unsigned,scopespace_t,int);
 std::string getTypeasString(Symbol*);
 std::string sym_toString(Symbol*);
 std::string getScopeSpaceasString(Symbol*);
@@ -78,7 +86,7 @@ enum iopcode{
         uminus,         And,            Or,
         Not,            if_eq,          if_noteq,
         if_lesseq,      if_greatereq,   if_less,
-		if_greater,		call,			param,
+	if_greater,	call,		param,
         ret,            getretval,      funcstart,
         funcend,        tablecrate,     tablegetelem,
         tablesetelem,	jump	
@@ -131,6 +139,8 @@ unsigned currScopeOffset();
 void incCurrScopeOffset();
 void enterScopeSpace();
 void exitScopeSpace();
+void patchlabel(unsigned,unsigned);
+unsigned nextquadlabel();
 expr *lvalue_expr(Symbol*);
 expr* newexpr(expr_t);
 expr* newexpr_constbool_e(bool);

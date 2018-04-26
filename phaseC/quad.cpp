@@ -56,11 +56,14 @@ Symbol* newtemp(){
 	std::string name = newtempname();
 	tmp = SymTable.lookup(name,currScope);
 	if(tmp==NULL){
-
-		return SymTable.insert(construct_Symbol(name,((currScope) ? 1: 0),yylineno,currScope,currScopeSpace(), currOffset));
+		tmp=construct_Symbol(name, ((currScope) ? 1 : 0), yylineno, currScope,currRange, currScopeSpace(), currScopeOffset());
+		tmp= SymTable.insert(tmp);
+		incCurrScopeOffset();
 	}else{
-		return tmp;
-	}
+//		tmp->offset = currScopeOffset();
+	} 
+
+	return tmp;
 }
 
 unsigned currScopeOffset(){
@@ -191,8 +194,20 @@ std::string quads_toString(){
 		buffer<<"\t";
 		if(quads[i].arg1)	buffer<<expr_toString(quads[i].arg1);
 		buffer<<"\t";
-	        if(quads[i].arg2)	buffer<<expr_toString(quads[i].arg2);
+	        if(quads[i].arg2)	buffer<<expr_toString(quads[i].arg2); 
+		if(quads[i].op == jump) buffer<<quads[i].label;
 		buffer<<std::endl;
 	}
 	return buffer.str();
+}
+
+
+void patchlabel(unsigned quadNo,unsigned label){
+	assert(quadNo < currQuad);
+	quads[quadNo].label = label;
+}
+
+
+unsigned nextquadlabel(){
+	return currQuad;
 }
