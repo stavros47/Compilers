@@ -202,16 +202,16 @@ std::string quads_toString(){
 		<<"\n";
 	buffer<<"--------------------------------------------------\n";
 	for(int i=0;i<currQuad;i++){
+
 		buffer<<std::to_string(i)<<":"<<std::setw(12);
 		buffer<<iopcode_toString(quads[i].op)<<std::setw(12);
-
-		if(quads[i].result)
+		if(quads[i].result){
 			buffer<<expr_toString(quads[i].result)<<std::setw(12);
+		}
 
-
-		if(quads[i].arg1)
+		if(quads[i].arg1){
 			buffer<<expr_toString(quads[i].arg1)<<std::setw(12);
-
+		}
 
 	        if(quads[i].arg2)
 			buffer<<expr_toString(quads[i].arg2)<<std::setw(12); 
