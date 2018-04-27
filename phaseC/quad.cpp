@@ -1,4 +1,4 @@
-#include "symtable.h"
+#include "quad.h"
 
 
 void expand(void){
@@ -31,27 +31,6 @@ std::string newtempname(){
 	return tempname + std::to_string(tempcounter++);
 }
 
-void resettmp(){
-	tempcounter=0;
-}
-
-int currentScope(){
-	return currScope;
-}
-
-scopespace_t currScopeSpace()
-{
-	if (currRange == 1){
-		return programVar;
-	}
-	else if (currRange % 2 == 0){
-		return formalArg;
-	}
-	else{
-		return functionLocal;
-	}
-}
-
 Symbol* newtemp(){
 	Symbol* tmp;
 	std::string name = newtempname();
@@ -67,6 +46,22 @@ Symbol* newtemp(){
 	return tmp;
 }
 
+scopespace_t currScopeSpace(){
+	if (currRange == 1){
+		return programVar;
+	}
+	else if (currRange % 2 == 0){
+		return formalArg;
+	}
+	else{
+		return functionLocal;
+	}
+}
+
+int currentScope(){
+	return currScope;
+}
+
 unsigned currScopeOffset(){
 	switch(currScopeSpace()){
 		case programVar : return programVarOffset;
@@ -76,8 +71,7 @@ unsigned currScopeOffset(){
 	}
 }
 
-void incCurrScopeOffset()
-{
+void incCurrScopeOffset(){
 	switch (currScopeSpace()){
 		case programVar: ++programVarOffset;break;
 		case functionLocal:	++functionLocalOffset;break;
@@ -86,9 +80,23 @@ void incCurrScopeOffset()
 	}
 }
 
-void enterScopeSpace(){++currRange;}
+void enterScopeSpace(){
+	++currRange;
+}
 
-void exitScopeSpace(){assert(currRange>1);--currRange;}
+void exitScopeSpace(){
+	assert(currRange>1);
+	--currRange;
+}
+
+unsigned nextquadlabel(){
+	return currQuad;
+}
+
+void patchlabel(unsigned quadNo,unsigned label){
+	assert(quadNo < currQuad);
+	quads[quadNo].label = label;
+}
 
 
 expr* lvalue_expr(Symbol *sym){
@@ -117,10 +125,11 @@ expr* newexpr(expr_t type){
 	e->type = type;
 	return e;
 }
+
 expr* newexpr_constbool_e(bool b){
-		expr* e = newexpr(constbool_e);
-		e->boolConst = b;
-		return e;
+	expr* e = newexpr(constbool_e);
+	e->boolConst = b;
+	return e;
 
 }
 
@@ -172,10 +181,10 @@ std::string expr_toString(expr* temp){
 		case libraryfunc_e: return temp->sym->name;
 		case programfunc_e: return temp->sym->name;
 		case constnum_e:	if((fmod(temp->numConst,1)==0)){
-								return std::to_string((int)temp->numConst);
-							}else {
-								return std::to_string(temp->numConst);
-							}
+						return std::to_string((int)temp->numConst);
+					}else {
+						return std::to_string(temp->numConst);
+					}
 		case conststring_e:	return temp->strConst;
 		case constbool_e:	return (temp->boolConst) ? "TRUE" : "FALSE";
 		case nil_e:	return "NULL";
@@ -197,23 +206,11 @@ std::string quads_toString(){
 
 		buffer<<std::setw(width)<<iopcode_toString(quads[i].op);
 		if(quads[i].result)	buffer<<std::setw(10)<<expr_toString(quads[i].result);
-		//buffer<<"\t";
 		if(quads[i].arg1)	buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
-		//buffer<<"\t";
-	    if(quads[i].arg2)	buffer<<std::setw(10)<<expr_toString(quads[i].arg2); 
-		if(quads[i].op == jump) buffer<<std::setw(10)<<quads[i].label;
+		if(quads[i].arg2)	buffer<<std::setw(10)<<expr_toString(quads[i].arg2); 
+		if(quads[i].label != 0) buffer<<std::setw(10)<<quads[i].label;
 		buffer<<std::endl;
 	}
 	return buffer.str();
 }
 
-
-void patchlabel(unsigned quadNo,unsigned label){
-	assert(quadNo < currQuad);
-	quads[quadNo].label = label;
-}
-
-
-unsigned nextquadlabel(){
-	return currQuad;
-}

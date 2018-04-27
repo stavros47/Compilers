@@ -1,11 +1,19 @@
-al: scanner.cpp parser.cpp symtable.cpp	quad.cpp symtable.h
-	g++ -std=c++11 scanner.cpp parser.cpp quad.cpp symtable.cpp -o al 
+DEPS = Symbol.h HashTable.h quad.h
+obj = parser.o scanner.o Symbol.o HashTable.o quad.o
+FLAGS = -std=c++11 -g
+CC = g++
 
-scanner.cpp : scanner.l
-	flex scanner.l
+%.o: %.cpp $(DEPS)
+	$(CC) -c $(FLAGS) $< -o $@ 
+
+al: $(obj) $(DEPS)
+	$(CC) $(FLAGS) $^ -o $@
 
 parser.cpp: parser.y
 	bison --yacc --defines --output=parser.cpp parser.y -v
 
+scanner.cpp : scanner.l
+	flex scanner.l
+
 clean:
-	rm parser.cpp scanner.cpp parser.hpp al parser.output
+	rm al parser.cpp scanner.cpp parser.hpp parser.output *.o

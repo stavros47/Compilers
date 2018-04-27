@@ -1,6 +1,6 @@
 %{
-	#include "symtable.h"
-
+	#include "quad.h"
+	
 	unsigned tempcounter=0;
 	quad*    quads = (quad*) 0;
 	unsigned total=0;
@@ -61,10 +61,14 @@ program:	stmts	{std::cout<<"Program <- stmts"<<std::endl;}
 		|	{std::cout<<"Program <- (empty)"<<std::endl;}
 		;
 
-stmts:		stmts stmt	{//tempcounter=0;
-						std::cout<<"stmts <- stmts stmt"<<std::endl;}
-		|stmt		{//tempcounter=0;
-					std::cout<<"stmts <- stmt"<<std::endl;}
+stmts:		stmts stmt	{
+					//tempcounter=0;
+					std::cout<<"stmts <- stmts stmt"<<std::endl;
+				}
+		|stmt		{
+					//tempcounter=0;
+					std::cout<<"stmts <- stmt"<<std::endl;
+				}
 		;
 
 stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
@@ -484,7 +488,8 @@ const:		INTCONST 	{
 							e->type=constnum_e;
 							e->numConst=$1;
 							$$=e;
-							std::cout<<"const <- REALCONST"<<std::endl;}
+							std::cout<<"const <- REALCONST"<<std::endl;
+				}
 		| STRING 	{std::cout<<"const <- STRING"<<std::endl;}
 		| NIL 		{std::cout<<"const <- NIL"<<std::endl;}
 		| TRUE 		{std::cout<<"const <- TRUE"<<std::endl;}
@@ -512,9 +517,7 @@ idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
 							incCurrScopeOffset();
 						}
 
-                    }
-
-				
+                    			}
 
 					std::cout<<"idlist <- ID "<<std::endl;
 				}
