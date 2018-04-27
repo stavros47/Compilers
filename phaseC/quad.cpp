@@ -1,4 +1,4 @@
-#include "symtable.h"
+#include "quad.h"
 
 void expand(void){
 	assert(total==currQuad);
@@ -30,27 +30,6 @@ std::string newtempname(){
 	return tempname + std::to_string(tempcounter++);
 }
 
-void resettmp(){
-	tempcounter=0;
-}
-
-int currentScope(){
-	return currScope;
-}
-
-scopespace_t currScopeSpace()
-{
-	if (currRange == 1){
-		return programVar;
-	}
-	else if (currRange % 2 == 0){
-		return formalArg;
-	}
-	else{
-		return functionLocal;
-	}
-}
-
 Symbol* newtemp(){
 	Symbol* tmp;
 	std::string name = newtempname();
@@ -66,6 +45,22 @@ Symbol* newtemp(){
 	return tmp;
 }
 
+scopespace_t currScopeSpace(){
+	if (currRange == 1){
+		return programVar;
+	}
+	else if (currRange % 2 == 0){
+		return formalArg;
+	}
+	else{
+		return functionLocal;
+	}
+}
+
+int currentScope(){
+	return currScope;
+}
+
 unsigned currScopeOffset(){
 	switch(currScopeSpace()){
 		case programVar : return programVarOffset;
@@ -75,8 +70,7 @@ unsigned currScopeOffset(){
 	}
 }
 
-void incCurrScopeOffset()
-{
+void incCurrScopeOffset(){
 	switch (currScopeSpace()){
 		case programVar: ++programVarOffset;break;
 		case functionLocal:	++functionLocalOffset;break;
@@ -85,9 +79,23 @@ void incCurrScopeOffset()
 	}
 }
 
-void enterScopeSpace(){++currRange;}
+void enterScopeSpace(){
+	++currRange;
+}
 
-void exitScopeSpace(){assert(currRange>1);--currRange;}
+void exitScopeSpace(){
+	assert(currRange>1);
+	--currRange;
+}
+
+unsigned nextquadlabel(){
+	return currQuad;
+}
+
+void patchlabel(unsigned quadNo,unsigned label){
+	assert(quadNo < currQuad);
+	quads[quadNo].label = label;
+}
 
 
 expr* lvalue_expr(Symbol *sym){
@@ -116,6 +124,7 @@ expr* newexpr(expr_t type){
 	e->type = type;
 	return e;
 }
+
 expr* newexpr_constbool_e(bool b){
 		expr* e = newexpr(constbool_e);
 		e->boolConst = b;
@@ -201,13 +210,3 @@ std::string quads_toString(){
 	return buffer.str();
 }
 
-
-void patchlabel(unsigned quadNo,unsigned label){
-	assert(quadNo < currQuad);
-	quads[quadNo].label = label;
-}
-
-
-unsigned nextquadlabel(){
-	return currQuad;
-}
