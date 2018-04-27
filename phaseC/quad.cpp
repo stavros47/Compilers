@@ -126,9 +126,9 @@ expr* newexpr(expr_t type){
 }
 
 expr* newexpr_constbool_e(bool b){
-		expr* e = newexpr(constbool_e);
-		e->boolConst = b;
-		return e;
+	expr* e = newexpr(constbool_e);
+	e->boolConst = b;
+	return e;
 
 }
 
@@ -180,10 +180,10 @@ std::string expr_toString(expr* temp){
 		case libraryfunc_e: return temp->sym->name;
 		case programfunc_e: return temp->sym->name;
 		case constnum_e:	if((fmod(temp->numConst,1)==0)){
-								return std::to_string((int)temp->numConst);
-							}else {
-								return std::to_string(temp->numConst);
-							}
+						return std::to_string((int)temp->numConst);
+					}else {
+						return std::to_string(temp->numConst);
+					}
 		case conststring_e:	return temp->strConst;
 		case constbool_e:	return (temp->boolConst) ? "TRUE" : "FALSE";
 		case nil_e:	return "NULL";
@@ -194,18 +194,33 @@ std::string expr_toString(expr* temp){
 
 std::string quads_toString(){
 	std::ostringstream buffer;
-	buffer<<"#quad\topcode\t\tresult\targ1\targ2\n";
+	buffer	<<"#quad"<<std::setw(12)
+		<<"opcode"<<std::setw(12)
+		<<"result"<<std::setw(12)
+		<<"arg1"<<std::setw(12)
+		<<"arg2"<<std::setw(12)
+		<<"\n";
 	buffer<<"--------------------------------------------------\n";
 	for(int i=0;i<currQuad;i++){
-		buffer<<std::to_string(i)<<":\t";
-		buffer<<iopcode_toString(quads[i].op)<<"\t";
-		if(quads[i].result)	buffer<<expr_toString(quads[i].result);
-		buffer<<"\t";
-		if(quads[i].arg1)	buffer<<expr_toString(quads[i].arg1);
-		buffer<<"\t";
-	        if(quads[i].arg2)	buffer<<expr_toString(quads[i].arg2); 
-		if(quads[i].op == jump) buffer<<quads[i].label;
-		buffer<<std::endl;
+		buffer<<std::to_string(i)<<":"<<std::setw(12);
+		buffer<<iopcode_toString(quads[i].op)<<std::setw(12);
+
+		if(quads[i].result)
+			buffer<<expr_toString(quads[i].result)<<std::setw(12);
+
+
+		if(quads[i].arg1)
+			buffer<<expr_toString(quads[i].arg1)<<std::setw(12);
+
+
+	        if(quads[i].arg2)
+			buffer<<expr_toString(quads[i].arg2)<<std::setw(12); 
+
+		
+		if(quads[i].label != 0) 
+			buffer<<quads[i].label<<std::setw(12);
+
+		buffer<<"\n";
 	}
 	return buffer.str();
 }

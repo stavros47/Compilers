@@ -6,9 +6,9 @@ Symbol* construct_Symbol(std::string newName,int newType,int newLineno,int newSc
         tmp->type=(Type)newType;
         tmp->lineno=newLineno;
         tmp->scope=newScope;
-		tmp->range=newRange;
-		tmp->scopespace = newSpace;
-		tmp->offset=newOffset;
+	tmp->range=newRange;
+	tmp->scopespace = newSpace;
+	tmp->offset=newOffset;
         tmp->hidden=false;
         tmp->scopeNext=NULL;
         tmp->next=NULL;

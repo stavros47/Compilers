@@ -2,6 +2,7 @@
 #ifndef	_SYMBOL_H_
 #define _SYMBOL_H_
 
+#include <iomanip>    
 #include <stack>
 #include <string>
 #include <cstring>

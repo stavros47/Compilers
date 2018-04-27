@@ -104,7 +104,7 @@ std::string HashTable::toString(){
 	
 	for(int i=0;i<733;i++){
 		iter=SymTable[i];
-		if(iter!=NULL)buffer<<"Position:"<<i<<std::endl;
+	//	if(iter!=NULL)buffer<<"Position:"<<i<<std::endl;
 		while(iter!=NULL){
 			buffer<<sym_toString(iter)<<std::endl;
 			iter=iter->next;
