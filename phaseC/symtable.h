@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+#include <iomanip> //used for std::setw to set output width
 
 enum Type {GLOBAL_VAR,LOCAL_VAR,FUNC_ARG,LIBRARY_FUNC,PROGRAM_FUNC};
 

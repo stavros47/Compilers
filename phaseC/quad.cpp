@@ -1,5 +1,6 @@
 #include "symtable.h"
 
+
 void expand(void){
 	assert(total==currQuad);
 	quad* p = (quad*)malloc(NEW_SIZE);
@@ -183,19 +184,24 @@ std::string expr_toString(expr* temp){
 
 }
 
+/* std::setw sets the width of the column for better print alignment */
 std::string quads_toString(){
 	std::ostringstream buffer;
-	buffer<<"#quad\topcode\t\tresult\targ1\targ2\n";
-	buffer<<"--------------------------------------------------\n";
+	int width = 12;
+	buffer<<"#Quad"<<std::setw(10)<<"OpCode"<<std::setw(10)<<"result"<<std::setw(10)<<"arg1"<<std::setw(10)<<"arg2"<<std::endl;
+	buffer<<"----------------------------------------------\n";
+	
 	for(int i=0;i<currQuad;i++){
-		buffer<<std::to_string(i)<<":\t";
-		buffer<<iopcode_toString(quads[i].op)<<"\t";
-		if(quads[i].result)	buffer<<expr_toString(quads[i].result);
-		buffer<<"\t";
-		if(quads[i].arg1)	buffer<<expr_toString(quads[i].arg1);
-		buffer<<"\t";
-	        if(quads[i].arg2)	buffer<<expr_toString(quads[i].arg2); 
-		if(quads[i].op == jump) buffer<<quads[i].label;
+		buffer<<std::to_string(i)<<": ";
+		width = (i > 9) ? 11 : 12; // width space
+
+		buffer<<std::setw(width)<<iopcode_toString(quads[i].op);
+		if(quads[i].result)	buffer<<std::setw(10)<<expr_toString(quads[i].result);
+		//buffer<<"\t";
+		if(quads[i].arg1)	buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
+		//buffer<<"\t";
+	    if(quads[i].arg2)	buffer<<std::setw(10)<<expr_toString(quads[i].arg2); 
+		if(quads[i].op == jump) buffer<<std::setw(10)<<quads[i].label;
 		buffer<<std::endl;
 	}
 	return buffer.str();
