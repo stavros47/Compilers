@@ -6,6 +6,10 @@
 		int enter;
 	};
 
+	/*If > 1 return is in a function block. 
+	Increase +1 when entering a function and reduce -1 when exiting*/
+	int inFunction = 0; 
+	/*-----------------------------*/
 	unsigned tempcounter=0;
 	quad*    quads = (quad*) 0;
 	unsigned total=1;
@@ -22,6 +26,8 @@
 	HashTable SymTable;
 	std::fstream buffer;
 	std::stack<unsigned> offsetStack,labelStack;
+	std::list<unsigned> funcReturnsList;
+	std::stack<std::list<unsigned>> returnStack;
 
 %}
 
@@ -495,11 +501,20 @@ funcprefix: FUNCTION funcname{
 				formalArgOffset = 0;
 			}
 		;
-funcargs:	'('idlist')'	{currScope--;currRange++;functionLocalOffset=0;}
+funcargs:	'('idlist')'	{
+								currScope--;currRange++;functionLocalOffset=0;inFunction++;
+									returnStack.push(funcReturnsList);
+									funcReturnsList.clear();
+							}
 		;
 
-funcbody: 	block		{currRange-=2;}
-		;
+funcbody: 	block	{
+						currRange-=2;
+						inFunction--;
+					
+						
+					}
+			;
 
 funcdef:	funcprefix funcargs funcbody	{
 							$1->function.totallocals = functionLocalOffset;
@@ -509,7 +524,15 @@ funcdef:	funcprefix funcargs funcbody	{
 							formalArgOffset = offsetStack.top();
 							offsetStack.pop();
 
+						
+							//patch the return jumps
+							for(unsigned jumpLabel : funcReturnsList){
+								patchlabel(jumpLabel, nextquadlabel());
+							}
 							emit(funcend,(expr*)0,(expr*)0,lvalue_expr($1),0,yylineno);
+							funcReturnsList=returnStack.top();
+							returnStack.pop();
+							
 							unsigned labels=labelStack.top();
 							labelStack.pop();
 							patchlabel(labels,currQuad);
@@ -576,12 +599,12 @@ idlists: 	',' ID		{
 					}else{
 						if(tmp->type == LIBRARY_FUNC){
 							buffer << "Line " << yylineno << ":\n\t"<<$2<< " is a Library Function.\n";
-						}else if(tmp->hidden){
-							tmp=SymTable.insert(newSym);
-							incCurrScopeOffset();
-						}else{
+						}else if(!tmp->hidden && tmp->scope==currScope){
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Variable: "<<$2<<" is already defined at line: "<< tmp->lineno <<std::endl;
+						}else{
+							tmp=SymTable.insert(newSym);
+							incCurrScopeOffset();
 						}
 					}
 
@@ -661,8 +684,33 @@ for: forprefix N elist')' N stmt N{
 	;
 
 
-returnstmt: RETURN expr';'	{std::cout<<"returnstmt <- RETURN expr ;"<<std::endl;}
-		|RETURN ';'	{std::cout<<"returnstmt <- RETURN ;"<<std::endl;}
+returnstmt: RETURN expr';'	
+			{	
+				/*Should be made a function in a general purpose utilities.h for commonly used functions*/
+				if(inFunction > 0){
+					emit(ret,(expr*)0,(expr*)0,$2,0,yylineno);
+					funcReturnsList.push_back(nextquadlabel());
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+				}else{
+					buffer << "Line: "<< yylineno <<" \n\t";
+					buffer<<"return statement not within a function. "<<std::endl;
+				}
+				
+				std::cout<<"returnstmt <- RETURN expr ;"<<std::endl;
+			}
+			|RETURN ';'	
+			{
+				/*Should be made a function in a general purpose utilities.h for commonly used functions*/
+				if(inFunction > 0){
+					emit(ret,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+					funcReturnsList.push_back(nextquadlabel());
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+				}else{
+					buffer << "Line: "<< yylineno <<" \n\t";
+					buffer<<"return statement not within a function. "<<std::endl;
+				}
+				std::cout<<"returnstmt <- RETURN ;"<<std::endl;
+			}
 		;
 %%
 
