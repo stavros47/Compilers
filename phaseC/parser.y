@@ -8,8 +8,8 @@
 
 	unsigned tempcounter=0;
 	quad*    quads = (quad*) 0;
-	unsigned total=0;
-	unsigned currQuad = 0;
+	unsigned total=1;
+	unsigned currQuad =1;
 
 	unsigned programVarOffset=0;
 	unsigned functionLocalOffset=0;
@@ -23,6 +23,8 @@
 	std::fstream buffer;
 	std::stack<unsigned> offsetStack,labelStack;
 
+unsigned breakChecker=0;
+unsigned continueChecker=0;
 %}
 
 %start program
@@ -83,8 +85,18 @@ stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 		| whilestmt	{std::cout<<"stmt <- whilestmt"<<std::endl;}
 		| for	{std::cout<<"stmt <- forstmt"<<std::endl;}
 		| returnstmt	{std::cout<<"stmt <- returnstmt"<<std::endl;}
-		| BREAK';'	{std::cout<<"stmt <- break(;)"<<std::endl;}
-		| CONTINUE';'	{std::cout<<"stmt <- continue(;)"<<std::endl;}
+		| BREAK';'	{ 
+					if(breakChecker==0){
+						buffer << "Line: "<< yylineno <<" \n\t";
+						buffer<<"Invalid use of break : " << std::endl;
+					}
+			std::cout<<"stmt <- break(;)"<<std::endl;}
+		| CONTINUE';'	{
+						if(continueChecker==0){
+						buffer << "Line: "<< yylineno <<" \n\t";
+						buffer<<"Invalid use of break : " << std::endl;
+					}
+					std::cout<<"stmt <- continue(;)"<<std::endl;}
 		| block		{std::cout<<"stmt <- block"<<std::endl;}
 		| funcdef	{std::cout<<"stmt <- funcdef"<<std::endl;}
 		| ';'		{std::cout<<"stmt <- semicolon(;)"<<std::endl;}
@@ -220,7 +232,15 @@ term:		'('expr')'		{$$=$2;std::cout<<"term <- ( expr )"<<std::endl;}
 						emit(uminus,$2,(expr*)0,e,0,yylineno);
 						std::cout<<"term <- - expr (UMINUS)"<<std::endl;
 					}
-		| NOT expr		{std::cout<<"term <- ! expr"<<std::endl;}
+		| NOT expr		{ 
+						emit(if_eq,$2,newexpr_constbool_e(true),(expr*)0,currQuad+4,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+1,yylineno);
+						expr *e = newexpr(assignexpr_e);
+						e->sym=newtemp();
+						emit(assign,newexpr_constbool_e(true),(expr*) 0,e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
+						std::cout<<"term <- ! expr"<<std::endl;}
 		| PLUS_PLUS lvalue	{
 						if(($2->sym!=NULL) && ($2->sym->type == LIBRARY_FUNC || $2->sym->type == PROGRAM_FUNC)){
 							buffer << "Line: "<< yylineno <<" \n\t";
@@ -366,7 +386,12 @@ lvalue:		ID		{
 		| member	{$$->sym->type=LOCAL_VAR;std::cout<<"lvalue <- member"<<std::endl;}
 		;
 
-member:		lvalue'.'ID		{std::cout<<"member <- lvalue.ID"<<std::endl;}
+member:		lvalue'.'ID		{ expr *e = newexpr(tableitem_e);
+							e->sym=newtemp();
+							emit(tablegetelem,$1,newexpr_conststring($3),e,0,yylineno);
+							$$=e;
+							
+							std::cout<<"member <- lvalue.ID"<<std::endl;}
 		| lvalue '['expr']'	{std::cout<<"member <- lvalue [expr]"<<std::endl;}
 		| call '.' ID		{std::cout<<"member <- call.ID"<<std::endl;}
 		| call '[' expr ']'	{std::cout<<"member <- call[expr]"<<std::endl;}

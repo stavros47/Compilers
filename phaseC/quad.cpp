@@ -140,6 +140,31 @@ expr* newexpr_constnum_e(double x){
 
 }
 
+expr* newexpr_conststring(char* s){
+	expr* e= newexpr(conststring_e);
+	e->strConst = strdup(s);
+	return e;
+
+}
+
+expr* member_item(expr* e1,char* e2){
+		e1 = emit_iftableitem(e1);
+		expr* item = newexpr(tableitem_e);
+		item->sym = e1->sym;
+		item->index=newexpr_conststring(e2);
+		return item;
+}
+
+expr* emit_iftableitem(expr* e){
+	if(e->type == tableitem_e)
+		return e;
+	else{
+		expr* result = newexpr(var_e);
+		result->sym = newtemp();
+		emit(tablegetelem,e,e->index,result,0,yylineno);
+		return result;
+	}
+}
 
 std::string iopcode_toString(iopcode type){
 	switch(type){
@@ -180,6 +205,7 @@ std::string expr_toString(expr* temp){
 		case arithexpr_e: return temp->sym->name;
 		case libraryfunc_e: return temp->sym->name;
 		case programfunc_e: return temp->sym->name;
+		case tableitem_e: return temp->sym->name;
 		case constnum_e:	if((fmod(temp->numConst,1)==0)){
 						return std::to_string((int)temp->numConst);
 					}else {
@@ -200,7 +226,7 @@ std::string quads_toString(){
 	buffer<<"#Quad"<<std::setw(10)<<"OpCode"<<std::setw(10)<<"result"<<std::setw(10)<<"arg1"<<std::setw(10)<<"arg2"<<std::endl;
 	buffer<<"----------------------------------------------\n";
 	
-	for(int i=0;i<currQuad;i++){
+	for(int i=1;i<currQuad;i++){
 		buffer<<std::to_string(i)<<": ";
 		width = (i > 9) ? 11 : 12; // width space
 
@@ -209,7 +235,9 @@ std::string quads_toString(){
 		if(quads[i].arg1)	buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
 		if(quads[i].arg2)	buffer<<std::setw(10)<<expr_toString(quads[i].arg2); 
 		if(quads[i].label != 0) buffer<<std::setw(10)<<quads[i].label;
+//		buffer<<std::setw(10)<<"[line:"<<quads[i].line<<']';
 		buffer<<std::endl;
+
 	}
 	return buffer.str();
 }
