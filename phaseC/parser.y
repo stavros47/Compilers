@@ -55,7 +55,7 @@
 %left	'(' ')'
 
 
-%type <intVal> INTCONST funcbody op ifprefix elseprefix N M
+%type <intVal> INTCONST funcbody op ifprefix elseprefix N M whilestart whilecond
 %type <realVal> REALCONST
 %type <strVal> ID STRING funcname
 %type <node> lvalue member primary assignexpr call term objectdef const expr
@@ -592,9 +592,27 @@ ifstmt:		ifstmt elseprefix stmt 	{
 						patchlabel($1,nextquadlabel());
 						std::cout<<"ifstmt <- IF ( expr ) stmt"<<std::endl;
 					}
+whilestart: WHILE
+			{
+				$$ = nextquadlabel();
+
+			}
 		;
 
-whilestmt:	WHILE '(' expr ')' stmt	{std::cout<<"whilestmt <- WHILE ( expr ) stmt"<<std::endl;}
+whilecond: '(' expr ')' 
+			{
+				emit(if_eq,newexpr_constbool_e(true),(expr*)0,$2,nextquadlabel()+2,yylineno);
+				$$ = nextquadlabel();
+				emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+			}
+			;
+
+whilestmt:	whilestart whilecond  stmt	
+			{
+				emit(jump,(expr*)0,(expr*)0,(expr*)0,$1,yylineno);
+				patchlabel($2,nextquadlabel());
+				std::cout<<"whilestmt <- WHILE ( expr ) stmt"<<std::endl;
+			}
 		;
 
 N:	{$$=currQuad;
