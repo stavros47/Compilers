@@ -123,6 +123,7 @@ expr* lvalue_expr(Symbol *sym){
 expr* newexpr(expr_t type){
 	expr* e = new expr();
 	e->type = type;
+	e->next=NULL;
 	return e;
 }
 
@@ -138,8 +139,26 @@ expr* newexpr_constnum_e(double x){
 	e->numConst = x;
 	return e;
 
+
+}
+expr* newexpr_conststring_e(char* str){
+	expr* e = newexpr(conststring_e);
+	e->strConst = strdup(str);
+	return e;
+
 }
 
+void call_emits(expr* list,expr* lvalue){
+	while(list!=NULL){
+		emit(param,(expr*)0,(expr*)0,list,0,yylineno);
+		list=list->next;
+	}
+
+	emit(call,(expr*)0,(expr*)0,lvalue,0,yylineno);
+	expr* temp = newexpr(assignexpr_e);
+	temp->sym = newtemp();
+	emit(getretval,(expr*)0,(expr*)0,temp,0,yylineno);
+}
 
 std::string iopcode_toString(iopcode type){
 	switch(type){
@@ -165,7 +184,7 @@ std::string iopcode_toString(iopcode type){
 		case 19:	return "getretval";
 		case 20:	return "funcstart";
 		case 21:	return "funcend";
-		case 22:	return "tablecrate";
+		case 22:	return "tablecreate";
 		case 23:	return "tablegetelem";
 		case 24:	return "tablesetelem";
 		case 25:	return "jump";
@@ -180,6 +199,7 @@ std::string expr_toString(expr* temp){
 		case arithexpr_e: return temp->sym->name;
 		case libraryfunc_e: return temp->sym->name;
 		case programfunc_e: return temp->sym->name;
+		case newtable_e:	return temp->sym->name;
 		case constnum_e:	if((fmod(temp->numConst,1)==0)){
 						return std::to_string((int)temp->numConst);
 					}else {

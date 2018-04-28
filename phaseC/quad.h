@@ -24,7 +24,7 @@ enum iopcode{
         if_lesseq,      if_greatereq,   if_less,
 	if_greater,	call,		param,
         ret,            getretval,      funcstart,
-        funcend,        tablecrate,     tablegetelem,
+        funcend,        tablecreate,     tablegetelem,
         tablesetelem,	jump	
 };
 
@@ -47,6 +47,12 @@ struct quad {
 	unsigned label;
 };
 
+struct indexed{
+	expr* key;
+	expr* value;
+	indexed* next;
+};
+
 void expand(void);
 void emit(iopcode op,expr* arg1,expr* arg2,expr* result,unsigned label,unsigned line);
 
@@ -66,6 +72,11 @@ expr *lvalue_expr(Symbol*);
 expr* newexpr(expr_t);
 expr* newexpr_constbool_e(bool);
 expr* newexpr_constnum_e(double);
+expr* newexpr_conststring_e(char*);
+
+
+void call_emits(expr*,expr*);
+
 
 std::string iopcode_toString();
 std::string expr_toString();
@@ -91,7 +102,6 @@ extern unsigned suffixNum;
 extern unsigned currScope;
 extern unsigned currRange;
 extern unsigned currOffset;
-
 
 #endif
 

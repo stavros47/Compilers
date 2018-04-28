@@ -38,6 +38,7 @@
 	double realVal;
 	struct Symbol* sym;
 	struct expr *node;
+	struct indexed* index;
 	struct forPrefix *prefix;
 }
 
@@ -58,9 +59,10 @@
 %type <intVal> INTCONST funcbody op ifprefix elseprefix N M whilestart whilecond
 %type <realVal> REALCONST
 %type <strVal> ID STRING funcname
-%type <node> lvalue member primary assignexpr call term objectdef const expr
+%type <node> lvalue member primary assignexpr call term objectdef const expr exprs elist normcall methodcall 
 %type <sym> funcprefix funcdef
 %type <prefix> forprefix
+%type <index>	indexed indexeds indexedelem
 
 %%
 
@@ -81,7 +83,7 @@ stmts:		stmts stmt	{
 stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 		| ifstmt	{std::cout<<"stmt <- ifstmt"<<std::endl;}
 		| whilestmt	{std::cout<<"stmt <- whilestmt"<<std::endl;}
-		| for	{std::cout<<"stmt <- forstmt"<<std::endl;}
+		| forstmt	{std::cout<<"stmt <- forstmt"<<std::endl;}
 		| returnstmt	{std::cout<<"stmt <- returnstmt"<<std::endl;}
 		| BREAK';'	{std::cout<<"stmt <- break(;)"<<std::endl;}
 		| CONTINUE';'	{std::cout<<"stmt <- continue(;)"<<std::endl;}
@@ -92,19 +94,6 @@ stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 
 expr:		assignexpr	{std::cout<<"expr <- assignexpr"<<std::endl;}
 		| expr op	{
-/*					if(quads[currQuad-$2].arg1==NULL){
-						quads[currQuad-$2].result=newexpr(arithexpr_e);
-						quads[currQuad-$2].result->sym=newtemp();
-						
-						$$=quads[currQuad-$2].result;
-						
-						quads[currQuad-$2].arg1 = $1;
-					}else{
-						$$=quads[currQuad-$2+2].result;
-						quads[currQuad-$2].result=$1;
-					}
-*/
-
 					$$=quads[currQuad-$2].result;
 					if(quads[currQuad-$2].label!=0) quads[currQuad-$2].result=NULL;//relop
 					quads[currQuad-$2].arg1= $1;
@@ -390,47 +379,105 @@ member:		lvalue'.'ID		{std::cout<<"member <- lvalue.ID"<<std::endl;}
 		| call '[' expr ']'	{std::cout<<"member <- call[expr]"<<std::endl;}
 		;
 
-call: 		call '(' elist ')'		{std::cout<<"call <- call ( elist )"<<std::endl;}
-		| lvalue callsuffix		{std::cout<<"call <- lvalue callsuffix"<<std::endl;}
-		| '(' funcdef ')' '(' elist ')'	{std::cout<<"call <- (funcdef) (elist)"<<std::endl;}
-		;
-
-callsuffix:	normcall	{std::cout<<"callsuffix <- normcall"<<std::endl;}
-		| methodcall	{std::cout<<"callsuffix <- methodcall"<<std::endl;}
-		;
-
-
-normcall:	'(' elist ')'	{std::cout<<"normcall <- ( elist )"<<std::endl;}
-		;
-
-methodcall:	DOT_DOT ID '(' elist ')'	{std::cout<<"methodcall <- ..ID(elist)"<<std::endl;}
-		;
-
-elist: 		elist exprs	{std::cout<<"elist <- elist exprs"<<std::endl;}
-		|expr		{std::cout<<"elist <- expr"<<std::endl;}
-		|
-		;
-
-exprs: 		',' expr	{std::cout<<"exprs <- , expr"<<std::endl;}
-		;
-
-objectdef: 	'['objectdefs']'	{std::cout<<"objectdef <- [ objectdefs ]"<<std::endl;}
-		;
-
-objectdefs:	elist		{std::cout<<"objectdefs <- elist"<<std::endl;}
-		| indexed	{std::cout<<"objectdefs <- indexed"<<std::endl;}
+call: 		call '(' elist ')'		{
+							call_emits($3,$1);
+							$$=$1;
+							std::cout<<"call <- call ( elist )"<<std::endl;
+						}
+		| lvalue normcall 		{	
+							call_emits($2,$1);
+							$$=$1;
+							std::cout<<"call <- lvalue callsuffix"<<std::endl;
+						}
+		| lvalue methodcall		{
+							$1->next = $2;
+							quads[currQuad-1].arg1=$1;
+							call_emits($1,quads[currQuad-1].result);
+							$$=quads[currQuad-1].result;
+						}
+		| '(' funcdef ')' '(' elist ')'	{
+							expr* e = lvalue_expr($2);
+							call_emits($5,e);
+							$$=e;
+							std::cout<<"call <- (funcdef) (elist)"<<std::endl;
+						}
 		;
 
 
-indexed:	indexed indexeds	{std::cout<<"indexed <- indexed indexeds"<<std::endl;}
+
+normcall:	'(' elist ')'	{$$=$2;std::cout<<"normcall <- ( elist )"<<std::endl;}
+		;
+
+methodcall:	DOT_DOT ID '(' elist ')'	{	
+							expr* e = newexpr(assignexpr_e);
+							e->sym = newtemp();
+							emit(tablegetelem,(expr*)0,newexpr_conststring_e($2),e,0,yylineno);
+							$$=$4;
+							std::cout<<"methodcall <- ..ID(elist)"<<std::endl;
+						}
+		;
+
+elist: 		elist exprs	{
+					$2->next=$1;
+					$$=$2;
+					std::cout<<"elist <- elist exprs"<<std::endl;
+				}
+		|expr		{
+					std::cout<<"elist <- expr"<<std::endl;
+				}
+		|		{
+					$$=(expr*)0;
+				}
+		;
+
+exprs: 		',' expr	{
+					$$=$2;
+					std::cout<<"exprs <- , expr"<<std::endl;
+				}
+		;
+
+objectdef: 	'['elist']'	{
+						unsigned table_cnt=0;
+						expr* e = newexpr(newtable_e);
+						e->sym = newtemp();
+						emit(tablecreate,(expr*)0,(expr*)0,e,0,yylineno);
+						while($2!=NULL){
+							emit(tablesetelem,newexpr_constnum_e(table_cnt++),$2,e,0,yylineno);
+							$2=$2->next;
+						}
+						std::cout<<"objectdef <- [ elist ]"<<std::endl;
+				}
+		|'['indexed']'	{
+						expr* e = newexpr(newtable_e);
+						e->sym = newtemp();
+						emit(tablecreate,(expr*)0,(expr*)0,e,0,yylineno);
+						while($2!=NULL){
+							emit(tablesetelem,$2->key,$2->value,e,0,yylineno);
+							$2=$2->next;
+						}
+						std::cout<<"objectdef <- [ elist ]"<<std::endl;
+				}
+		;
+
+indexed:	indexed indexeds	{
+						$2->next=$1;
+						$$=$2;
+						std::cout<<"indexed <- indexed indexeds"<<std::endl;
+					}
 		| indexedelem		{std::cout<<"indexed <- indexedelem"<<std::endl;}
 		;
 
-indexeds: 	',' indexedelem	{std::cout<<"indexeds <- , indexedelem"<<std::endl;}
+indexeds: 	',' indexedelem	{$$=$2;std::cout<<"indexeds <- , indexedelem"<<std::endl;}
 		;
 
 
-indexedelem:	'{' expr ':' expr '}'	{std::cout<<"indexedelem <- { expr : expr }"<<std::endl;}
+indexedelem:	'{' expr ':' expr '}'	{
+						indexed* i = new indexed();
+						i->key = $2;
+						i->value = $4;
+						$$=i;
+						std::cout<<"indexedelem <- { expr : expr }"<<std::endl;
+					}
 		;
 
 block:		'{' 	{currScope++;}
@@ -525,11 +572,11 @@ const:		INTCONST 	{
 					std::cout<<"const <- INTCONST"<<std::endl;
 				}
 		| REALCONST 	{
-							expr* e =new expr();
-							e->type=constnum_e;
-							e->numConst=$1;
-							$$=e;
-							std::cout<<"const <- REALCONST"<<std::endl;
+					expr* e =new expr();
+					e->type=constnum_e;
+					e->numConst=$1;
+					$$=e;
+					std::cout<<"const <- REALCONST"<<std::endl;
 				}
 		| STRING 	{std::cout<<"const <- STRING"<<std::endl;}
 		| NIL 		{std::cout<<"const <- NIL"<<std::endl;}
@@ -576,7 +623,7 @@ idlists: 	',' ID		{
 					}else{
 						if(tmp->type == LIBRARY_FUNC){
 							buffer << "Line " << yylineno << ":\n\t"<<$2<< " is a Library Function.\n";
-						}else if(tmp->hidden){
+						}else if(tmp->hidden  && tmp->scope==currScope){
 							tmp=SymTable.insert(newSym);
 							incCurrScopeOffset();
 						}else{
@@ -650,7 +697,7 @@ forprefix:	FOR'('elist ';' M expr ';'	{
 			}
 			;
 
-for: forprefix N elist')' N stmt N{
+forstmt:forprefix N elist')' N stmt N{
 		patchlabel($1->enter ,$5+1);
 		patchlabel($2,nextquadlabel());
 		patchlabel($5,$1->test);
