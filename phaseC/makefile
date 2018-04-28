@@ -7,7 +7,7 @@ CC = g++
 	$(CC) -c $(FLAGS) $< -o $@ 
 
 al: $(obj) $(DEPS)
-	$(CC) $(FLAGS) $^ -o $@
+	$(CC) $(FLAGS) $^ -o $@ -g
 
 parser.cpp: parser.y
 	bison --yacc --defines --output=parser.cpp parser.y -v
