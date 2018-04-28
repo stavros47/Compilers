@@ -1,6 +1,11 @@
 %{
 	#include "quad.h"
-	
+
+	struct forPrefix{
+		int test;
+		int enter;
+	};
+
 	unsigned tempcounter=0;
 	quad*    quads = (quad*) 0;
 	unsigned total=0;
@@ -33,6 +38,7 @@
 	double realVal;
 	struct Symbol* sym;
 	struct expr *node;
+	struct forPrefix *prefix;
 }
 
 
@@ -49,11 +55,12 @@
 %left	'(' ')'
 
 
-%type <intVal> INTCONST funcbody op
+%type <intVal> INTCONST funcbody op N M
 %type <realVal> REALCONST
 %type <strVal> ID STRING funcname
 %type <node> lvalue member primary assignexpr call term objectdef const expr
 %type <sym> funcprefix funcdef
+%type <prefix> forprefix
 
 %%
 
@@ -74,7 +81,7 @@ stmts:		stmts stmt	{
 stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 		| ifstmt	{std::cout<<"stmt <- ifstmt"<<std::endl;}
 		| whilestmt	{std::cout<<"stmt <- whilestmt"<<std::endl;}
-		| forstmt	{std::cout<<"stmt <- forstmt"<<std::endl;}
+		| for	{std::cout<<"stmt <- forstmt"<<std::endl;}
 		| returnstmt	{std::cout<<"stmt <- returnstmt"<<std::endl;}
 		| BREAK';'	{std::cout<<"stmt <- break(;)"<<std::endl;}
 		| CONTINUE';'	{std::cout<<"stmt <- continue(;)"<<std::endl;}
@@ -88,7 +95,7 @@ expr:		assignexpr	{std::cout<<"expr <- assignexpr"<<std::endl;}
 					if(quads[currQuad-$2].arg1==NULL){
 						quads[currQuad-$2].result=newexpr(arithexpr_e);
 						quads[currQuad-$2].result->sym=newtemp();
-						
+
 						quads[currQuad-$2].arg1 = $1;
 						$$=quads[currQuad-$2].result;
 					}else{
@@ -106,22 +113,22 @@ op:		'+' expr 		{
 					}
 		| '-' expr 		{
 						emit(sub,(expr*)0,$2,(expr*)0,0,yylineno);
-						$$=1;						
+						$$=1;
 						std::cout<<"op <- - expr"<<std::endl;
 					}
 		| '*' expr 		{
 						emit(mul,(expr*)0,$2,(expr*)0,0,yylineno);
-						$$=1;						
+						$$=1;
 						std::cout<<"op <- * expr"<<std::endl;
 					}
 		| '/' expr 		{
 						emit(Div,(expr*)0,$2,(expr*)0,0,yylineno);
-						$$=1;						
+						$$=1;
 						std::cout<<"op <- / expr"<<std::endl;
 					}
 		| '%' expr		{
 						emit(mod,(expr*)0,$2,(expr*)0,0,yylineno);
-						$$=1;						
+						$$=1;
 						std::cout<<"op <- % expr"<<std::endl;
 					}
 		| '>' expr		{
@@ -182,7 +189,7 @@ op:		'+' expr 		{
 		| AND expr		{
 						emit(And,(expr*)0,$2,(expr*)0,0,yylineno);
 						$$ = 1;
-	
+
 						std::cout<<"op <- && expr"<<std::endl;
 					}
 		| OR expr		{
@@ -219,7 +226,11 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
                                                         buffer<<"Line: " <<yylineno<< ":";
                                                         buffer<<" undeclared variable."<<std::endl;
                                                 }
-
+						emit(add,$2,newexpr_constnum_e(1),$2,0,yylineno);
+						expr* e = newexpr(arithexpr_e);
+						e->sym = newtemp();
+						emit(assign,$2,(expr*)0,e,0,yylineno);
+						$$=$2;
 						std::cout<<"term <- ++ lvalue"<<std::endl;
 					}
 		| lvalue PLUS_PLUS	{
@@ -227,10 +238,14 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
 							buffer << "Line: "<< yylineno <<" \n\t";
 							buffer<<"Invalid use of suffix operator ++ : " << $1->sym->name << " refers to a function type."<<std::endl;
 						}else if($1->sym==NULL){
-                                                        buffer<<"Line: " <<yylineno<< ":\n\t";
-                                                        buffer<<"undeclared variable."<<std::endl;
-                                                }
-
+							buffer<<"Line: " <<yylineno<< ":\n\t";
+							buffer<<"undeclared variable."<<std::endl;
+						}
+						expr* e = newexpr(arithexpr_e);
+						e->sym = newtemp();
+						emit(assign,$1,(expr*)0,e,0,yylineno);
+						emit(add,$1,newexpr_constnum_e(1),$1,0,yylineno);
+						$$ = e;
 						std::cout<<"term <- lvalue ++"<<std::endl;
 					}
 		| MINUS_MINUS lvalue	{
@@ -241,7 +256,11 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
                                                         buffer<<"Line: " <<yylineno<< ":\n\t";
                                                         buffer<<"undeclared variable."<<std::endl;
                                                 }
-
+						emit(sub,$2,newexpr_constnum_e(1),$2,0,yylineno);
+						expr* e = newexpr(arithexpr_e);
+						e->sym = newtemp();
+						emit(assign,$2,(expr*)0,e,0,yylineno);
+						$$=$2;
 						std::cout<<"term <- -- lvalue"<<std::endl;
 					}
 		| lvalue MINUS_MINUS	{
@@ -252,7 +271,11 @@ term:		'('expr')'		{std::cout<<"term <- ( expr )"<<std::endl;}
                                                         buffer<<"Line: " <<yylineno<< ":\n\t";
                                                         buffer<<"undeclared variable."<<std::endl;
                                                 }
-
+						expr* e = newexpr(arithexpr_e);
+						e->sym = newtemp();
+						emit(assign,$1,(expr*)0,e,0,yylineno);
+						emit(sub,$1,newexpr_constnum_e(1),$1,0,yylineno);
+						$$ = e;
 						std::cout<<"term <- lvalue --"<<std::endl;
 					}
 		| primary		{std::cout<<"term <- primary"<<std::endl;}
@@ -272,7 +295,7 @@ assignexpr:	lvalue	'=' expr	{
 						$$ = newexpr(assignexpr_e);
 						$$->sym = newtemp();
 						emit(assign,$1,(expr*)0,$$,0,yylineno);
-						
+
 						std::cout<<"assignexpr <- lvalue = expr"<<std::endl;
 					}
 		;
@@ -555,10 +578,35 @@ ifstmt:		ifstmt ELSE stmt 	{std::cout<<"ifstmt <- ifstmt ELSE stmt"<<std::endl;}
 whilestmt:	WHILE '(' expr ')' stmt	{std::cout<<"whilestmt <- WHILE ( expr ) stmt"<<std::endl;}
 		;
 
-forstmt:	FOR '(' elist';'expr';'elist ')'stmt	{std::cout<<"forstmt <- FOR ( elist ; expr ; elist ) stmt"<<std::endl;}
-		;
+N:	{$$=currQuad;
+	emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+	}
+	;
 
-returnstmt:	RETURN expr';'	{std::cout<<"returnstmt <- RETURN expr ;"<<std::endl;}
+M: {$$=currQuad;}
+	;
+
+forprefix:	FOR'('elist ';' M expr ';'	{
+			struct forPrefix* e = (struct forPrefix*)malloc(sizeof(struct forPrefix));
+			e->test = $5;
+			e->enter = nextquadlabel();
+			$$ = e;
+			emit(if_eq,$6,newexpr_constbool_e(true),(expr*)0,0,yylineno);
+			}
+			;
+
+for: forprefix N elist')' N stmt N{
+		patchlabel($1->enter ,$5+1);
+		patchlabel($2,nextquadlabel());
+		patchlabel($5,$1->test);
+		patchlabel($7,$2+1);
+
+		std::cout<<"forstmt <- FOR ( elist ; expr ; elist ) stmt"<<std::endl;
+	}
+	;
+
+
+returnstmt: RETURN expr';'	{std::cout<<"returnstmt <- RETURN expr ;"<<std::endl;}
 		|RETURN ';'	{std::cout<<"returnstmt <- RETURN ;"<<std::endl;}
 		;
 %%
