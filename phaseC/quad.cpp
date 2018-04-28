@@ -200,7 +200,7 @@ std::string quads_toString(){
 	buffer<<"#Quad"<<std::setw(10)<<"OpCode"<<std::setw(10)<<"result"<<std::setw(10)<<"arg1"<<std::setw(10)<<"arg2"<<std::endl;
 	buffer<<"----------------------------------------------\n";
 	
-	for(int i=0;i<currQuad;i++){
+	for(int i=1;i<currQuad;i++){
 		buffer<<std::to_string(i)<<": ";
 		width = (i > 9) ? 11 : 12; // width space
 
@@ -209,7 +209,9 @@ std::string quads_toString(){
 		if(quads[i].arg1)	buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
 		if(quads[i].arg2)	buffer<<std::setw(10)<<expr_toString(quads[i].arg2); 
 		if(quads[i].label != 0) buffer<<std::setw(10)<<quads[i].label;
+//		buffer<<std::setw(10)<<"[line:"<<quads[i].line<<']';
 		buffer<<std::endl;
+
 	}
 	return buffer.str();
 }

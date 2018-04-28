@@ -8,8 +8,8 @@
 
 	unsigned tempcounter=0;
 	quad*    quads = (quad*) 0;
-	unsigned total=0;
-	unsigned currQuad = 0;
+	unsigned total=1;
+	unsigned currQuad = 1;
 
 	unsigned programVarOffset=0;
 	unsigned functionLocalOffset=0;
@@ -92,7 +92,7 @@ stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 
 expr:		assignexpr	{std::cout<<"expr <- assignexpr"<<std::endl;}
 		| expr op	{
-					if(quads[currQuad-$2].arg1==NULL){
+/*					if(quads[currQuad-$2].arg1==NULL){
 						quads[currQuad-$2].result=newexpr(arithexpr_e);
 						quads[currQuad-$2].result->sym=newtemp();
 						
@@ -103,43 +103,57 @@ expr:		assignexpr	{std::cout<<"expr <- assignexpr"<<std::endl;}
 						$$=quads[currQuad-$2+2].result;
 						quads[currQuad-$2].result=$1;
 					}
+*/
 
+					$$=quads[currQuad-$2].result;
+					if(quads[currQuad-$2].label!=0) quads[currQuad-$2].result=NULL;//relop
+					quads[currQuad-$2].arg1= $1;
 					std::cout<<"expr <- expr op"<<std::endl;
-				}
+				}	
 		| term		{std::cout<<"expr <- term"<<std::endl;}
 		;
 
 op:		'+' expr 	{
-					emit(add,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(add,(expr*)0,$2,e,0,yylineno);
 					$$=1;
 					std::cout<<"op <- + expr"<<std::endl;
 				}
 		| '-' expr 	{
-					emit(sub,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(sub,(expr*)0,$2,e,0,yylineno);
 					$$=1;						
 					std::cout<<"op <- - expr"<<std::endl;
 				}
 		| '*' expr 	{
-					emit(mul,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(mul,(expr*)0,$2,e,0,yylineno);
 					$$=1;						
 					std::cout<<"op <- * expr"<<std::endl;
 				}
 		| '/' expr 	{
-					emit(Div,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(Div,(expr*)0,$2,e,0,yylineno);
 					$$=1;						
 					std::cout<<"op <- / expr"<<std::endl;
 				}
 		| '%' expr	{
-					emit(mod,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(mod,(expr*)0,$2,e,0,yylineno);
 					$$=1;						
 					std::cout<<"op <- % expr"<<std::endl;
 				}
 		
 		|'>' expr	{
-					emit(if_greater,$2,(expr*)0,(expr*)0,currQuad+2,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
+					emit(if_greater,(expr*)0,$2,e,currQuad+2,yylineno);
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -147,10 +161,10 @@ op:		'+' expr 	{
 					std::cout<<"op <- > expr"<<std::endl;
 				}
 		| GREATER_EQUAL expr	{
-						emit(if_greatereq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
+						emit(if_greatereq,(expr*)0,$2,e,currQuad+2,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -158,10 +172,10 @@ op:		'+' expr 	{
 						std::cout<<"op <- >= expr"<<std::endl;
 					}
 		| '<' expr	{
-					emit(if_less,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
+					emit(if_less,(expr*)0,$2,e,currQuad+2,yylineno);
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -169,10 +183,10 @@ op:		'+' expr 	{
 					std::cout<<"op <- < expr"<<std::endl;
 				}
 		| LESS_EQUAL expr	{
-						emit(if_lesseq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
+						emit(if_lesseq,(expr*)0,$2,e,currQuad+2,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -180,10 +194,10 @@ op:		'+' expr 	{
 						std::cout<<"op <- <= expr"<<std::endl;
 					}
 		| NOT_EQUAL expr{
-					emit(if_noteq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
+					emit(if_noteq,(expr*)0,$2,e,currQuad+2,yylineno);
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -191,20 +205,24 @@ op:		'+' expr 	{
 					std::cout<<"op <- != expr"<<std::endl;
 				}
 		| AND expr	{
-					emit(And,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(And,(expr*)0,$2,e,0,yylineno);
 					$$ = 1;
 					std::cout<<"op <- && expr"<<std::endl;
 				}
 		| OR expr	{
-					emit(Or,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(Or,(expr*)0,$2,e,0,yylineno);
 					$$ = 1;
 					std::cout<<"op <- || expr"<<std::endl;
 				}
 		| EQUAL_EQUAL expr	{
-						emit(if_eq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
+						emit(if_eq,(expr*)0,$2,e,currQuad+2,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
