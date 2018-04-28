@@ -74,9 +74,10 @@ expr* newexpr_constbool_e(bool);
 expr* newexpr_constnum_e(double);
 expr* newexpr_conststring_e(char*);
 
-
 void call_emits(expr*,expr*);
 
+expr* member_item(expr*,char*);
+expr* emit_iftableitem(expr*);
 
 std::string iopcode_toString();
 std::string expr_toString();

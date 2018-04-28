@@ -138,9 +138,8 @@ expr* newexpr_constnum_e(double x){
 	expr* e = newexpr(constnum_e);
 	e->numConst = x;
 	return e;
-
-
 }
+
 expr* newexpr_conststring_e(char* str){
 	expr* e = newexpr(conststring_e);
 	e->strConst = strdup(str);
@@ -158,6 +157,26 @@ void call_emits(expr* list,expr* lvalue){
 	expr* temp = newexpr(assignexpr_e);
 	temp->sym = newtemp();
 	emit(getretval,(expr*)0,(expr*)0,temp,0,yylineno);
+}
+
+
+expr* member_item(expr* e1,char* e2){
+		e1 = emit_iftableitem(e1);
+		expr* item = newexpr(tableitem_e);
+		item->sym = e1->sym;
+		item->index=newexpr_conststring_e(e2);
+		return item;
+}
+
+expr* emit_iftableitem(expr* e){
+	if(e->type == tableitem_e)
+		return e;
+	else{
+		expr* result = newexpr(var_e);
+		result->sym = newtemp();
+		emit(tablegetelem,e,e->index,result,0,yylineno);
+		return result;
+	}
 }
 
 std::string iopcode_toString(iopcode type){
@@ -200,6 +219,7 @@ std::string expr_toString(expr* temp){
 		case libraryfunc_e: return temp->sym->name;
 		case programfunc_e: return temp->sym->name;
 		case newtable_e:	return temp->sym->name;
+		case tableitem_e: return temp->sym->name;
 		case constnum_e:	if((fmod(temp->numConst,1)==0)){
 						return std::to_string((int)temp->numConst);
 					}else {
