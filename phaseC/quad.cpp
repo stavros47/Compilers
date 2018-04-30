@@ -147,7 +147,7 @@ expr* newexpr_conststring_e(char* str){
 
 }
 
-void call_emits(expr* list,expr* lvalue){
+expr* call_emits(expr* list,expr* lvalue){
 	while(list!=NULL){
 		emit(param,(expr*)0,(expr*)0,list,0,yylineno);
 		list=list->next;
@@ -157,6 +157,7 @@ void call_emits(expr* list,expr* lvalue){
 	expr* temp = newexpr(assignexpr_e);
 	temp->sym = newtemp();
 	emit(getretval,(expr*)0,(expr*)0,temp,0,yylineno);
+	return temp;
 }
 
 

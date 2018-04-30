@@ -26,8 +26,8 @@
 	HashTable SymTable;
 	std::fstream buffer;
 	std::stack<unsigned> offsetStack,labelStack;
-	std::list<unsigned> funcReturnsList;
-	std::stack<std::list<unsigned>> returnStack;
+	std::list<unsigned> funcReturnsList,breakList,continueList;
+	std::stack<std::list<unsigned>> returnStack,breakStack,continueStack;
 
 unsigned breakChecker=0;
 unsigned continueChecker=0;
@@ -98,13 +98,19 @@ stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 						buffer << "Line: "<< yylineno <<" \n\t";
 						buffer<<"Invalid use of break : " << std::endl;
 					}
-					std::cout<<"stmt <- break(;)"<<std::endl;}
+					breakList.push_back(nextquadlabel());
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+					std::cout<<"stmt <- break(;)"<<std::endl;
+				}
 		| CONTINUE';'	{
-						if(continueChecker==0){
+					if(continueChecker==0){
 						buffer << "Line: "<< yylineno <<" \n\t";
 						buffer<<"Invalid use of break : " << std::endl;
 					}
-					std::cout<<"stmt <- continue(;)"<<std::endl;}
+					continueList.push_back(nextquadlabel());
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+					std::cout<<"stmt <- continue(;)"<<std::endl;
+				}
 		| block		{std::cout<<"stmt <- block"<<std::endl;}
 		| funcdef	{std::cout<<"stmt <- funcdef"<<std::endl;}
 		| ';'		{std::cout<<"stmt <- semicolon(;)"<<std::endl;}
@@ -159,7 +165,7 @@ op:		'+' expr 	{
 		|'>' expr	{
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
-					emit(if_greater,$2,(expr*)0,e,currQuad+2,yylineno);
+					emit(if_greater,(expr*)0,$2,e,currQuad+2,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
@@ -170,7 +176,7 @@ op:		'+' expr 	{
 		| GREATER_EQUAL expr	{
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
-						emit(if_greatereq,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+						emit(if_greatereq,(expr*)0,$2,e,currQuad+2,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
@@ -181,7 +187,7 @@ op:		'+' expr 	{
 		| '<' expr	{
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
-					emit(if_less,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+					emit(if_less,(expr*)0,$2,e,currQuad+2,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
@@ -192,7 +198,7 @@ op:		'+' expr 	{
 		| LESS_EQUAL expr	{
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
-						emit(if_lesseq,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+						emit(if_lesseq,(expr*)0,$2,e,currQuad+2,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
@@ -203,7 +209,7 @@ op:		'+' expr 	{
 		| NOT_EQUAL expr{
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
-					emit(if_noteq,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+					emit(if_noteq,(expr*)0,$2,e,currQuad+2,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
@@ -228,7 +234,7 @@ op:		'+' expr 	{
 		| EQUAL_EQUAL expr	{
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
-						emit(if_eq,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+						emit(if_eq,(expr*)0,$2,e,currQuad+2,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
@@ -347,7 +353,11 @@ assignexpr:	lvalue	'=' expr	{
 primary:	lvalue			{$$=emit_iftableitem($1);std::cout<<"primary <- lvalue"<<std::endl;}
 		| call			{std::cout<<"primary <- call"<<std::endl;}
 		| objectdef		{std::cout<<"primary <- objectdef"<<std::endl;}
-		| '('funcdef')'		{std::cout<<"primary <- ( funcdef )"<<std::endl;}
+		| '('funcdef')'		{
+						$$ = newexpr(programfunc_e);
+						$$->sym = $2;
+						std::cout<<"primary <- ( funcdef )"<<std::endl;
+					}
 		| const			{std::cout<<"primary <- const"<<std::endl;}
 		;
 
@@ -404,43 +414,43 @@ lvalue:		ID		{
 					$$=lvalue_expr(tmp);
 					std::cout<<"lvalue <- SCOPE ID"<<std::endl;
 				}
-		| member	{/*$$->sym->type=LOCAL_VAR;*/std::cout<<"lvalue <- member"<<std::endl;}
+		| member	{std::cout<<"lvalue <- member"<<std::endl;}
 		;
 
 member:		lvalue'.'ID	{ 
 					$$ = member_item($1,$3);
-			/*		expr *e = newexpr(tableitem_e);
-					e->sym=newtemp();
-					emit(tablegetelem,$1,newexpr_conststring_e($3),e,0,yylineno);
-					$$=e;
-					*/
 					std::cout<<"member <- lvalue.ID"<<std::endl;
 				}
-		| lvalue '['expr']'	{std::cout<<"member <- lvalue [expr]"<<std::endl;}
-		| call '.' ID		{std::cout<<"member <- call.ID"<<std::endl;}
-		| call '[' expr ']'	{std::cout<<"member <- call[expr]"<<std::endl;}
+		| lvalue '['expr']'	{
+						$$ = member_item($1,const_cast<char*>($3->sym->name.c_str()));
+						std::cout<<"member <- lvalue [expr]"<<std::endl;
+					}
+		| call '.' ID		{
+						$$ = member_item($1,$3);
+						std::cout<<"member <- call.ID"<<std::endl;
+					}
+		| call '[' expr ']'	{
+						$$ = member_item($1,const_cast<char*>($3->sym->name.c_str()));
+						std::cout<<"member <- call[expr]"<<std::endl;
+					}
 		;
 
 call: 		call '(' elist ')'		{
-							call_emits($3,$1);
-							$$=$1;
+							$$ = call_emits($3,$1);
 							std::cout<<"call <- call ( elist )"<<std::endl;
 						}
 		| lvalue normcall 		{	
-							call_emits($2,$1);
-							$$=$1;
+							$$ = call_emits($2,$1);
 							std::cout<<"call <- lvalue callsuffix"<<std::endl;
 						}
 		| lvalue methodcall		{
 							$1->next = $2;
 							quads[currQuad-1].arg1=$1;
-							call_emits($1,quads[currQuad-1].result);
-							$$=quads[currQuad-1].result;
+							$$=call_emits($1,quads[currQuad-1].result);
 						}
 		| '(' funcdef ')' '(' elist ')'	{
 							expr* e = lvalue_expr($2);
-							call_emits($5,e);
-							$$=e;
+							$$=call_emits($5,e);
 							std::cout<<"call <- (funcdef) (elist)"<<std::endl;
 						}
 		;
@@ -547,42 +557,42 @@ funcname: 		ID {$$=$1;}
 				}
 			;
 
-funcprefix: FUNCTION funcname{
-				Symbol* tmp;
-				Symbol* newSym=construct_Symbol($2,4,yylineno,currScope,currRange,currScopeSpace(),currOffset);
-				tmp = SymTable.lookup($2,currScope);
+funcprefix: FUNCTION funcname	{
+					Symbol* tmp;
+					Symbol* newSym=construct_Symbol($2,4,yylineno,currScope,currRange,currScopeSpace(),currOffset);
+					tmp = SymTable.lookup($2,currScope);
 	
-				if(tmp==NULL){
-					if((tmp = SymTable.lookup($2,0))!=NULL && tmp->type == LIBRARY_FUNC){
+					if(tmp==NULL){
+						if((tmp = SymTable.lookup($2,0))!=NULL && tmp->type == LIBRARY_FUNC){
+							buffer << "Line: "<< yylineno <<" \n\t";
+							buffer<<"Invalid Name:  \""<<$2<<"\". Reserved keyword for a library function"<<std::endl;
+						}else{
+							tmp=SymTable.insert(newSym);
+						}
+					}
+					else{
 						buffer << "Line: "<< yylineno <<" \n\t";
-						buffer<<"Invalid Name:  \""<<$2<<"\". Reserved keyword for a library function"<<std::endl;
-					}else{
-						tmp=SymTable.insert(newSym);
+						if(tmp->type == LIBRARY_FUNC){
+							buffer<<"Invalid Name:  \""<<$2<<"\". Reserved keyword for a library function"<<std::endl;
+						}else if(tmp->type == PROGRAM_FUNC){
+							buffer<<"Function redefinition. "<<$2<<". already defined here: "<< tmp->lineno<<std::endl;
+						}else{
+							buffer<<"Cannot access "<<$2<<". already defined here: "<< tmp->lineno<<std::endl;
+						}
 					}
-				}
-				else{
-					buffer << "Line: "<< yylineno <<" \n\t";
-					if(tmp->type == LIBRARY_FUNC){
-						buffer<<"Invalid Name:  \""<<$2<<"\". Reserved keyword for a library function"<<std::endl;
-					}else if(tmp->type == PROGRAM_FUNC){
-						buffer<<"Function redefinition. "<<$2<<". already defined here: "<< tmp->lineno<<std::endl;
-					}else{
-						buffer<<"Cannot access "<<$2<<". already defined here: "<< tmp->lineno<<std::endl;
-					}
-				}
 
 
-				$$=tmp;
-				labelStack.push(currQuad);
-				emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
-				$$->function.iaddress = nextquadlabel();
-				emit(funcstart,(expr*)0,(expr*)0,lvalue_expr($$),0,yylineno);
-				currScope++;
-				currRange++;
-				offsetStack.push(formalArgOffset);
-				offsetStack.push(functionLocalOffset);
-				formalArgOffset = 0;
-			}
+					$$=tmp;
+					labelStack.push(currQuad);
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+					$$->function.iaddress = nextquadlabel();
+					emit(funcstart,(expr*)0,(expr*)0,lvalue_expr($$),0,yylineno);
+					currScope++;
+					currRange++;
+					offsetStack.push(formalArgOffset);
+					offsetStack.push(functionLocalOffset);
+					formalArgOffset = 0;
+				}
 		;
 funcargs:	'('idlist')'	{
 					currScope--;currRange++;functionLocalOffset=0;inFunction++;
@@ -720,55 +730,86 @@ ifstmt:		ifstmt elseprefix stmt 	{
 						patchlabel($1,nextquadlabel());
 						std::cout<<"ifstmt <- IF ( expr ) stmt"<<std::endl;
 					}
-whilestart: WHILE
-			{
-				$$ = nextquadlabel();
 
-			}
+whilestart:	WHILE	{$$ = nextquadlabel();}
 		;
 
-whilecond: '(' expr ')' 
-			{
-				emit(if_eq,newexpr_constbool_e(true),(expr*)0,$2,nextquadlabel()+2,yylineno);
-				$$ = nextquadlabel();
+whilecond:	'(' expr ')' 	{
+					emit(if_eq,newexpr_constbool_e(true),(expr*)0,$2,nextquadlabel()+2,yylineno);
+					$$ = nextquadlabel();
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+					breakChecker++;continueChecker++;
+					breakStack.push(breakList);
+					continueStack.push(continueList);
+					breakList.clear();
+					continueList.clear();
+				}
+		;
+
+whilestmt:	whilestart whilecond  stmt	{
+							emit(jump,(expr*)0,(expr*)0,(expr*)0,$1,yylineno);
+							patchlabel($2,nextquadlabel());
+							for(unsigned i : breakList){
+								patchlabel(i,nextquadlabel());
+							}
+							breakList = breakStack.top();
+							breakStack.pop();
+
+							for(unsigned i : continueList){
+								patchlabel(i,$1);
+							}
+							continueList = continueStack.top();
+							continueStack.pop();
+
+							breakChecker--;continueChecker--;
+							std::cout<<"whilestmt <- WHILE ( expr ) stmt"<<std::endl;
+						}		
+			;
+
+N:			{
+				$$=currQuad;
 				emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
 			}
-			;
-
-whilestmt:	whilestart whilecond  stmt	
-			{
-				emit(jump,(expr*)0,(expr*)0,(expr*)0,$1,yylineno);
-				patchlabel($2,nextquadlabel());
-				std::cout<<"whilestmt <- WHILE ( expr ) stmt"<<std::endl;
-			}
 		;
 
-N:	{$$=currQuad;
-	emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
-	}
-	;
-
-M: {$$=currQuad;}
-	;
+M: 			{$$=currQuad;}
+		;
 
 forprefix:	FOR'('elist ';' M expr ';'	{
-			struct forPrefix* e = (struct forPrefix*)malloc(sizeof(struct forPrefix));
-			e->test = $5;
-			e->enter = nextquadlabel();
-			$$ = e;
-			emit(if_eq,$6,newexpr_constbool_e(true),(expr*)0,0,yylineno);
-			}
-			;
+							forPrefix* e = new forPrefix();
+							e->test = $5;
+							e->enter = nextquadlabel();
+							$$ = e;
+							emit(if_eq,$6,newexpr_constbool_e(true),(expr*)0,0,yylineno);
+							breakChecker++;continueChecker++;
+							breakStack.push(breakList);
+							continueStack.push(continueList);
+							breakList.clear();
+							continueList.clear();
+						}
+		;
 
-forstmt:forprefix N elist')' N stmt N{
-		patchlabel($1->enter ,$5+1);
-		patchlabel($2,nextquadlabel());
-		patchlabel($5,$1->test);
-		patchlabel($7,$2+1);
+forstmt:	forprefix N elist')' N stmt N	{
+							patchlabel($1->enter ,$5+1);
+							patchlabel($2,nextquadlabel());
+							patchlabel($5,$1->test);
+							patchlabel($7,$2+1);
+						
+							for(unsigned i : breakList){
+								patchlabel(i,nextquadlabel());
+							}
+							breakList = breakStack.top();
+							breakStack.pop();
 
-		std::cout<<"forstmt <- FOR ( elist ; expr ; elist ) stmt"<<std::endl;
-	}
-	;
+							for(unsigned i : continueList){
+								patchlabel(i,$2);
+							}
+							continueList = continueStack.top();
+							continueStack.pop();
+							breakChecker--;continueChecker--;
+							std::cout<<"forstmt <- FOR ( elist ; expr ; elist ) stmt"<<std::endl;
+						}
+		;
 
 
 returnstmt: RETURN expr';'	
