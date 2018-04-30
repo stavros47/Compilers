@@ -225,7 +225,7 @@ std::string expr_toString(expr* temp){
 					}else {
 						return std::to_string(temp->numConst);
 					}
-		case conststring_e:	return temp->strConst;
+		case conststring_e:	return "\"" + temp->strConst + "\"";
 		case constbool_e:	return (temp->boolConst) ? "TRUE" : "FALSE";
 		case nil_e:	return "NULL";
 		default: return "NOT DONE";
@@ -237,18 +237,30 @@ std::string expr_toString(expr* temp){
 std::string quads_toString(){
 	std::ostringstream buffer;
 	int width = 12;
-	buffer<<"#Quad"<<std::setw(10)<<"OpCode"<<std::setw(10)<<"result"<<std::setw(10)<<"arg1"<<std::setw(10)<<"arg2"<<std::endl;
-	buffer<<"----------------------------------------------\n";
+	buffer<<"#Quad"<<std::setw(10)<<"OpCode"<<std::setw(10)<<"result"<<std::setw(10)<<"arg1"<<std::setw(10)<<"arg2"<<std::setw(10)<<"label"<<std::endl;
+	buffer<<"--------------------------------------------------------\n";
 	
 	for(int i=1;i<currQuad;i++){
 		buffer<<std::to_string(i)<<": ";
 		width = (i > 9) ? 11 : 12; // width space
 
 		buffer<<std::setw(width)<<iopcode_toString(quads[i].op);
-		if(quads[i].result)	buffer<<std::setw(10)<<expr_toString(quads[i].result);
-		if(quads[i].arg1)	buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
-		if(quads[i].arg2)	buffer<<std::setw(10)<<expr_toString(quads[i].arg2); 
-		if(quads[i].label != 0) buffer<<std::setw(10)<<quads[i].label;
+		// if(quads[i].result)	buffer<<std::setw(10)<<expr_toString(quads[i].result);
+		// if(quads[i].arg1)	buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
+		// if(quads[i].arg2)	buffer<<std::setw(10)<<expr_toString(quads[i].arg2); 
+		// if(quads[i].label != 0) buffer<<std::setw(10)<<quads[i].label;
+		if(quads[i].result){
+			buffer<<std::setw(10)<<expr_toString(quads[i].result);
+		}
+		if(quads[i].arg1){
+			buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
+		}
+		if(quads[i].arg2){
+			buffer<<std::setw(10)<<expr_toString(quads[i].arg2);
+		}
+		if(quads[i].label != 0){
+			buffer<<std::setw(40)<<quads[i].label;
+		}
 //		buffer<<std::setw(10)<<"[line:"<<quads[i].line<<']';
 		buffer<<std::endl;
 
