@@ -98,7 +98,7 @@ stmt:		expr';'		{std::cout<<"stmt <- expr(;)"<<std::endl;}
 						buffer << "Line: "<< yylineno <<" \n\t";
 						buffer<<"Invalid use of break : " << std::endl;
 					}
-			std::cout<<"stmt <- break(;)"<<std::endl;}
+					std::cout<<"stmt <- break(;)"<<std::endl;}
 		| CONTINUE';'	{
 						if(continueChecker==0){
 						buffer << "Line: "<< yylineno <<" \n\t";
@@ -121,36 +121,46 @@ expr:		assignexpr	{std::cout<<"expr <- assignexpr"<<std::endl;}
 		;
 
 op:		'+' expr 	{
-					emit(add,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr* e = newexpr(assignexpr_e);
+					e->sym = newtemp();
+					emit(add,(expr*)0,$2,e,0,yylineno);
 					$$=1;
 					std::cout<<"op <- + expr"<<std::endl;
 				}
 		| '-' expr 	{
-					emit(sub,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr* e = newexpr(assignexpr_e);
+					e->sym = newtemp();
+					emit(sub,(expr*)0,$2,e,0,yylineno);
 					$$=1;						
 					std::cout<<"op <- - expr"<<std::endl;
 				}
 		| '*' expr 	{
-					emit(mul,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr* e = newexpr(assignexpr_e);
+					e->sym = newtemp();
+					emit(mul,(expr*)0,$2,e,0,yylineno);
 					$$=1;						
 					std::cout<<"op <- * expr"<<std::endl;
 				}
 		| '/' expr 	{
-					emit(Div,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr* e = newexpr(assignexpr_e);
+					e->sym = newtemp();
+					emit(Div,(expr*)0,$2,e,0,yylineno);
 					$$=1;						
 					std::cout<<"op <- / expr"<<std::endl;
 				}
 		| '%' expr	{
-					emit(mod,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr* e = newexpr(assignexpr_e);
+					e->sym = newtemp();
+					emit(mod,(expr*)0,$2,e,0,yylineno);
 					$$=1;						
 					std::cout<<"op <- % expr"<<std::endl;
 				}
 		
 		|'>' expr	{
-					emit(if_greater,$2,(expr*)0,(expr*)0,currQuad+2,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
+					emit(if_greater,$2,(expr*)0,e,currQuad+2,yylineno);
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -158,10 +168,10 @@ op:		'+' expr 	{
 					std::cout<<"op <- > expr"<<std::endl;
 				}
 		| GREATER_EQUAL expr	{
-						emit(if_greatereq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
+						emit(if_greatereq,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -169,10 +179,10 @@ op:		'+' expr 	{
 						std::cout<<"op <- >= expr"<<std::endl;
 					}
 		| '<' expr	{
-					emit(if_less,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
+					emit(if_less,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -180,10 +190,10 @@ op:		'+' expr 	{
 					std::cout<<"op <- < expr"<<std::endl;
 				}
 		| LESS_EQUAL expr	{
-						emit(if_lesseq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
+						emit(if_lesseq,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -191,10 +201,10 @@ op:		'+' expr 	{
 						std::cout<<"op <- <= expr"<<std::endl;
 					}
 		| NOT_EQUAL expr{
-					emit(if_noteq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					expr *e=newexpr(assignexpr_e);
 					e->sym=newtemp();
+					emit(if_noteq,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -202,20 +212,24 @@ op:		'+' expr 	{
 					std::cout<<"op <- != expr"<<std::endl;
 				}
 		| AND expr	{
-					emit(And,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(And,(expr*)0,$2,e,0,yylineno);
 					$$ = 1;
 					std::cout<<"op <- && expr"<<std::endl;
 				}
 		| OR expr	{
-					emit(Or,(expr*)0,$2,(expr*)0,0,yylineno);
+					expr *e=newexpr(assignexpr_e);
+					e->sym=newtemp();
+					emit(Or,(expr*)0,$2,e,0,yylineno);
 					$$ = 1;
 					std::cout<<"op <- || expr"<<std::endl;
 				}
 		| EQUAL_EQUAL expr	{
-						emit(if_eq,$2,newexpr_constnum_e(currQuad+2),(expr*)0,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						expr *e=newexpr(assignexpr_e);
 						e->sym=newtemp();
+						emit(if_eq,$2,newexpr_constnum_e(currQuad+2),e,0,yylineno);
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
 						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
@@ -560,19 +574,17 @@ funcprefix: FUNCTION funcname{
 			}
 		;
 funcargs:	'('idlist')'	{
-								currScope--;currRange++;functionLocalOffset=0;inFunction++;
-									returnStack.push(funcReturnsList);
-									funcReturnsList.clear();
-							}
+					currScope--;currRange++;functionLocalOffset=0;inFunction++;
+					returnStack.push(funcReturnsList);
+					funcReturnsList.clear();
+				}
 		;
 
-funcbody: 	block	{
-						currRange-=2;
-						inFunction--;
-					
-						
-					}
-			;
+funcbody: 	block		{
+					currRange-=2;
+					inFunction--;
+				}
+		;
 
 funcdef:	funcprefix funcargs funcbody	{
 							$1->function.totallocals = functionLocalOffset;
@@ -599,23 +611,29 @@ funcdef:	funcprefix funcargs funcbody	{
 		;
 
 const:		INTCONST 	{
-					expr* e =new expr();
-					e->type=constnum_e;
-					e->numConst=$1;
-					$$=e;
+					$$=newexpr_constnum_e($1);
 					std::cout<<"const <- INTCONST"<<std::endl;
 				}
 		| REALCONST 	{
-					expr* e =new expr();
-					e->type=constnum_e;
-					e->numConst=$1;
-					$$=e;
+					$$=newexpr_constnum_e($1);
 					std::cout<<"const <- REALCONST"<<std::endl;
 				}
-		| STRING 	{std::cout<<"const <- STRING"<<std::endl;}
-		| NIL 		{std::cout<<"const <- NIL"<<std::endl;}
-		| TRUE 		{std::cout<<"const <- TRUE"<<std::endl;}
-		| FALSE 	{std::cout<<"const <- FALSE"<<std::endl;}
+		| STRING 	{
+					$$ = newexpr_conststring_e($1);
+					std::cout<<"const <- STRING"<<std::endl;
+				}
+		| NIL 		{
+					$$=newexpr(nil_e);
+					std::cout<<"const <- NIL"<<std::endl;
+				}
+		| TRUE 		{
+					$$=newexpr_constbool_e(true);
+					std::cout<<"const <- TRUE"<<std::endl;
+				}
+		| FALSE 	{
+					$$=newexpr_constbool_e(false);
+					std::cout<<"const <- FALSE"<<std::endl;
+				}
 		;
 
 idlist:		idlist idlists	{std::cout<<"idlist <- idlist idlists"<<std::endl;}
