@@ -169,7 +169,7 @@ expr* member_item(expr* e1,char* e2){
 }
 
 expr* emit_iftableitem(expr* e){
-	if(e->type == tableitem_e)
+	if(e->type != tableitem_e)
 		return e;
 	else{
 		expr* result = newexpr(var_e);

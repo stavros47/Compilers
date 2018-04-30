@@ -314,7 +314,7 @@ term:		'('expr')'		{$$=$2;std::cout<<"term <- ( expr )"<<std::endl;}
 						$$ = e;
 						std::cout<<"term <- lvalue --"<<std::endl;
 					}
-		| primary		{std::cout<<"term <- primary"<<std::endl;}
+		| primary		{$$=$1;std::cout<<"term <- primary"<<std::endl;}
 		;
 
 assignexpr:	lvalue	'=' expr	{
@@ -326,17 +326,25 @@ assignexpr:	lvalue	'=' expr	{
 								buffer<<"undeclared variable."<<std::endl;
 						}
 
-						emit(assign,$3,(expr*)0,$1,0,yylineno);
+						if($1->type ==tableitem_e){
+							emit(tablesetelem,$1->index,$3,$$,0,yylineno);
+							$$ = emit_iftableitem($1);
+							$$ -> type = assignexpr_e;
+						}else{
+							emit(assign,$3,(expr*)0,$1,0,yylineno);
 
-						$$ = newexpr(assignexpr_e);
-						$$->sym = newtemp();
-						emit(assign,$1,(expr*)0,$$,0,yylineno);
+							$$ = newexpr(assignexpr_e);
+							$$->sym = newtemp();
+
+							emit(assign,$1,(expr*)0,$$,0,yylineno);
+						}
+						
 
 						std::cout<<"assignexpr <- lvalue = expr"<<std::endl;
 					}
 		;
 
-primary:	lvalue			{std::cout<<"primary <- lvalue"<<std::endl;}
+primary:	lvalue			{$$=emit_iftableitem($1);std::cout<<"primary <- lvalue"<<std::endl;}
 		| call			{std::cout<<"primary <- call"<<std::endl;}
 		| objectdef		{std::cout<<"primary <- objectdef"<<std::endl;}
 		| '('funcdef')'		{std::cout<<"primary <- ( funcdef )"<<std::endl;}
@@ -396,15 +404,18 @@ lvalue:		ID		{
 					$$=lvalue_expr(tmp);
 					std::cout<<"lvalue <- SCOPE ID"<<std::endl;
 				}
-		| member	{$$->sym->type=LOCAL_VAR;std::cout<<"lvalue <- member"<<std::endl;}
+		| member	{/*$$->sym->type=LOCAL_VAR;*/std::cout<<"lvalue <- member"<<std::endl;}
 		;
 
-member:		lvalue'.'ID		{ expr *e = newexpr(tableitem_e);
-							e->sym=newtemp();
-							emit(tablegetelem,$1,newexpr_conststring_e($3),e,0,yylineno);
-							$$=e;
-							
-							std::cout<<"member <- lvalue.ID"<<std::endl;}
+member:		lvalue'.'ID	{ 
+					$$ = member_item($1,$3);
+			/*		expr *e = newexpr(tableitem_e);
+					e->sym=newtemp();
+					emit(tablegetelem,$1,newexpr_conststring_e($3),e,0,yylineno);
+					$$=e;
+					*/
+					std::cout<<"member <- lvalue.ID"<<std::endl;
+				}
 		| lvalue '['expr']'	{std::cout<<"member <- lvalue [expr]"<<std::endl;}
 		| call '.' ID		{std::cout<<"member <- call.ID"<<std::endl;}
 		| call '[' expr ']'	{std::cout<<"member <- call[expr]"<<std::endl;}
