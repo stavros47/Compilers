@@ -53,6 +53,12 @@ struct indexed{
 	indexed* next;
 };
 
+struct callsuffix{
+	expr* list;
+	bool method;
+	char* name;
+};
+
 void expand(void);
 void emit(iopcode op,expr* arg1,expr* arg2,expr* result,unsigned label,unsigned line);
 
@@ -77,6 +83,7 @@ expr* newexpr_conststring_e(char*);
 expr* call_emits(expr*,expr*);
 
 expr* member_item(expr*,char*);
+expr* member_item(expr*,double);
 expr* emit_iftableitem(expr*);
 
 std::string iopcode_toString();

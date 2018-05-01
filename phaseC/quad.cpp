@@ -148,16 +148,17 @@ expr* newexpr_conststring_e(char* str){
 }
 
 expr* call_emits(expr* list,expr* lvalue){
+	expr* func = emit_iftableitem(lvalue);
 	while(list!=NULL){
 		emit(param,(expr*)0,(expr*)0,list,0,yylineno);
 		list=list->next;
 	}
 
 	emit(call,(expr*)0,(expr*)0,lvalue,0,yylineno);
-	expr* temp = newexpr(assignexpr_e);
-	temp->sym = newtemp();
-	emit(getretval,(expr*)0,(expr*)0,temp,0,yylineno);
-	return temp;
+	expr* result = newexpr(assignexpr_e);
+	result->sym = newtemp();
+	emit(getretval,(expr*)0,(expr*)0,result,0,yylineno);
+	return result;
 }
 
 
@@ -166,6 +167,14 @@ expr* member_item(expr* e1,char* e2){
 		expr* item = newexpr(tableitem_e);
 		item->sym = e1->sym;
 		item->index=newexpr_conststring_e(e2);
+		return item;
+}
+
+expr* member_item(expr* e1,double e2){
+		e1 = emit_iftableitem(e1);
+		expr* item = newexpr(tableitem_e);
+		item->sym = e1->sym;
+		item->index=newexpr_constnum_e(e2);
 		return item;
 }
 
@@ -214,12 +223,13 @@ std::string iopcode_toString(iopcode type){
 
 std::string expr_toString(expr* temp){
 	switch(temp->type){
-		case var_e:	return temp->sym->name;
-		case assignexpr_e:	return temp->sym->name;
-		case arithexpr_e: return temp->sym->name;
-		case libraryfunc_e: return temp->sym->name;
-		case programfunc_e: return temp->sym->name;
-		case newtable_e:	return temp->sym->name;
+		case var_e:	
+		case assignexpr_e:	
+		case arithexpr_e: 
+		case libraryfunc_e: 
+		case programfunc_e: 
+		case newtable_e:
+		case boolexpr_e:
 		case tableitem_e: return temp->sym->name;
 		case constnum_e:	if((fmod(temp->numConst,1)==0)){
 						return std::to_string((int)temp->numConst);

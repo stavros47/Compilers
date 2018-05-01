@@ -22,7 +22,6 @@ enum scopespace_t {programVar,	functionLocal,	formalArg};
 struct function{
 	unsigned iaddress;
 	unsigned totallocals;
-	unsigned totalformals;
 };
 
 struct Symbol{
