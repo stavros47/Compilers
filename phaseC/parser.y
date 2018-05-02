@@ -199,56 +199,51 @@ op:		'+' expr 	{
 		|'>' expr	{
 					expr *e=newexpr(boolexpr_e);
 					e->sym=newtemp();
-					emit(if_greater,(expr*)0,$2,e,currQuad+2,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
-					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+					emit(if_greater,(expr*)0,$2,e,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
-					$$ = 5;
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+					$$ = 4;
 					std::cout<<"op <- > expr"<<std::endl;
 				}
 		| GREATER_EQUAL expr	{
 						expr *e=newexpr(boolexpr_e);
 						e->sym=newtemp();
-						emit(if_greatereq,(expr*)0,$2,e,currQuad+2,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
-						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(if_greatereq,(expr*)0,$2,e,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
-						$$ = 5;
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+						$$ = 4;
 						std::cout<<"op <- >= expr"<<std::endl;
 					}
 		| '<' expr	{
 					expr *e=newexpr(boolexpr_e);
 					e->sym=newtemp();
-					emit(if_less,(expr*)0,$2,e,currQuad+2,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
-					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+					emit(if_less,(expr*)0,$2,e,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
-					$$ = 5;
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+					$$ = 4;
 					std::cout<<"op <- < expr"<<std::endl;
 				}
 		| LESS_EQUAL expr	{
 						expr *e=newexpr(boolexpr_e);
 						e->sym=newtemp();
-						emit(if_lesseq,(expr*)0,$2,e,currQuad+2,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
-						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(if_lesseq,(expr*)0,$2,e,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
-						$$ = 5;
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+						$$ = 4;
 						std::cout<<"op <- <= expr"<<std::endl;
 					}
 		| NOT_EQUAL expr{
 					expr *e=newexpr(boolexpr_e);
 					e->sym=newtemp();
-					emit(if_noteq,(expr*)0,$2,e,currQuad+2,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
-					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+					emit(if_noteq,(expr*)0,$2,e,currQuad+3,yylineno);
 					emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
-					$$ = 5;
+					emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+					emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+					$$ = 4;
 					std::cout<<"op <- != expr"<<std::endl;
 				}
 		| AND expr	{
@@ -268,12 +263,11 @@ op:		'+' expr 	{
 		| EQUAL_EQUAL expr	{
 						expr *e=newexpr(boolexpr_e);
 						e->sym=newtemp();
-						emit(if_eq,(expr*)0,$2,e,currQuad+2,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+3,yylineno);
-						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
-						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(if_eq,(expr*)0,$2,e,currQuad+3,yylineno);
 						emit(assign,newexpr_constbool_e(false),(expr*)0,e,0,yylineno);
-						$$ = 5;
+						emit(jump,(expr*)0,(expr*)0,(expr*)0,currQuad+2,yylineno);
+						emit(assign,newexpr_constbool_e(true),(expr*)0,e,0,yylineno);
+						$$ = 4;
 						std::cout<<"op <- == expr"<<std::endl;
 					}
 		;

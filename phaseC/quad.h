@@ -35,6 +35,7 @@ struct expr{
 	double numConst;
 	std::string strConst;
 	unsigned char boolConst;
+	std::list<unsigned> trueList,falseList;
 	expr* next;
 };
 
@@ -74,6 +75,7 @@ void exitScopeSpace();
 
 unsigned nextquadlabel();
 void patchlabel(unsigned,unsigned);
+void backpatch(std::list<unsigned>,unsigned);
 expr *lvalue_expr(Symbol*);
 expr* newexpr(expr_t);
 expr* newexpr_constbool_e(bool);

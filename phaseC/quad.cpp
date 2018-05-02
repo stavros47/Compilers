@@ -97,6 +97,11 @@ void patchlabel(unsigned quadNo,unsigned label){
 	quads[quadNo].label = label;
 }
 
+void backpatch(std::list<unsigned> list,unsigned label){
+	for(unsigned i : list){
+		patchlabel(i,label);
+	}
+}
 
 expr* lvalue_expr(Symbol *sym){
 	assert(sym);
