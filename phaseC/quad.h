@@ -75,7 +75,9 @@ void exitScopeSpace();
 
 unsigned nextquadlabel();
 void patchlabel(unsigned,unsigned);
-void backpatch(std::list<unsigned>,unsigned);
+void patchlabel(std::list<unsigned>,unsigned);
+expr* backpatch(expr*);
+
 expr *lvalue_expr(Symbol*);
 expr* newexpr(expr_t);
 expr* newexpr_constbool_e(bool);
@@ -83,6 +85,9 @@ expr* newexpr_constnum_e(double);
 expr* newexpr_conststring_e(char*);
 
 expr* call_emits(expr*,expr*);
+expr* arithop_emits(iopcode,expr*,expr*);
+expr* relop_emits(iopcode,expr*,expr*,unsigned);
+expr* boolop_emits(iopcode,expr*,expr*,unsigned);
 
 expr* member_item(expr*,char*);
 expr* member_item(expr*,double);

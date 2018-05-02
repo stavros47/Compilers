@@ -97,10 +97,24 @@ void patchlabel(unsigned quadNo,unsigned label){
 	quads[quadNo].label = label;
 }
 
-void backpatch(std::list<unsigned> list,unsigned label){
+void patchlabel(std::list<unsigned> list,unsigned label){	
 	for(unsigned i : list){
 		patchlabel(i,label);
 	}
+}
+
+
+expr* backpatch(expr* myexpr){
+	expr* result = new expr();
+	result->type=boolexpr_e;
+	result -> sym = newtemp();
+
+        patchlabel(myexpr->trueList,nextquadlabel());
+        emit(assign,newexpr_constbool_e(true),(expr*)0,result,0,yylineno);
+        emit(jump,(expr*)0,(expr*)0,(expr*)0,nextquadlabel()+2,yylineno);
+        patchlabel(myexpr->falseList,nextquadlabel());
+      	emit(assign,newexpr_constbool_e(false),(expr*)0,result,0,yylineno);
+	return result;
 }
 
 expr* lvalue_expr(Symbol *sym){
@@ -165,6 +179,36 @@ expr* call_emits(expr* list,expr* lvalue){
 	return result;
 }
 
+expr* arithop_emits(iopcode op,expr* arg1,expr* arg2){
+	 if(arg2->type == programfunc_e || arg2->type == libraryfunc_e || arg2->type == newtable_e
+            ||arg2->type == constbool_e ||arg2->type == conststring_e ||arg2->type == boolexpr_e ||arg2->type == nil_e){
+			buffer << "Line: "<< yylineno <<" \n\t";
+			buffer<<"Invalid use of operator + : " << arg2->sym->name<<std::endl;
+         }
+	expr* result = newexpr(arithexpr_e);
+	result->sym = newtemp();
+	emit(op,arg1,arg2,result,0,yylineno);
+	return result;
+}
+
+expr* relop_emits(iopcode op,expr* arg1,expr* arg2,unsigned label){
+	expr* result = newexpr(boolexpr_e);
+	result->sym = newtemp();
+
+	result->trueList.push_back(nextquadlabel());
+	result->falseList.push_back(nextquadlabel()+1);
+	
+	emit(op,arg1,arg2,(expr*)0,0,yylineno);
+        emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+
+	return result;
+}
+
+expr* boolop_emits(iopcode op,expr* arg1,expr* arg2,unsigned label){
+	expr* result = newexpr(arithexpr_e);
+	result->sym = newtemp();
+	return result;
+}
 
 expr* member_item(expr* e1,char* e2){
 		e1 = emit_iftableitem(e1);
