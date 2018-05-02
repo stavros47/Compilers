@@ -9,6 +9,7 @@
 	/*If > 1 return is in a function block. 
 	Increase +1 when entering a function and reduce -1 when exiting*/
 	int inFunction = 0; 
+	int error=0;
 	/*-----------------------------*/
 	unsigned tempcounter=0;
 	quad*    quads = (quad*) 0;
@@ -81,11 +82,11 @@ program:	stmts	{std::cout<<"Program <- stmts"<<std::endl;}
 		;
 
 stmts:		stmts stmt	{
-					//tempcounter=0;
+					tempcounter=0;
 					std::cout<<"stmts <- stmts stmt"<<std::endl;
 				}
 		|stmt		{
-					//tempcounter=0;
+					tempcounter=0;
 					std::cout<<"stmts <- stmt"<<std::endl;
 				}
 		;
@@ -436,18 +437,19 @@ lvalue:		ID		{
 					Symbol* newSym=construct_Symbol($1,((currScope) ? 1 : 0),yylineno,currScope,currRange,currScopeSpace(),currScopeOffset());
 
 					tmp = SymTable.lookup($1,currScope,1);
-					if(tmp==NULL || (tmp->hidden && tmp->scope==currScope)){
+					if(tmp==NULL || tmp->hidden){
 						tmp=SymTable.insert(newSym);
 						incCurrScopeOffset();
 					}else{
 						if(!((tmp->range==currRange || tmp->range==currRange-1) || tmp->scope==0
 							|| tmp->type==LIBRARY_FUNC || tmp->type==PROGRAM_FUNC)){
-								buffer << "Line: "<< yylineno <<"\t"<<tmp->range<<"\t"<<currRange<<" \n\t";
-								buffer<<"ID:Cannot access "<<$1<<" already defined here: "<< tmp->lineno <<std::endl;
+							buffer << "Line: "<< yylineno <<"\t"<<tmp->range<<"\t"<<currRange<<" \n\t";
+							buffer<<"ID:Cannot access "<<$1<<" already defined here: "<< tmp->lineno <<std::endl;
 						}
 					}
 
 					$$=lvalue_expr(tmp);
+
 					std::cout<<"lvalue <- ID"<<std::endl;
 				}
 		| LOCAL ID	{
@@ -458,17 +460,19 @@ lvalue:		ID		{
 					if(tmp==NULL){
 						tmp=SymTable.insert(newSym);
 						incCurrScopeOffset();
+						$$=lvalue_expr(tmp);
 					}else{
 						if((tmp->scope!=currScope || tmp->hidden)  && (tmp->type!=LIBRARY_FUNC)){
 							tmp=SymTable.insert(newSym);
 							incCurrScopeOffset();
+							$$=lvalue_expr(tmp);
 						}else if(tmp->type==LIBRARY_FUNC){
 							buffer << "Line " << yylineno << ":\n\t"<<$2<<" is a Library Function.\n\t";
 							buffer<<"Library functions cannot be shadowed:"<<$2<<" already defined here:" << tmp->lineno<<std::endl;
+							$$=newexpr(nil_e);
 						}
 					}
 
-					$$=lvalue_expr(tmp);
 
 					std::cout<<"lvalue <- LOCAL ID"<<std::endl;
 				}
@@ -479,9 +483,10 @@ lvalue:		ID		{
 					if(tmp==NULL){
 						buffer << "Line: "<< yylineno <<" \n\t";
 						buffer<<"Could not find Global variable:  \""<<$2<<"\" ,is not defined"<<std::endl;
+						$$ = newexpr(nil_e);
+					}else{
+						$$=lvalue_expr(tmp);
 					}
-
-					$$=lvalue_expr(tmp);
 					std::cout<<"lvalue <- SCOPE ID"<<std::endl;
 				}
 		| member	{std::cout<<"lvalue <- member"<<std::endl;}
@@ -532,6 +537,7 @@ call: 		call '(' elist ')'		{
 						}
 
 						$$ = call_emits($2->list,$1);
+						std::cout<<"call <- lvalue callsuffix"<<std::endl;
 					}
 		| '(' funcdef ')' '(' elist ')'	{
 							expr* e = newexpr(programfunc_e);
@@ -557,7 +563,7 @@ normcall:	'(' elist ')'	{
 				}
 		;
 
-methodcall:	DOT_DOT ID '(' elist ')'	{	
+methodcall:	DOT_DOT ID '(' elist ')'	{	$$=new callsuffix();
 							$$->list=$4;
 							$$->method=true;
 							$$->name=$2;
@@ -953,6 +959,7 @@ returnstmt: RETURN expr';'
 int yyerror(const char* yaccProvidedMessage){
 	fprintf(stderr,"%s: at line %d,before token: %s\n",yaccProvidedMessage,yylineno,yytext);
 	fprintf(stderr,"INPUT NOT VALID\n");
+	error=1;
 }
 
 int main(int argc,char** argv){
@@ -983,17 +990,17 @@ int main(int argc,char** argv){
 	buffer.close();
 
 	std::cout<<SymTable.allscopestoString()<<std::endl;
-
 	std::ifstream errors("alpha_compiler_Errors.txt");
 	std::string line;
 	if(errors.is_open()){
 		while(getline(errors,line)){
+			error=1;
 			std::cout<<line<<std::endl;
 		}
 	}
 	remove("alpha_compiler_Errors.txt");
 
 
-	std::cout<<quads_toString()<<std::endl;
+	if(!error) std::cout<<quads_toString()<<std::endl;
 return 0;
 }

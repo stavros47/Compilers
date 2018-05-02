@@ -34,14 +34,13 @@ std::string newtempname(){
 Symbol* newtemp(){
 	Symbol* tmp;
 	std::string name = newtempname();
-	tmp = SymTable.lookup(name,currScope);
-	if(tmp==NULL){
+	tmp = SymTable.lookup(name,currScope,1);
+	if(tmp==NULL || ((tmp->scope==currScope || tmp->scope==0) || (tmp->range==currRange || tmp->range==currRange-1))){
+
 		tmp=construct_Symbol(name, ((currScope) ? 1 : 0), yylineno, currScope,currRange, currScopeSpace(), currScopeOffset());
 		tmp= SymTable.insert(tmp);
 		incCurrScopeOffset();
-	}else{
-//		tmp->offset = currScopeOffset();
-	} 
+	}
 
 	return tmp;
 }
@@ -154,8 +153,8 @@ expr* call_emits(expr* list,expr* lvalue){
 		list=list->next;
 	}
 
-	emit(call,(expr*)0,(expr*)0,lvalue,0,yylineno);
-	expr* result = newexpr(assignexpr_e);
+	emit(call,(expr*)0,(expr*)0,func,0,yylineno);
+	expr* result = newexpr(var_e);
 	result->sym = newtemp();
 	emit(getretval,(expr*)0,(expr*)0,result,0,yylineno);
 	return result;
