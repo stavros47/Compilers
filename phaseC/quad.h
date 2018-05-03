@@ -60,6 +60,11 @@ struct callsuffix{
 	char* name;
 };
 
+struct forPrefix{
+        int test;
+	int enter;
+};
+
 void expand(void);
 void emit(iopcode op,expr* arg1,expr* arg2,expr* result,unsigned label,unsigned line);
 
@@ -77,6 +82,7 @@ unsigned nextquadlabel();
 void patchlabel(unsigned,unsigned);
 void patchlabel(std::list<unsigned>,unsigned);
 expr* backpatch(expr*);
+expr* checkexpr(expr*);
 
 expr *lvalue_expr(Symbol*);
 expr* newexpr(expr_t);
@@ -86,7 +92,7 @@ expr* newexpr_conststring_e(char*);
 
 expr* call_emits(expr*,expr*);
 expr* arithop_emits(iopcode,expr*,expr*);
-expr* relop_emits(iopcode,expr*,expr*,unsigned);
+expr* relop_emits(iopcode,expr*,expr*);
 expr* boolop_emits(iopcode,expr*,expr*,unsigned);
 
 expr* member_item(expr*,char*);
@@ -94,15 +100,16 @@ expr* member_item(expr*,double);
 expr* emit_iftableitem(expr*);
 
 std::string iopcode_toString();
-std::string expr_toString();
+std::string expr_toString(expr*);
 std::string quads_toString();
 
+extern quad*	quads;
 extern unsigned programVarOffset;
 extern unsigned functionLocalOffset;
 extern unsigned formalArgOffset;
-
+extern unsigned error;
+extern unsigned inFucntion;
 extern unsigned tempcounter;
-extern quad*	quads;
 extern unsigned total;
 extern unsigned currQuad;
 extern int yyerror(const char* yaccProvidedMessage);
@@ -111,7 +118,7 @@ extern int yylineno;
 extern char* yytext;
 extern FILE* yyin;
 extern HashTable SymTable; 
-extern std::fstream buffer;
+extern std::fstream error_buffer,grammar_buffer;
 extern std::stack<unsigned> offsetStack;
 extern unsigned suffixNum;
 extern unsigned currScope;

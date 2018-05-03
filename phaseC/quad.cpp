@@ -105,8 +105,7 @@ void patchlabel(std::list<unsigned> list,unsigned label){
 
 
 expr* backpatch(expr* myexpr){
-	expr* result = new expr();
-	result->type=boolexpr_e;
+	expr* result = newexpr(boolexpr_e);
 	result -> sym = newtemp();
 
         patchlabel(myexpr->trueList,nextquadlabel());
@@ -115,6 +114,14 @@ expr* backpatch(expr* myexpr){
         patchlabel(myexpr->falseList,nextquadlabel());
       	emit(assign,newexpr_constbool_e(false),(expr*)0,result,0,yylineno);
 	return result;
+}
+
+expr* checkexpr(expr* e){
+	assert(e);
+	if(e->type==boolexpr_e)
+		return backpatch(e);
+
+	return e;
 }
 
 expr* lvalue_expr(Symbol *sym){
@@ -182,8 +189,8 @@ expr* call_emits(expr* list,expr* lvalue){
 expr* arithop_emits(iopcode op,expr* arg1,expr* arg2){
 	 if(arg2->type == programfunc_e || arg2->type == libraryfunc_e || arg2->type == newtable_e
             ||arg2->type == constbool_e ||arg2->type == conststring_e ||arg2->type == boolexpr_e ||arg2->type == nil_e){
-			buffer << "Line: "<< yylineno <<" \n\t";
-			buffer<<"Invalid use of operator + : " << arg2->sym->name<<std::endl;
+			error_buffer << "Line: "<< yylineno <<" \n\t";
+			error_buffer<<"Invalid use of operator + : " << arg2->sym->name<<std::endl;
          }
 	expr* result = newexpr(arithexpr_e);
 	result->sym = newtemp();
@@ -191,7 +198,7 @@ expr* arithop_emits(iopcode op,expr* arg1,expr* arg2){
 	return result;
 }
 
-expr* relop_emits(iopcode op,expr* arg1,expr* arg2,unsigned label){
+expr* relop_emits(iopcode op,expr* arg1,expr* arg2){
 	expr* result = newexpr(boolexpr_e);
 	result->sym = newtemp();
 
