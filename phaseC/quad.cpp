@@ -309,7 +309,7 @@ std::string quads_toString(){
 	for(int i=1;i<currQuad;i++){
 		buffer<<std::to_string(i)<<": ";
 		width = (i > 9) ? 11 : 12; // width space
-
+		int labelWidth = 40;
 		buffer<<std::setw(width)<<iopcode_toString(quads[i].op);
 		// if(quads[i].result)	buffer<<std::setw(10)<<expr_toString(quads[i].result);
 		// if(quads[i].arg1)	buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
@@ -317,15 +317,18 @@ std::string quads_toString(){
 		// if(quads[i].label != 0) buffer<<std::setw(10)<<quads[i].label;
 		if(quads[i].result){
 			buffer<<std::setw(10)<<expr_toString(quads[i].result);
+			labelWidth -= 10;
 		}
 		if(quads[i].arg1){
 			buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
+			labelWidth -= 10;
 		}
 		if(quads[i].arg2){
 			buffer<<std::setw(10)<<expr_toString(quads[i].arg2);
+			labelWidth -= 10;
 		}
 		if(quads[i].label != 0){
-			buffer<<std::setw(40)<<quads[i].label;
+			buffer<<std::setw(labelWidth)<<quads[i].label;
 		}
 //		buffer<<std::setw(10)<<"[line:"<<quads[i].line<<']';
 		buffer<<std::endl;
