@@ -919,7 +919,7 @@ forstmt:	forprefix N elist')' N stmt N	{
 							breakStack.pop();
 
 							for(unsigned i : continueList){
-								patchlabel(i,$2);
+								patchlabel(i,$2+1);
 							}
 							continueList = continueStack.top();
 							continueStack.pop();
