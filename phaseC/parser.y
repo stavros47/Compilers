@@ -134,94 +134,70 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 					grammar_buffer<<"expr % expr"<<std::endl;
 				}
 		| expr '>' expr	{
-/*					if($1->type != arithexpr_e || $3->type!=arithexpr_e){
-						error_buffer << "Line: "<< yylineno <<" \n\t";
-						error_buffer<<"Invalid type for boolean expression : "<<std::endl;
-					}
-*/
 					$$=relop_emits(if_greater,$1,$3);
 					grammar_buffer<<"expr > expr"<<std::endl;
 				}
 		| expr '<' expr	{
-/*					if($1->type != arithexpr_e || $3->type!=arithexpr_e){
-						error_buffer << "Line: "<< yylineno <<" \n\t";
-						error_buffer<<"Invalid type for boolean expression : "<<std::endl;
-					}
-*/					$$=relop_emits(if_less,$1,$3);
+					$$=relop_emits(if_less,$1,$3);
 					grammar_buffer<<"expr < expr"<<std::endl;
 				}
 		| expr GREATER_EQUAL expr 	{
-/*							if($1->type != arithexpr_e || $3->type!=arithexpr_e){
-								error_buffer << "Line: "<< yylineno <<" \n\t";
-								error_buffer<<"Invalid type for boolean expression : "<<std::endl;
-							}
-*/							$$=relop_emits(if_greatereq,$1,$3);
+							$$=relop_emits(if_greatereq,$1,$3);
 							grammar_buffer<<"expr >= expr"<<std::endl;
 						}
 		| expr LESS_EQUAL expr	{
-/*						if($1->type != arithexpr_e || $3->type!=arithexpr_e){
-							error_buffer << "Line: "<< yylineno <<" \n\t";
-							error_buffer<<"Invalid type for boolean expression : "<<std::endl;
-						}
-*/						$$=relop_emits(if_lesseq,$1,$3);
+						$$=relop_emits(if_lesseq,$1,$3);
 						grammar_buffer<<"expr <= expr"<<std::endl;
 					}
 		| expr NOT_EQUAL expr	{
-/*						if($1->type != arithexpr_e || $3->type!=arithexpr_e){
-							error_buffer << "Line: "<< yylineno <<" \n\t";
-							error_buffer<<"Invalid type for boolean expression : "<<std::endl;
-						}
-*/						$1=checkexpr($1);
+						$1=checkexpr($1);
 						$3=checkexpr($3);
 						$$=relop_emits(if_noteq,$1,$3);
 						grammar_buffer<<"expr!=expr"<<std::endl;
 					}
 		| expr EQUAL_EQUAL expr	{
-/*						if($1->type != arithexpr_e || $3->type!=arithexpr_e){
-							error_buffer << "Line: "<< yylineno <<" \n\t";
-							error_buffer<<"Invalid type for boolean expression : "<<std::endl; 
-						}
-						
-*/						$1=checkexpr($1);
+						$1=checkexpr($1);
 						$3=checkexpr($3);
 						$$=relop_emits(if_eq,$1,$3);
 						grammar_buffer<<"expr == expr"<<std::endl;
 					}
-		| expr OR M expr	{
+		| expr OR 		{
 						if($1->type!=boolexpr_e){
 							$1 = relop_emits(if_eq,$1,newexpr_constbool_e(true));
-							$3+=2;
 						}
-						if($4->type!=boolexpr_e){
-							$4 = relop_emits(if_eq,$4,newexpr_constbool_e(true));
+					} 
+		M expr			{
+						if($5->type!=boolexpr_e){
+							$5 = relop_emits(if_eq,$5,newexpr_constbool_e(true));
 						}
 					
-						patchlabel($1->falseList,$3);
+						patchlabel($1->falseList,$4);
 
 						$$ = newexpr(boolexpr_e);
 					
-						$$->trueList = mergeList($1->trueList,$4->trueList);
+						$$->trueList = mergeList($1->trueList,$5->trueList);
 	
-						$$->falseList = $4->falseList;
+						$$->falseList = $5->falseList;
 
 						grammar_buffer<<"expr or M expr"<<std::endl;
 					}
-		| expr AND M expr	{
+		| expr AND		{
 						if($1->type!=boolexpr_e){
 							$1=relop_emits(if_eq,$1,newexpr_constbool_e(true));
-							$3+=2;
 						}
-						if($4->type!=boolexpr_e){
-							$4=relop_emits(if_eq,$4,newexpr_constbool_e(true));
+					}
+		 M expr			{
+						if($5->type!=boolexpr_e){
+							$5=relop_emits(if_eq,$5,newexpr_constbool_e(true));
 						}
 					
-						patchlabel($1->trueList,$3);
+						patchlabel($1->trueList,$4);
 
 						$$ = newexpr(boolexpr_e);
 
-						$$->trueList = $4->trueList;
+						$$->trueList = $5->trueList;
 
-						$$->falseList =mergeList($1->falseList,$4->falseList);
+						$$->falseList =mergeList($1->falseList,$5->falseList);
 
 						grammar_buffer<<"expr and M expr"<<std::endl;
 					}
