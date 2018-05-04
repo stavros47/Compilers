@@ -225,7 +225,10 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 
 
 
-term:		'('expr')'		{grammar_buffer<<"term <- ( expr )"<<std::endl;}
+term:		'('expr')'		{
+						$$=$2;
+						grammar_buffer<<"term <- ( expr )"<<std::endl;
+					}
 		| '-'expr %prec UMINUS	{
 						$2 = checkexpr($2);
 
@@ -240,6 +243,7 @@ term:		'('expr')'		{grammar_buffer<<"term <- ( expr )"<<std::endl;}
 						$$->sym = $2->sym;
 						$$->trueList = $2->falseList;
 						$$->falseList = $2->trueList;
+						$$ = checkexpr($$);
 						
 						
 						grammar_buffer<<"term <- ! expr"<<std::endl;}
