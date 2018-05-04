@@ -307,30 +307,28 @@ std::string expr_toString(expr* temp){
 /* std::setw sets the width of the column for better print alignment */
 std::string quads_toString(){
 	std::ostringstream buffer;
-	int width = 12;
-	buffer<<"#Quad"<<std::setw(10)<<"OpCode"<<std::setw(10)<<"result"<<std::setw(10)<<"arg1"<<std::setw(10)<<"arg2"<<std::setw(10)<<"label"<<std::endl;
-	buffer<<"--------------------------------------------------------\n";
+	int width = 15;
+	buffer<<"---------------------------------------------------------------------------------\n";
+	buffer<<"#Quad"<<std::setw(width)<<"OpCode"<<std::setw(width)<<"result"<<std::setw(width)<<"arg1"<<std::setw(width)<<"arg2"<<std::setw(width)<<"label"<<std::endl;
+	buffer<<"---------------------------------------------------------------------------------\n";
 	
 	for(int i=1;i<currQuad;i++){
-		buffer<<std::to_string(i)<<": ";
-		width = (i > 9) ? 11 : 12; // width space
-		int labelWidth = 40;
+		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<": ";
+		//width = (i > 9) ? 14 : 15; // width space
+		int labelWidth = 60;// (i > 9) ? 40 : 41;
 		buffer<<std::setw(width)<<iopcode_toString(quads[i].op);
-		// if(quads[i].result)	buffer<<std::setw(10)<<expr_toString(quads[i].result);
-		// if(quads[i].arg1)	buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
-		// if(quads[i].arg2)	buffer<<std::setw(10)<<expr_toString(quads[i].arg2); 
-		// if(quads[i].label != 0) buffer<<std::setw(10)<<quads[i].label;
+
 		if(quads[i].result){
-			buffer<<std::setw(10)<<expr_toString(quads[i].result);
-			labelWidth -= 10;
+			buffer<<std::setw(15)<<expr_toString(quads[i].result);
+			labelWidth -= 15;
 		}
 		if(quads[i].arg1){
-			buffer<<std::setw(10)<<expr_toString(quads[i].arg1);
-			labelWidth -= 10;
+			buffer<<std::setw(15)<<expr_toString(quads[i].arg1);
+			labelWidth -= 15;
 		}
 		if(quads[i].arg2){
-			buffer<<std::setw(10)<<expr_toString(quads[i].arg2);
-			labelWidth -= 10;
+			buffer<<std::setw(15)<<expr_toString(quads[i].arg2);
+			labelWidth -= 15;
 		}
 		if(quads[i].label != 0){
 			buffer<<std::setw(labelWidth)<<quads[i].label;
@@ -339,6 +337,8 @@ std::string quads_toString(){
 		buffer<<std::endl;
 
 	}
+	buffer<<"--------------------------------------------------------------------------------\n";
+
 	return buffer.str();
 }
 
