@@ -228,10 +228,7 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 
 
 
-term:		'('expr')'		{
-						$$ = checkexpr($2);
-						grammar_buffer<<"term <- ( expr )"<<std::endl;
-					}
+term:		'('expr')'		{grammar_buffer<<"term <- ( expr )"<<std::endl;}
 		| '-'expr %prec UMINUS	{
 						$2 = checkexpr($2);
 
