@@ -83,6 +83,7 @@ void patchlabel(unsigned,unsigned);
 void patchlabel(std::list<unsigned>,unsigned);
 expr* backpatch(expr*);
 expr* checkexpr(expr*);
+std::list<unsigned> mergeList(std::list<unsigned>,std::list<unsigned> );
 
 expr *lvalue_expr(Symbol*);
 expr* newexpr(expr_t);

@@ -124,6 +124,11 @@ expr* checkexpr(expr* e){
 	return e;
 }
 
+std::list<unsigned> mergeList(std::list<unsigned> dest,std::list<unsigned> src){
+	dest.splice(dest.end(),src);
+        return dest;
+}
+
 expr* lvalue_expr(Symbol *sym){
 	assert(sym);
 	expr* e = new expr();

@@ -45,7 +45,7 @@
 
 
 %right	'='
-%left 	OR
+%left	OR
 %left	AND
 %nonassoc EQUAL_EQUAL NOT_EQUAL
 %nonassoc '>' GREATER_EQUAL '<' LESS_EQUAL
@@ -182,6 +182,25 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 */						$$=relop_emits(if_eq,$1,$3);
 						grammar_buffer<<"expr == expr"<<std::endl;
 					}
+		| expr OR M expr	{
+						if($1->type!=boolexpr_e){
+							$1 = relop_emits(if_eq,$1,newexpr_constbool_e(true));
+							$3+=2;
+						}
+						if($4->type!=boolexpr_e){
+							$4 = relop_emits(if_eq,$4,newexpr_constbool_e(true));
+						}
+					
+						patchlabel($1->falseList,$3);
+
+						$$ = newexpr(boolexpr_e);
+					
+						$$->trueList = mergeList($1->trueList,$4->trueList);
+	
+						$$->falseList = $4->falseList;
+
+						grammar_buffer<<"expr or M expr"<<std::endl;
+					}
 		| expr AND M expr	{
 						if($1->type!=boolexpr_e){
 							$1=relop_emits(if_eq,$1,newexpr_constbool_e(true));
@@ -197,39 +216,17 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 
 						$$->trueList = $4->trueList;
 
-						$1->falseList.splice($1->falseList.end(),$4->falseList);
-						$$->falseList=$1->falseList;
+						$$->falseList =mergeList($1->falseList,$4->falseList);
 
-						grammar_buffer<<"expr and expr"<<std::endl;
+						grammar_buffer<<"expr and M expr"<<std::endl;
 					}
-		| expr OR M expr	{
-						if($1->type!=boolexpr_e){
-							$1 = relop_emits(if_eq,$1,newexpr_constbool_e(true));
-							$3+=2;
-						}
-						if($4->type!=boolexpr_e){
-							$4 = relop_emits(if_eq,$4,newexpr_constbool_e(true));
-						}
-					
-						patchlabel($1->falseList,$3);
-
-						$$ = newexpr(boolexpr_e);
-						
-						$1->trueList.splice($1->trueList.end(),$4->trueList);
-						$$->trueList=$1->trueList;
-
-						$$->falseList = $4->falseList;
-
-						grammar_buffer<<"expr or expr"<<std::endl;
-					}
-
 		| term		{grammar_buffer<<"expr <- term"<<std::endl;}
 		;
 
 
 
 term:		'('expr')'		{
-						$$ = checkexpr($2);
+						$$=$2;
 						grammar_buffer<<"term <- ( expr )"<<std::endl;
 					}
 		| '-'expr %prec UMINUS	{
@@ -246,6 +243,7 @@ term:		'('expr')'		{
 						$$->sym = $2->sym;
 						$$->trueList = $2->falseList;
 						$$->falseList = $2->trueList;
+						$$ = checkexpr($$);
 						
 						
 						grammar_buffer<<"term <- ! expr"<<std::endl;}
@@ -364,7 +362,7 @@ assignexpr:	lvalue	'=' expr	{
 						$3 = checkexpr($3);
 
 						if($1->type ==tableitem_e){
-							emit(tablesetelem,$3,$$,$1->index,0,yylineno);
+							emit(tablesetelem,$1->index,$3,$1,0,yylineno);
 							$$ = emit_iftableitem($1);
 							$$ -> type = assignexpr_e;
 						}else{
@@ -543,12 +541,17 @@ methodcall:	DOT_DOT ID '(' elist ')'	{	$$=new callsuffix();
 		;
 
 elist: 		elist exprs	{
-					$2->next=$1;
-					$$=$2;
+					expr* tmp;
+					tmp=$1;
+					while(tmp->next!=NULL)
+						tmp=tmp->next;
+
+					tmp->next=$2;
+					$$=$1;
 					grammar_buffer<<"elist <- elist exprs"<<std::endl;
 				}
 		|expr		{
-					$1 = checkexpr($1);
+					$$ = checkexpr($1);
 					grammar_buffer<<"elist <- expr"<<std::endl;
 				}
 		|		{
@@ -916,7 +919,7 @@ forstmt:	forprefix N elist')' N stmt N	{
 							breakStack.pop();
 
 							for(unsigned i : continueList){
-								patchlabel(i,$2);
+								patchlabel(i,$2+1);
 							}
 							continueList = continueStack.top();
 							continueStack.pop();
