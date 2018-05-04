@@ -1,4 +1,6 @@
 *.o
+*.txt
+/tests
 easy.asc
 parser.cpp
 scanner.cpp
