@@ -171,7 +171,9 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 							error_buffer << "Line: "<< yylineno <<" \n\t";
 							error_buffer<<"Invalid type for boolean expression : "<<std::endl;
 						}
-*/						$$=relop_emits(if_noteq,$1,$3);
+*/						$1=checkexpr($1);
+						$3=checkexpr($3);
+						$$=relop_emits(if_noteq,$1,$3);
 						grammar_buffer<<"expr!=expr"<<std::endl;
 					}
 		| expr EQUAL_EQUAL expr	{
@@ -179,7 +181,10 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 							error_buffer << "Line: "<< yylineno <<" \n\t";
 							error_buffer<<"Invalid type for boolean expression : "<<std::endl; 
 						}
-*/						$$=relop_emits(if_eq,$1,$3);
+						
+*/						$1=checkexpr($1);
+						$3=checkexpr($3);
+						$$=relop_emits(if_eq,$1,$3);
 						grammar_buffer<<"expr == expr"<<std::endl;
 					}
 		| expr OR M expr	{
@@ -243,7 +248,6 @@ term:		'('expr')'		{
 						$$->sym = $2->sym;
 						$$->trueList = $2->falseList;
 						$$->falseList = $2->trueList;
-						$$ = checkexpr($$);
 						
 						
 						grammar_buffer<<"term <- ! expr"<<std::endl;}
