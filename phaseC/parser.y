@@ -2,27 +2,32 @@
 	#include "quad.h"
 
 	quad*    quads = (quad*) 0;
-	unsigned tempcounter=0;
-	unsigned total=1;
-	unsigned currQuad =1;
 
 	unsigned programVarOffset=0;
 	unsigned functionLocalOffset=0;
 	unsigned formalArgOffset=0;
 
 	unsigned error=0;
+
+	unsigned inFunction = 0; 
+	unsigned inside_loop=0;
+
+	unsigned tempcounter=0;
+
+	unsigned total=1;
+	unsigned currQuad =1;
+
 	unsigned suffixNum=0;
 	unsigned currScope=0;
 	unsigned currRange=1;
 	unsigned currOffset=0;
-	unsigned inside_loop=0;
-	unsigned inFunction = 0; 
+
 	HashTable SymTable;
 	std::fstream error_buffer;
 	std::fstream grammar_buffer;
 	std::stack<unsigned> offsetStack,labelStack;
-	std::list<unsigned> funcReturnsList,breakList,continueList;
-	std::stack<std::list<unsigned>> returnStack,breakStack,continueStack;
+	std::stack<std::list<unsigned>> breakStack,continueStack;
+	std::list<unsigned> breakList,continueList;
 %}
 
 %start program
@@ -152,23 +157,23 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 		| expr NOT_EQUAL expr	{
 						$1=checkexpr($1);
 						$3=checkexpr($3);
-						$$=relop_emits(if_noteq,$1,$3);
+						$$=boolop_emits(if_noteq,$1,$3);
 						grammar_buffer<<"expr!=expr"<<std::endl;
 					}
 		| expr EQUAL_EQUAL expr	{
 						$1=checkexpr($1);
 						$3=checkexpr($3);
-						$$=relop_emits(if_eq,$1,$3);
+						$$=boolop_emits(if_eq,$1,$3);
 						grammar_buffer<<"expr == expr"<<std::endl;
 					}
 		| expr OR 		{
 						if($1->type!=boolexpr_e){
-							$1 = relop_emits(if_eq,$1,newexpr_constbool_e(true));
+							$1 = boolop_emits(if_eq,$1,newexpr_constbool_e(true));
 						}
 					} 
 		M expr			{
 						if($5->type!=boolexpr_e){
-							$5 = relop_emits(if_eq,$5,newexpr_constbool_e(true));
+							$5 = boolop_emits(if_eq,$5,newexpr_constbool_e(true));
 						}
 					
 						patchlabel($1->falseList,$4);
@@ -183,12 +188,12 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 					}
 		| expr AND		{
 						if($1->type!=boolexpr_e){
-							$1=relop_emits(if_eq,$1,newexpr_constbool_e(true));
+							$1=boolop_emits(if_eq,$1,newexpr_constbool_e(true));
 						}
 					}
 		 M expr			{
 						if($5->type!=boolexpr_e){
-							$5=relop_emits(if_eq,$5,newexpr_constbool_e(true));
+							$5=boolop_emits(if_eq,$5,newexpr_constbool_e(true));
 						}
 					
 						patchlabel($1->trueList,$4);
@@ -211,15 +216,17 @@ term:		'('expr')'		{
 						grammar_buffer<<"term <- ( expr )"<<std::endl;
 					}
 		| '-'expr %prec UMINUS	{
-						$2 = checkexpr($2);
-
+						if(!isValid_arithop($2)){
+							error_buffer << "Line: "<< yylineno <<" \n\t";
+							error_buffer<<"Invalid use of prefix operator -(UMINUS) : " << $2->sym->name << " refers to a function type."<<std::endl;
+						}
 						$$ = newexpr(arithexpr_e);
 						$$->sym = newtemp();
 						emit(uminus,$2,(expr*)0,$$,0,yylineno);
 						grammar_buffer<<"term <- - expr (UMINUS)"<<std::endl;
 					}
 		| NOT expr		{
-						$2 = relop_emits(if_eq,$2,newexpr_constbool_e(true));
+						$2 = boolop_emits(if_eq,$2,newexpr_constbool_e(true));
 						$$ = newexpr(boolexpr_e);
 						$$->sym = $2->sym;
 						$$->trueList = $2->falseList;
@@ -228,12 +235,12 @@ term:		'('expr')'		{
 						
 						grammar_buffer<<"term <- ! expr"<<std::endl;}
 		| PLUS_PLUS lvalue	{
-						if(($2!=NULL) && ($2->type == libraryfunc_e || $2->type == programfunc_e)){
+						if(!isValid_arithop($2)){
 							error_buffer << "Line: "<< yylineno <<" \n\t";
 							error_buffer<<"Invalid use of prefix operator ++ : " << $2->sym->name << " refers to a function type."<<std::endl;
 						}else if($2->sym==NULL){
                                                         error_buffer<<"Line: " <<yylineno<< ":";
-                                                        error_buffer<<" undeclared variable."<<std::endl;
+                                                        error_buffer<<"Undeclared variable."<<std::endl;
                                                 }
 
 						if($2->type==tableitem_e){
@@ -251,7 +258,7 @@ term:		'('expr')'		{
 						grammar_buffer<<"term <- ++ lvalue"<<std::endl;
 					}
 		| lvalue PLUS_PLUS	{
-						if(($1!=NULL) && ($1->type == libraryfunc_e || $1->type == programfunc_e)){
+						if(!isValid_arithop($1)){
 							error_buffer<<"Invalid use of suffix operator ++ : " << $1->sym->name << " refers to a function type."<<std::endl;
 						}else if($1->sym==NULL){
 							error_buffer<<"Line: " <<yylineno<< ":\n\t";
@@ -400,18 +407,16 @@ lvalue:		ID		{
 					if(tmp==NULL){
 						tmp=SymTable.insert(newSym);
 						incCurrScopeOffset();
-						$$=lvalue_expr(tmp);
 					}else{
 						if((tmp->scope!=currScope || tmp->hidden)  && (tmp->type!=LIBRARY_FUNC)){
 							tmp=SymTable.insert(newSym);
 							incCurrScopeOffset();
-							$$=lvalue_expr(tmp);
 						}else if(tmp->type==LIBRARY_FUNC){
 							error_buffer << "Line " << yylineno << ":\n\t"<<$2<<" is a Library Function.\n\t";
 							error_buffer<<"Library functions cannot be shadowed:"<<$2<<" already defined here:" << tmp->lineno<<std::endl;
-							$$=newexpr(nil_e);
 						}
 					}
+					$$=lvalue_expr(tmp);
 
 					grammar_buffer<<"lvalue <- LOCAL ID"<<std::endl;
 				}
@@ -422,10 +427,9 @@ lvalue:		ID		{
 					if(tmp==NULL){
 						error_buffer << "Line: "<< yylineno <<" \n\t";
 						error_buffer<<"Could not find Global variable:  \""<<$2<<"\" ,is not defined"<<std::endl;
-						$$ = newexpr(nil_e);
-					}else{
-						$$=lvalue_expr(tmp);
 					}
+				
+					$$=lvalue_expr(tmp);
 					grammar_buffer<<"lvalue <- SCOPE ID"<<std::endl;
 				}
 		| member	{grammar_buffer<<"lvalue <- member"<<std::endl;}
@@ -446,6 +450,7 @@ member:		lvalue'.'ID	{
 						}else{
 							$$ = member_item($1,const_cast<char*>($3->sym->name.c_str()));
 						}
+
 						grammar_buffer<<"member <- lvalue [expr]"<<std::endl;
 					}
 		| call '.' ID		{
@@ -512,12 +517,13 @@ normcall:	'(' elist ')'	{
 				}
 		;
 
-methodcall:	DOT_DOT ID '(' elist ')'	{	$$=new callsuffix();
-							$$->list=$4;
-							$$->method=true;
-							$$->name=$2;
-							grammar_buffer<<"methodcall <- ..ID(elist)"<<std::endl;
-						}
+methodcall:	DOT_DOT ID '(' elist ')'{
+						$$=new callsuffix();
+						$$->list=$4;
+						$$->method=true;
+						$$->name=$2;
+						grammar_buffer<<"methodcall <- ..ID(elist)"<<std::endl;
+					}
 		;
 
 elist: 		elist exprs	{
@@ -654,14 +660,16 @@ funcprefix: FUNCTION funcname	{
 
 
 					$$=tmp;
-					labelStack.push(currQuad);
+
+					labelStack.push(nextquadlabel());
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+
 					$$->function.iaddress = nextquadlabel();
 					emit(funcstart,(expr*)0,(expr*)0,lvalue_expr($$),0,yylineno);
+
 					currScope++;
 					currRange++;
 					offsetStack.push(formalArgOffset);
-					offsetStack.push(functionLocalOffset);
 					formalArgOffset = 0;
 					grammar_buffer<<"funcprefix <-FUNCTION funcname"<<std::endl;
 				}
@@ -669,10 +677,9 @@ funcprefix: FUNCTION funcname	{
 funcargs:	'('idlist')'	{
 					currScope--;
 					currRange++;
+					offsetStack.push(functionLocalOffset);
 					functionLocalOffset=0;
 					inFunction++;
-					returnStack.push(funcReturnsList);
-					funcReturnsList.clear();
 					grammar_buffer<<"funcargs <-( idlist )"<<std::endl;
 				}
 		;
@@ -691,18 +698,11 @@ funcdef:	funcprefix funcargs funcbody	{
 							formalArgOffset = offsetStack.top();
 							offsetStack.pop();
 
-						
-							//patch the return jumps
-							for(unsigned jumpLabel : funcReturnsList){
-								patchlabel(jumpLabel, nextquadlabel());
-							}
 							emit(funcend,(expr*)0,(expr*)0,lvalue_expr($1),0,yylineno);
-							funcReturnsList=returnStack.top();
-							returnStack.pop();
-							
+
 							unsigned labels=labelStack.top();
 							labelStack.pop();
-							patchlabel(labels,currQuad);
+							patchlabel(labels,nextquadlabel());
 
 							grammar_buffer<<"funcdef <- funcprefix funcargs funcbody"<<std::endl;
 						}
@@ -789,7 +789,7 @@ idlists: 	',' ID		{
 ifprefix:	IF '(' expr ')'	{
 					$3 = checkexpr($3);
 
-					emit(if_eq,$3,newexpr_constbool_e(true),(expr*)0,currQuad+2,yylineno);
+					emit(if_eq,$3,newexpr_constbool_e(true),(expr*)0,nextquadlabel()+2,yylineno);
 					$$=nextquadlabel();
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
 					grammar_buffer<<"ifprefix <- IF ( expr )"<<std::endl;
@@ -827,10 +827,13 @@ whilecond:	'(' expr ')' 	{
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
 
 					inside_loop++;
+
 					breakStack.push(breakList);
 					continueStack.push(continueList);
+
 					breakList.clear();
 					continueList.clear();
+
 					grammar_buffer<<"whilecond <- ( expr )"<<std::endl;
 				}
 		;
@@ -838,15 +841,12 @@ whilecond:	'(' expr ')' 	{
 whilestmt:	whilestart whilecond  stmt	{
 							emit(jump,(expr*)0,(expr*)0,(expr*)0,$1,yylineno);
 							patchlabel($2,nextquadlabel());
-							for(unsigned i : breakList){
-								patchlabel(i,nextquadlabel());
-							}
+						
+							patchlabel(breakList,nextquadlabel());
 							breakList = breakStack.top();
 							breakStack.pop();
 
-							for(unsigned i : continueList){
-								patchlabel(i,$1);
-							}
+							patchlabel(continueList,$1);
 							continueList = continueStack.top();
 							continueStack.pop();
 
@@ -892,17 +892,14 @@ forstmt:	forprefix N elist')' N stmt N	{
 							patchlabel($5,$1->test);
 							patchlabel($7,$2+1);
 						
-							for(unsigned i : breakList){
-								patchlabel(i,nextquadlabel());
-							}
+							patchlabel(breakList,nextquadlabel());
 							breakList = breakStack.top();
 							breakStack.pop();
 
-							for(unsigned i : continueList){
-								patchlabel(i,$2+1);
-							}
+							patchlabel(continueList,$2+1);
 							continueList = continueStack.top();
 							continueStack.pop();
+
 							inside_loop--;
 							grammar_buffer<<"forstmt <- forprefix N elist ) N stmt N"<<std::endl;
 						}
@@ -911,29 +908,25 @@ forstmt:	forprefix N elist')' N stmt N	{
 returnstmt: RETURN expr';'	
 			{
 				$2 = checkexpr($2);	
-				/*Should be made a function in a general purpose utilities.h for commonly used functions*/
-				if(inFunction > 0){
-					emit(ret,(expr*)0,(expr*)0,$2,0,yylineno);
-					funcReturnsList.push_back(nextquadlabel());
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
-				}else{
+				if(!inFunction){
 					error_buffer << "Line: "<< yylineno <<" \n\t";
 					error_buffer<<"return statement not within a function. "<<std::endl;
 				}
+
+				emit(ret,(expr*)0,(expr*)0,$2,0,yylineno);
+				
 				
 				grammar_buffer<<"returnstmt <- RETURN expr ;"<<std::endl;
 			}
 			|RETURN ';'	
 			{
-				/*Should be made a function in a general purpose utilities.h for commonly used functions*/
-				if(inFunction > 0){
-					emit(ret,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
-					funcReturnsList.push_back(nextquadlabel());
-					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
-				}else{
+				if(!inFunction){
 					error_buffer << "Line: "<< yylineno <<" \n\t";
 					error_buffer<<"return statement not within a function. "<<std::endl;
 				}
+
+				emit(ret,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+				
 				grammar_buffer<<"returnstmt <- RETURN ;"<<std::endl;
 			}
 		;

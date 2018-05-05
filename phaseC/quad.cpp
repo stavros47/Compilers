@@ -63,29 +63,20 @@ int currentScope(){
 
 unsigned currScopeOffset(){
 	switch(currScopeSpace()){
-		case programVar : return programVarOffset;
-		case functionLocal : return functionLocalOffset;
+		case programVar : 	return programVarOffset;
+		case functionLocal : 	return functionLocalOffset;
 		case formalArg	:	return formalArgOffset;
-		default	:	assert(0);
+		default	:		assert(0);
 	}
 }
 
 void incCurrScopeOffset(){
 	switch (currScopeSpace()){
-		case programVar: ++programVarOffset;break;
+		case programVar: 	++programVarOffset;break;
 		case functionLocal:	++functionLocalOffset;break;
-		case formalArg:	++formalArgOffset;break;
-		default:	assert(0);
+		case formalArg:		++formalArgOffset;break;
+		default:		assert(0);
 	}
-}
-
-void enterScopeSpace(){
-	++currRange;
-}
-
-void exitScopeSpace(){
-	assert(currRange>1);
-	--currRange;
 }
 
 unsigned nextquadlabel(){
@@ -137,14 +128,13 @@ expr* lvalue_expr(Symbol *sym){
 	e->next = (expr*)0;
 	e->sym = sym;
 
-	if ((sym->type == GLOBAL_VAR) || (sym->type == LOCAL_VAR) || (sym->type ==FUNC_ARG)){
-		e->type = var_e;
-	}else if(sym->type == PROGRAM_FUNC){
-		e->type = programfunc_e;
-	}else if(sym->type == LIBRARY_FUNC){
-		e->type = libraryfunc_e;
-	}else{
-		assert(0);
+	switch ( sym->type){
+		case GLOBAL_VAR:
+		case LOCAL_VAR:
+		case FUNC_ARG:		e->type = var_e;break;
+		case PROGRAM_FUNC:	e->type = programfunc_e;break;
+		case LIBRARY_FUNC:	e->type = libraryfunc_e;break;
+		default:		assert(0);
 	}
 
 	return e;
@@ -161,7 +151,6 @@ expr* newexpr_constbool_e(bool b){
 	expr* e = newexpr(constbool_e);
 	e->boolConst = b;
 	return e;
-
 }
 
 expr* newexpr_constnum_e(double x){
@@ -175,6 +164,32 @@ expr* newexpr_conststring_e(char* str){
 	e->strConst = strdup(str);
 	return e;
 
+}
+
+bool isValid_arithop(expr* arg){
+	 switch(arg->type){	
+		case programfunc_e:
+		case libraryfunc_e:
+		case newtable_e:
+		case constbool_e:
+		case conststring_e:
+		case boolexpr_e:
+		case nil_e:	return false;
+		default:	return true;
+	}
+}
+
+bool isValid_relop(expr* arg){
+	 switch(arg->type){	
+		case programfunc_e:
+		case libraryfunc_e:
+		case newtable_e:
+		case constbool_e:
+		case boolexpr_e:
+		case conststring_e:
+		case nil_e:	return false;
+		default:	return true;
+	}
 }
 
 expr* call_emits(expr* list,expr* lvalue){
@@ -192,11 +207,10 @@ expr* call_emits(expr* list,expr* lvalue){
 }
 
 expr* arithop_emits(iopcode op,expr* arg1,expr* arg2){
-	 if(arg2->type == programfunc_e || arg2->type == libraryfunc_e || arg2->type == newtable_e
-            ||arg2->type == constbool_e ||arg2->type == conststring_e ||arg2->type == boolexpr_e ||arg2->type == nil_e){
+	if(!isValid_arithop(arg1) || !(isValid_arithop(arg2))){
 			error_buffer << "Line: "<< yylineno <<" \n\t";
-			error_buffer<<"Invalid use of operator + : " << arg2->sym->name<<std::endl;
-         }
+			error_buffer<<"Invalid use of operator: "<<iopcode_toString(op)<<std::endl;
+        }
 	expr* result = newexpr(arithexpr_e);
 	result->sym = newtemp();
 	emit(op,arg1,arg2,result,0,yylineno);
@@ -204,6 +218,11 @@ expr* arithop_emits(iopcode op,expr* arg1,expr* arg2){
 }
 
 expr* relop_emits(iopcode op,expr* arg1,expr* arg2){
+	if(!isValid_relop(arg1) || !(isValid_relop(arg2))){
+			error_buffer << "Line: "<< yylineno <<" \n\t";
+			error_buffer<<"Invalid use of operator: "<<iopcode_toString(op)<<std::endl;
+        }
+	
 	expr* result = newexpr(boolexpr_e);
 	result->sym = newtemp();
 
@@ -216,10 +235,17 @@ expr* relop_emits(iopcode op,expr* arg1,expr* arg2){
 	return result;
 }
 
-expr* boolop_emits(iopcode op,expr* arg1,expr* arg2,unsigned label){
-	expr* result = newexpr(arithexpr_e);
-	result->sym = newtemp();
-	return result;
+expr* boolop_emits(iopcode op,expr* arg1,expr* arg2){
+        expr* result = newexpr(boolexpr_e);
+        result->sym = newtemp();
+
+        result->trueList.push_back(nextquadlabel());
+        result->falseList.push_back(nextquadlabel()+1);
+
+        emit(op,arg1,arg2,(expr*)0,0,yylineno);
+        emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+
+        return result;
 }
 
 expr* member_item(expr* e1,char* e2){
@@ -277,7 +303,7 @@ std::string iopcode_toString(iopcode type){
 		case 23:	return "tablegetelem";
 		case 24:	return "tablesetelem";
 		case 25:	return "jump";
-
+		default:	assert(0);
 	}
 }
 
@@ -298,8 +324,8 @@ std::string expr_toString(expr* temp){
 					}
 		case conststring_e:	return "\"" + temp->strConst + "\"";
 		case constbool_e:	return (temp->boolConst) ? "TRUE" : "FALSE";
-		case nil_e:	return "NULL";
-		default: return "NOT DONE";
+		case nil_e:	return "nil";
+		default: return "INVALID";
 	}
 
 }
@@ -314,8 +340,8 @@ std::string quads_toString(){
 	
 	for(int i=1;i<currQuad;i++){
 		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<": ";
-		//width = (i > 9) ? 14 : 15; // width space
-		int labelWidth = 60;// (i > 9) ? 40 : 41;
+
+		int labelWidth = 60;
 		buffer<<std::setw(width)<<iopcode_toString(quads[i].op);
 
 		if(quads[i].result){
@@ -333,7 +359,7 @@ std::string quads_toString(){
 		if(quads[i].label != 0){
 			buffer<<std::setw(labelWidth)<<quads[i].label;
 		}
-//		buffer<<std::setw(10)<<"[line:"<<quads[i].line<<']';
+
 		buffer<<std::endl;
 
 	}

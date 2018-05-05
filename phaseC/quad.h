@@ -75,8 +75,6 @@ scopespace_t currScopeSpace();
 int currentScope();
 unsigned currScopeOffset();
 void incCurrScopeOffset();
-void enterScopeSpace();
-void exitScopeSpace();
 
 unsigned nextquadlabel();
 void patchlabel(unsigned,unsigned);
@@ -91,40 +89,55 @@ expr* newexpr_constbool_e(bool);
 expr* newexpr_constnum_e(double);
 expr* newexpr_conststring_e(char*);
 
+bool isValid_arithop(expr*);
+bool isValid_relop(expr*);
+
 expr* call_emits(expr*,expr*);
 expr* arithop_emits(iopcode,expr*,expr*);
 expr* relop_emits(iopcode,expr*,expr*);
-expr* boolop_emits(iopcode,expr*,expr*,unsigned);
+expr* boolop_emits(iopcode,expr*,expr*);
 
 expr* member_item(expr*,char*);
 expr* member_item(expr*,double);
 expr* emit_iftableitem(expr*);
 
-std::string iopcode_toString();
+std::string iopcode_toString(iopcode);
 std::string expr_toString(expr*);
 std::string quads_toString();
 
+extern int yyerror(const char* yaccProvidedMessage);
+extern int yylex(void);
+
 extern quad*	quads;
+
 extern unsigned programVarOffset;
 extern unsigned functionLocalOffset;
 extern unsigned formalArgOffset;
+
 extern unsigned error;
+
 extern unsigned inFucntion;
+extern unsigned inside_loop;
+
 extern unsigned tempcounter;
+
 extern unsigned total;
 extern unsigned currQuad;
-extern int yyerror(const char* yaccProvidedMessage);
-extern int yylex(void);
-extern int yylineno;
-extern char* yytext;
-extern FILE* yyin;
-extern HashTable SymTable; 
-extern std::fstream error_buffer,grammar_buffer;
-extern std::stack<unsigned> offsetStack;
+
 extern unsigned suffixNum;
 extern unsigned currScope;
 extern unsigned currRange;
 extern unsigned currOffset;
+
+extern int yylineno;
+extern char* yytext;
+extern FILE* yyin;
+
+extern HashTable SymTable; 
+extern std::fstream error_buffer,grammar_buffer;
+extern std::stack<unsigned> offsetStack,labelStack;
+extern std::stack<std::list<unsigned>> breakStack,continueStack;
+extern std::list<unsigned> breakList,continueList;
 
 #endif
 
