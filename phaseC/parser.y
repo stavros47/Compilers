@@ -26,8 +26,8 @@
 	std::fstream error_buffer;
 	std::fstream grammar_buffer;
 	std::stack<unsigned> offsetStack,labelStack;
-	std::stack<std::list<unsigned>> breakStack,continueStack;
-	std::list<unsigned> breakList,continueList;
+	std::stack<std::list<unsigned>> returnStack,breakStack,continueStack;
+	std::list<unsigned> returnList,breakList,continueList;
 %}
 
 %start program
@@ -679,6 +679,8 @@ funcargs:	'('idlist')'	{
 					currRange++;
 					offsetStack.push(functionLocalOffset);
 					functionLocalOffset=0;
+                                        returnStack.push(returnList);
+                                        returnList.clear();
 					inFunction++;
 					grammar_buffer<<"funcargs <-( idlist )"<<std::endl;
 				}
@@ -699,6 +701,10 @@ funcdef:	funcprefix funcargs funcbody	{
 							offsetStack.pop();
 
 							emit(funcend,(expr*)0,(expr*)0,lvalue_expr($1),0,yylineno);
+
+							patchlabel(returnList,nextquadlabel());
+                                                        returnList=returnStack.top();
+                                                        returnStack.pop();
 
 							unsigned labels=labelStack.top();
 							labelStack.pop();
@@ -908,25 +914,30 @@ forstmt:	forprefix N elist')' N stmt N	{
 returnstmt: RETURN expr';'	
 			{
 				$2 = checkexpr($2);	
-				if(!inFunction){
-					error_buffer << "Line: "<< yylineno <<" \n\t";
-					error_buffer<<"return statement not within a function. "<<std::endl;
-				}
+				 if(inFunction > 0){
+                                        emit(ret,(expr*)0,(expr*)0,$2,0,yylineno);
+                                        returnList.push_back(nextquadlabel());
+                                        emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+                                }else{
+                                        error_buffer << "Line: "<< yylineno <<" \n\t";
+                                        error_buffer<<"return statement not within a function. "<<std::endl;
+                                }
 
-				emit(ret,(expr*)0,(expr*)0,$2,0,yylineno);
 				
 				
 				grammar_buffer<<"returnstmt <- RETURN expr ;"<<std::endl;
 			}
 			|RETURN ';'	
 			{
-				if(!inFunction){
-					error_buffer << "Line: "<< yylineno <<" \n\t";
-					error_buffer<<"return statement not within a function. "<<std::endl;
-				}
+				if(inFunction > 0){
+                                        emit(ret,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+                                        returnList.push_back(nextquadlabel());
+                                        emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+                                }else{
+                                        error_buffer << "Line: "<< yylineno <<" \n\t";
+                                        error_buffer<<"return statement not within a function. "<<std::endl;
+                                }
 
-				emit(ret,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
-				
 				grammar_buffer<<"returnstmt <- RETURN ;"<<std::endl;
 			}
 		;
