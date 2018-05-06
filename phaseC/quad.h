@@ -118,6 +118,7 @@ extern unsigned error;
 
 extern unsigned inFucntion;
 extern unsigned inside_loop;
+extern unsigned validSpecial;
 
 extern unsigned tempcounter;
 
@@ -135,7 +136,7 @@ extern FILE* yyin;
 
 extern HashTable SymTable; 
 extern std::fstream error_buffer,grammar_buffer;
-extern std::stack<unsigned> offsetStack,labelStack;
+extern std::stack<unsigned> offsetStack,labelStack,validSpecialStack;
 extern std::stack<std::list<unsigned>> breakStack,continueStack;
 extern std::list<unsigned> breakList,continueList;
 

@@ -11,6 +11,7 @@
 
 	unsigned inFunction = 0; 
 	unsigned inside_loop=0;
+	unsigned validSpecial=0;
 
 	unsigned tempcounter=0;
 
@@ -25,7 +26,7 @@
 	HashTable SymTable;
 	std::fstream error_buffer;
 	std::fstream grammar_buffer;
-	std::stack<unsigned> offsetStack,labelStack;
+	std::stack<unsigned> offsetStack,labelStack,validSpecialStack;
 	std::stack<std::list<unsigned>> returnStack,breakStack,continueStack;
 	std::list<unsigned> returnList,breakList,continueList;
 %}
@@ -95,18 +96,18 @@ stmt:		expr';'		{
 		| forstmt	{grammar_buffer<<"stmt <- forstmt"<<std::endl;}
 		| returnstmt	{grammar_buffer<<"stmt <- returnstmt"<<std::endl;}
 		| BREAK';'	{ 
-					if(!inside_loop){
+					if(validSpecial!=inFunction || !inside_loop){
 						error_buffer << "Line: "<< yylineno <<" \n\t";
-						error_buffer<<"Invalid use of break : " << std::endl;
+						error_buffer<<"Invalid use of break" << std::endl;
 					}
 					breakList.push_back(nextquadlabel());
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
 					grammar_buffer<<"stmt <- break(;)"<<std::endl;
 				}
 		| CONTINUE';'	{
-					if(!inside_loop){
+					if(validSpecial!=inFunction || !inside_loop){
 						error_buffer << "Line: "<< yylineno <<" \n\t";
-						error_buffer<<"Invalid use of break : " << std::endl;
+						error_buffer<<"Invalid use of continue" << std::endl;
 					}
 					continueList.push_back(nextquadlabel());
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
@@ -700,9 +701,9 @@ funcdef:	funcprefix funcargs funcbody	{
 							formalArgOffset = offsetStack.top();
 							offsetStack.pop();
 
+							patchlabel(returnList,nextquadlabel());
 							emit(funcend,(expr*)0,(expr*)0,lvalue_expr($1),0,yylineno);
 
-							patchlabel(returnList,nextquadlabel());
                                                         returnList=returnStack.top();
                                                         returnStack.pop();
 
@@ -836,9 +837,10 @@ whilecond:	'(' expr ')' 	{
 
 					breakStack.push(breakList);
 					continueStack.push(continueList);
-
 					breakList.clear();
 					continueList.clear();
+					validSpecialStack.push(validSpecial);
+					validSpecial=inFunction;
 
 					grammar_buffer<<"whilecond <- ( expr )"<<std::endl;
 				}
@@ -855,6 +857,9 @@ whilestmt:	whilestart whilecond  stmt	{
 							patchlabel(continueList,$1);
 							continueList = continueStack.top();
 							continueStack.pop();
+
+							validSpecial = validSpecialStack.top();
+							validSpecialStack.pop();
 
 							inside_loop--;
 							grammar_buffer<<"whilestmt <- whilestart whilecond stmt"<<std::endl;
@@ -888,6 +893,11 @@ forprefix:	FOR'('elist ';' M expr ';'	{
 							continueStack.push(continueList);
 							breakList.clear();
 							continueList.clear();
+				
+								
+							validSpecialStack.push(validSpecial);
+							validSpecial=inFunction;
+							
 							grammar_buffer<<"forprefix <- FOR ( elist ; M expr ;"<<std::endl;
 						}
 		;
@@ -905,6 +915,9 @@ forstmt:	forprefix N elist')' N stmt N	{
 							patchlabel(continueList,$2+1);
 							continueList = continueStack.top();
 							continueStack.pop();
+
+							validSpecial = validSpecialStack.top();
+							validSpecialStack.pop();
 
 							inside_loop--;
 							grammar_buffer<<"forstmt <- forprefix N elist ) N stmt N"<<std::endl;
