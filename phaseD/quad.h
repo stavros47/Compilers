@@ -19,9 +19,10 @@ enum expr_t{
 enum iopcode{
         assign,         add,            sub,
         mul,            Div,            mod,
+        uminus,         And,            Or,
         Not,            if_eq,          if_noteq,
         if_lesseq,      if_greatereq,   if_less,
-		if_greater,		call,			param,
+	if_greater,	call,		param,
         ret,            getretval,      funcstart,
         funcend,        tablecreate,     tablegetelem,
         tablesetelem,	jump	
@@ -136,7 +137,7 @@ extern FILE* yyin;
 extern HashTable SymTable; 
 extern std::fstream error_buffer,grammar_buffer;
 extern std::stack<unsigned> offsetStack,labelStack,validSpecialStack;
-extern std::stack<std::list<unsigned>> breakStack,continueStack;
+extern std::stack<std::list<unsigned> > breakStack,continueStack;
 extern std::list<unsigned> breakList,continueList;
 
 #endif
