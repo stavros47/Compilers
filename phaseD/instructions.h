@@ -50,7 +50,7 @@ typedef struct{
 typedef struct {
     unsigned address;
     unsigned localSize;
-    char* id;
+    std::string id;
 }userfunc;
 
 extern unsigned totalStrings ;
@@ -59,7 +59,7 @@ extern unsigned totalLibFuncs ;
 extern unsigned totalUserFuncs;
 
 extern std::vector<std::string> strConsts;
-extern std::vector<double> numConsts;
+extern std::vector<double> numConsts; 
 extern std::vector<std::string> libFuncs;
 extern std::vector<userfunc*> userFuncs;
 
@@ -74,7 +74,8 @@ void make_numberoperand(vmarg* , double );
 void make_booloperand(vmarg*, unsigned );
 
 void make_retvaloperand(vmarg*);
-unsigned nextInstructionLabel();
+unsigned nextinstructionlabel();
+
 void make_instructions(quad*);
 
 // typedef struct{
@@ -87,6 +88,9 @@ void make_instructions(quad*);
 //unsigned ij_total=0;
 
 //void add_icomplete_jump(unsigned ,unsigned );
+std::string vmopcode_toString();
+std::string vmarg_toString(vmarg temp);
+std::string instr_to_String();
 
 void generate(vmopcode,quad*);
 

@@ -5,14 +5,14 @@ unsigned totalStrings = 0;
 unsigned totalNumConsts = 0;
 unsigned totalLibFuncs = 0;
 unsigned totalUserFuncs = 0;
-std::vector<std::string> strConst;
+std::vector<std::string> strConsts;
 std::vector<double> numConsts;
 std::vector<std::string> libFuncs;
 std::vector<userfunc*> userFuncs;
 instruction* instructions;
 
 unsigned consts_newstring (std::string s){
-    strConst.push_back(s);
+    strConsts.push_back(s);
 
     return totalStrings++;
 }
@@ -30,19 +30,19 @@ unsigned userfuncs_newfunc (Symbol* sym){
     userfunc *usrFunc = new userfunc();
     usrFunc->address = sym->function.iaddress;
     usrFunc->localSize = sym->function.totallocals;
-
+    usrFunc->id = sym->name;
     userFuncs.push_back(usrFunc);
     
     return totalUserFuncs++;
 }
 
-// void make_instructions(quad* quadsArray){
-//     instructions =(instruction*) malloc((nextquadlabel()-1)*sizeof(instruction));
+void make_instructions(quad* quadsArray){
+    instructions =(instruction*) malloc((nextquadlabel()-1)*sizeof(instruction));
 
-//     for(int i = 0; i < nextquadlabel(); i++){
-//         generators[quadsArray[i].op](&quadsArray[i]);
-//     }
-// }
+    for(int i = 1; i < nextquadlabel(); i++){
+        generators[quadsArray[i].op](&quadsArray[i]);
+    }
+}
 
 unsigned nextinstructionlabel(){
     return currInstruction;
@@ -54,51 +54,55 @@ void emit_instruction(instruction t){
 
 
 void make_operand(expr* e, vmarg* arg){
-    switch (e->type){
-        case var_e :
-        case tableitem_e:
-        case arithexpr_e:
-        case boolexpr_e:
-        case newtable_e: {
+   // std::cout<<e->sym->name<<std::endl;    
 
-            assert(e->sym);
-            arg->val= e->sym->offset;
+        switch (e->type){
+            case var_e :
+            case tableitem_e:
+            case arithexpr_e:
+            case boolexpr_e:
+            case newtable_e: {
 
-            switch (e->sym->scopespace){
-                case programVar: arg->type=global_a; break;
-                case functionLocal: arg->type = local_a; break;
-                case formalArg: arg->type = formal_a; break;
-                default: assert(0);
+                assert(e->sym);
+                arg->val= e->sym->offset;
 
+                switch (e->sym->scopespace){
+                    case programVar: arg->type=global_a; break;
+                    case functionLocal: arg->type = local_a; break;
+                    case formalArg: arg->type = formal_a; break;
+                    default: assert(0);
+
+                }
+                break;
             }
-            break;
+            case constbool_e:{
+                arg->val = e->boolConst;
+                arg->type = bool_a; break;
+            }
+            case conststring_e:{
+                arg->val = consts_newstring(e->strConst);
+                arg->type = string_a; break;
+            }
+            case constnum_e:{
+                arg->val = consts_newnumber(e->numConst);
+                arg->type = number_a; break;
+            }
+            case nil_e:{
+                arg->type = nil_a; break;
+            }
+            case programfunc_e:{
+                arg->type = userfunc_a;
+                //alternativly.. arg->val=e->sym->taddress;
+                arg->val = userfuncs_newfunc(e->sym); break;
+            }
+            case libraryfunc_e:{
+                arg->val = libfuncs_newused(e->sym->name);
+                arg->type = libfunc_a; break;
+            }
+            default: assert(0);
         }
-        case constbool_e:{
-            arg->val = e->boolConst;
-            arg->type = bool_a; break;
-        }
-        case conststring_e:{
-            arg->val = consts_newstring(e->strConst);
-            arg->type = string_a; break;
-        }
-        case constnum_e:{
-            arg->val = consts_newnumber(e->numConst);
-            arg->type = number_a; break;
-        }
-        case nil_e:{
-            arg->type = nil_a; break;
-        }
-         case programfunc_e:{
-            arg->type = userfunc_a;
-            //alternativly.. arg->val=e->sym->taddress;
-            arg->val = userfuncs_newfunc(e->sym); break;
-        }
-         case libraryfunc_e:{
-            arg->val = libfuncs_newused(e->sym->name);
-            arg->type = libfunc_a; break;
-        }
-        default: assert(0);
-    }
+    
+   
 
 }
 generator_func_t generators[] = {
@@ -145,11 +149,13 @@ void make_retvaloperand(vmarg* arg){
 void generate (vmopcode op,quad* quad) {
 	instruction t;
 	t.opcode = op;
+   // std::cout<<expr_toString(qua)<<std::endl; 
 	make_operand(quad->arg1, &t.arg1);
 	make_operand(quad->arg2, &t.arg2);
 	make_operand(quad->result, &t.result);
 	quad->label = nextinstructionlabel(); //changed taddress to label
 	emit_instruction(t);
+   
 } 
 
 void generate_ADD (quad* quad) { generate(add_v, quad); }
@@ -255,3 +261,80 @@ void generate_FUNCEND (quad*){
     make_operand(quad->result,t.result);
     emit_instruction(t);
 */}
+
+std::string vmopcode_toString(vmopcode type){
+	switch(type){
+		case 0:	return "assign";
+		case 1: return "add";
+		case 2:	return "sub";
+		case 3:	return "mul";
+		case 4:	return "Div";
+		case 5:	return "mod";
+		case 6:	return "Not";
+		case 7:	return "if_eq";
+		case 8:	return "if_noteq";
+		case 9:	return "if_lesseq";
+		case 10:	return "if_greatereq";
+		case 11:	return "if_less";
+		case 12:	return "if_greater";
+		case 13:	return "call";
+		case 14:	return "param";
+		case 15:	return "funcstart";
+		case 16:	return "funcend";
+		case 17:	return "tablecreate";
+		case 18:	return "tablegetelem";
+		case 19:	return "tablesetelem";
+	
+		default:	assert(0);
+	}
+}
+
+std::string vmarg_toString(vmarg temp){
+	switch(temp.type){
+	
+		case number_a: return std::to_string(numConsts[temp.val]); 
+		case userfunc_a:return userFuncs[temp.val]->id; 
+		case libfunc_a: return libFuncs[temp.val]; 
+		case string_a:	return strConsts[temp.val];
+
+		default: return "INVALID";
+	}
+
+}
+
+std::string instr_to_String(){
+	std::ostringstream buffer;
+	int width = 15;
+	buffer<<"---------------------------------------------------------------------------------\n";
+	buffer<<"#Quad"<<std::setw(width)<<"OpCode"<<std::setw(width)<<"result"<<std::setw(width)<<"arg1"<<std::setw(width)<<"arg2"<<std::setw(width)<<"label"<<std::endl;
+	buffer<<"---------------------------------------------------------------------------------\n";
+	
+	for(int i=1;i < nextinstructionlabel();i++){
+		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<": ";
+
+		int labelWidth = 60;
+		buffer<<std::setw(width)<<vmopcode_toString(instructions[i].opcode);
+
+		//if(instructions[i].result){
+			buffer<<std::setw(15)<<vmarg_toString(instructions[i].result);
+			labelWidth -= 15;
+		//}
+		//if(instructions[i].arg1){
+			buffer<<std::setw(15)<<vmarg_toString(instructions[i].arg1);
+			labelWidth -= 15;
+	//	}
+	//	if(instructions[i].arg2){
+			buffer<<std::setw(15)<<vmarg_toString(instructions[i].arg2);
+			labelWidth -= 15;
+	//	}
+		// if(quads[i].label != 0){
+		// 	buffer<<std::setw(labelWidth)<<quads[i].label;
+		// }
+
+		buffer<<std::endl;
+
+	}
+	buffer<<"--------------------------------------------------------------------------------\n";
+
+	return buffer.str();
+}

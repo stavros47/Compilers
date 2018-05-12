@@ -1006,8 +1006,8 @@ int main(int argc,char** argv){
 
 	if(!error){
 		std::cout<<quads_toString()<<std::endl;
-	//	make_instructions(quads);
+		make_instructions(quads);
 	} 
-
+	std::cout<<instr_to_String()<<std::endl;
 return 0;
 }
