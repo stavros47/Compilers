@@ -1,5 +1,5 @@
 %{
-	#include "quad.h"
+	#include "instructions.h"
 
 	quad*    quads = (quad*) 0;
 
@@ -17,7 +17,7 @@
 
 	unsigned total=1;
 	unsigned currQuad =1;
-
+	
 	unsigned suffixNum=0;
 	unsigned currScope=0;
 	unsigned currRange=1;
@@ -223,7 +223,8 @@ term:		'('expr')'		{
 						}
 						$$ = newexpr(arithexpr_e);
 						$$->sym = newtemp();
-						emit(uminus,$2,(expr*)0,$$,0,yylineno);
+						expr* uminus = newexpr_constnum_e(-1);
+						emit(mul,$2,uminus,$$,0,yylineno);
 						grammar_buffer<<"term <- - expr (UMINUS)"<<std::endl;
 					}
 		| NOT expr		{
@@ -1003,6 +1004,10 @@ int main(int argc,char** argv){
 	}
 	remove("alpha_errors.txt");
 
-	if(!error) std::cout<<quads_toString()<<std::endl;
+	if(!error){
+		std::cout<<quads_toString()<<std::endl;
+	//	make_instructions(quads);
+	} 
+
 return 0;
 }

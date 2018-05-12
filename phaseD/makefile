@@ -1,5 +1,5 @@
-DEPS = Symbol.h HashTable.h quad.h
-obj = parser.o scanner.o Symbol.o HashTable.o quad.o
+DEPS = Symbol.h HashTable.h quad.h instructions.h
+obj = parser.o scanner.o Symbol.o HashTable.o quad.o instructions.o
 FLAGS = -std=c++11 -g
 CC = g++
 

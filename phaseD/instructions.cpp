@@ -1,6 +1,59 @@
-#include "instruction.h"
+#include "instructions.h"
 
-void maike_operand(expr* e, vmarg* arg){
+unsigned currInstruction = 1;
+unsigned totalStrings = 0;
+unsigned totalNumConsts = 0;
+unsigned totalLibFuncs = 0;
+unsigned totalUserFuncs = 0;
+std::vector<std::string> strConst;
+std::vector<double> numConsts;
+std::vector<std::string> libFuncs;
+std::vector<userfunc*> userFuncs;
+instruction* instructions;
+
+unsigned consts_newstring (std::string s){
+    strConst.push_back(s);
+
+    return totalStrings++;
+}
+unsigned consts_newnumber (double n){
+    numConsts.push_back(n);
+    
+    return totalNumConsts++;
+}
+unsigned libfuncs_newused (std::string s){
+    libFuncs.push_back(s);
+
+    return totalLibFuncs++;
+}
+unsigned userfuncs_newfunc (Symbol* sym){
+    userfunc *usrFunc = new userfunc();
+    usrFunc->address = sym->function.iaddress;
+    usrFunc->localSize = sym->function.totallocals;
+
+    userFuncs.push_back(usrFunc);
+    
+    return totalUserFuncs++;
+}
+
+// void make_instructions(quad* quadsArray){
+//     instructions =(instruction*) malloc((nextquadlabel()-1)*sizeof(instruction));
+
+//     for(int i = 0; i < nextquadlabel(); i++){
+//         generators[quadsArray[i].op](&quadsArray[i]);
+//     }
+// }
+
+unsigned nextinstructionlabel(){
+    return currInstruction;
+}
+
+void emit_instruction(instruction t){
+        instructions[currInstruction++] = t;
+}
+
+
+void make_operand(expr* e, vmarg* arg){
     switch (e->type){
         case var_e :
         case tableitem_e:
@@ -40,7 +93,7 @@ void maike_operand(expr* e, vmarg* arg){
             //alternativly.. arg->val=e->sym->taddress;
             arg->val = userfuncs_newfunc(e->sym); break;
         }
-         case libfunc_a:{
+         case libraryfunc_e:{
             arg->val = libfuncs_newused(e->sym->name);
             arg->type = libfunc_a; break;
         }
@@ -48,6 +101,32 @@ void maike_operand(expr* e, vmarg* arg){
     }
 
 }
+generator_func_t generators[] = {
+    generate_ASSIGN ,
+    generate_ADD ,
+    generate_SUB ,
+    generate_MUL ,
+    generate_DIV ,
+    generate_MOD ,
+    generate_NOT ,
+    generate_IF_EQ ,
+    generate_IF_NOTEQ ,
+    generate_IF_LESSEQ ,
+    generate_IF_GREATEREQ,
+    generate_IF_LESS ,
+    generate_IF_GREATER ,
+    generate_CALL ,
+    generate_PARAM ,
+    generate_RETURN ,
+    generate_GETRETVAL ,
+    generate_FUNCSTART , 
+    generate_FUNCEND ,
+    generate_NEWTABLE ,
+    generate_TABLEGETELEM ,
+    generate_TABLESETELEM ,
+    generate_JUMP ,
+    generate_NOP  
+};
 
 void make_numberoperand(vmarg* arg, double val){
     arg->val = consts_newnumber(val);
@@ -63,78 +142,81 @@ void make_retvaloperand(vmarg* arg){
     arg->type= retval_a;
 }
 
-generate (vmopcode op,quad* quad) {
+void generate (vmopcode op,quad* quad) {
 	instruction t;
 	t.opcode = op;
-	make_operand(quad->arg1, t.arg1);
-	make_operand(quad->arg2, t.arg2);
-	make_operand(quad->result, t.result);
-	quad->taddress = nextinstructionlabel();
+	make_operand(quad->arg1, &t.arg1);
+	make_operand(quad->arg2, &t.arg2);
+	make_operand(quad->result, &t.result);
+	quad->label = nextinstructionlabel(); //changed taddress to label
 	emit_instruction(t);
 } 
 
-generate_ADD (quad* quad) { generate(add_v, quad); }
-generate_SUB (quad* quad) { generate(sub_v, quad); }
-generate_MUL (quad* quad) { generate(mul_v, quad); }
-generate_DIV (quad* quad) { generate(div_v, quad); }
-generate_MOD (quad* quad) { generate(mod_v, quad); }
-generate_NEWTABLE (quad* quad) { generate(newtable_v, quad); }
-generate_TABLEGETELM (quad* quad) { generate(tablegetelem_v, quad); }
-generate_TABLESETELEM (quad* quad) { generate(tablesetelem_v, quad); }
-generate_ASSIGN (quad* quad) 	{ generate(assign_v, quad); }
-generate_NOP ()	{ instruction t; t.opcode=nop; emit_instruction(t); } 
+void generate_ADD (quad* quad) { generate(add_v, quad); }
+void generate_SUB (quad* quad) { generate(sub_v, quad); }
+void generate_MUL (quad* quad) { generate(mul_v, quad); }
+void generate_DIV (quad* quad) { generate(div_v, quad); }
+void generate_MOD (quad* quad) { generate(mod_v, quad); }
+void generate_NEWTABLE (quad* quad) { generate(newtable_v, quad); }
+void generate_TABLEGETELEM (quad* quad) { generate(tablegetelem_v, quad); }
+void generate_TABLESETELEM (quad* quad) { generate(tablesetelem_v, quad); }
+void generate_ASSIGN (quad* quad) 	{ generate(assign_v, quad); }
+void generate_NOT (quad* quad)	{ instruction t; t.opcode=nop_v; emit_instruction(t); } 
+void generate_NOP (quad* quad)	{ instruction t; t.opcode=nop_v; emit_instruction(t); } 
 
 
-generate_relational (vmopcode op,quad* quad) {
+void generate_relational (vmopcode op,quad* quad) {
 	instruction t;
 	t.opcode = op;
-	make_operand(quad->arg1, t.arg1);
-	make_operand(quad->arg2, t.arg2);
- 
+	make_operand(quad->arg1, &t.arg1);
+	make_operand(quad->arg2, &t.arg2);
+
 	t.result.type = label_a;
-	if quad->label jump target < currprocessedquad() then
-		t.result.value = quads[quad->label]->taddress;
-	else
-		add_incomplete_jump(nextinstructionlabel(), quad->label);
-	quad->taddress = nextinstructionlabel();
+	// if quad->label jump target < currprocessedquad() {
+    //     t.result.value = quads[quad->label]->taddress;   
+    // }else{
+    //     add_incomplete_jump(nextinstructionlabel(), quad->label);
+    // }
+		
+	quad->label = nextinstructionlabel(); //taddres t label
 	emit_instruction(t);
 }
 
-generate_JUMP (quad* quad)		{ generate_relational(jump, quad); }
-generate_IF_EQ (quad* quad) 		{ generate_relational(jeq, quad); }
-generate_IF_NOTEQ(quad* quad) 	{ generate_relational(jne, quad); }
-generate_IF_GREATER (quad* quad) 	{ generate_relational(jgt, quad); }
-generate_IF_GREATEREQ(quad* quad) 	{ generate_relational(jge, quad); }
-generate_IF_LESS (quad* quad) 		{ generate_relational(jlt, quad); }
-generate_IF_LESSEQ (quad* quad) 	{ generate_relational(jle, quad); }
+void generate_JUMP (quad* quad)		{ generate_relational(jeq_v, quad); } //Note: jump to jeq_v
+void generate_IF_EQ (quad* quad) 		{ generate_relational(jeq_v, quad); }
+void generate_IF_NOTEQ(quad* quad) 	{ generate_relational(jne_v, quad); }
+void generate_IF_GREATER (quad* quad) 	{ generate_relational(jgt_v, quad); }
+void generate_IF_GREATEREQ(quad* quad) 	{ generate_relational(jge_v, quad); }
+void generate_IF_LESS (quad* quad) 		{ generate_relational(jlt_v, quad); }
+void generate_IF_LESSEQ (quad* quad) 	{ generate_relational(jle_v, quad); }
 
-generate_PARAM(quad* quad) {
-	quad*->taddress = nextinstructionlabel();
+void generate_PARAM(quad* quad) {
+	quad->label = nextinstructionlabel();
 	instruction t;
-	t.opcode = pusharg;
-	make_operand(quad*->arg1, &t.arg1);
-	emit(t);
-}
- 
-generate_CALL(quad* quad) {
-	quad->taddress = nextinstructionlabel();
-	instruction t;
-	t.opcode = callfunc;
+	t.opcode = pusharg_v;
 	make_operand(quad->arg1, &t.arg1);
-	emit(t);
+	emit_instruction(t);
 }
- 
-generate_GETRETVAL(quad* quad) {
-	quad->taddress = nextinstructionlabel();
+
+void generate_CALL(quad* quad) {
+	quad->label = nextinstructionlabel();
 	instruction t;
-	t.opcode = assign;
+	t.opcode = call_v;
+	make_operand(quad->arg1, &t.arg1);
+	emit_instruction(t);
+}
+
+void generate_GETRETVAL(quad* quad) {
+	quad->label = nextinstructionlabel();
+	instruction t;
+	t.opcode = assign_v;
 	make_operand(quad->result, &t.result);
 	make_retvaloperand(&t.arg1);
-	emit(t);
+	emit_instruction(t);
 }
 
-/*extern void generate_FUNCSTART (quad* quad){
-    Symbol* f = quad->result->sym;
+void generate_FUNCSTART (quad* quad){
+/*    Symbol* f = quad->result->sym;
     f->taddress = nextinstructionlabel();
     quad->taddress = nextinstructionlabel();
 
@@ -145,9 +227,9 @@ generate_GETRETVAL(quad* quad) {
     t.opcode = enterfunc;
     make_operand(quad->result,t.result);
     emit_instruction(t);
-}
-extern void generate_RETURN (quad* quad){
-    quad->taddress = nextinstructionlabel();
+*/}
+void generate_RETURN (quad* quad){
+  /*  quad->taddress = nextinstructionlabel();
     
     instruction t;
     t.opcode = assign;
@@ -164,12 +246,12 @@ extern void generate_RETURN (quad* quad){
     reset_operand(t.arg2);
     t.result.type = label_a;
     emit_instruction(t);  
-}
-extern void generate_FUNCEND (quad*){
-    f = pop(funcstack);
+*/}
+void generate_FUNCEND (quad*){
+  /*  f = pop(funcstack);
     quad->taddress = nextinstructionlabel();
     instructions t;
     t.opcode = exitfunc;
     make_operand(quad->result,t.result);
     emit_instruction(t);
-}*/
+*/}

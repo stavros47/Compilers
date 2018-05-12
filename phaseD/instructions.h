@@ -1,11 +1,13 @@
-#ifndef __INSTRUCTIONS_H__
-#define __INSTRUCTIONS_H__
+#ifndef _INSTRUCTIONS_H_
+#define _INSTRUCTIONS_H_
+#include <vector>
 #include "quad.h"
 
-unsigned consts_newstring (char* s);
+unsigned consts_newstring (std::string s);
 unsigned consts_newnumber (double n);
-unsigned libfuncs_newused (char* s);
+unsigned libfuncs_newused (std::string s);
 unsigned userfuncs_newfunc (Symbol* sym);
+extern unsigned currInstruction;
 
 enum vmopcode{
         assign_v,         add_v,            sub_v,
@@ -19,7 +21,7 @@ enum vmopcode{
 
 enum vmarg_t{
     label_a =0,
-    globlal_a=1,
+    global_a=1,
     formal_a=2,
     local_a=3,
     number_a=4,
@@ -43,7 +45,7 @@ typedef struct{
     vmarg arg2;
     unsigned srcLine;
 
-} instructions;
+} instruction;
 
 typedef struct {
     unsigned address;
@@ -51,16 +53,19 @@ typedef struct {
     char* id;
 }userfunc;
 
-double* numConsts;
-unsigned totalNumConsts;
-char** stringConsts;
-unsigned totalStringConsts;
-char** namedLibfuncs;
-unsigned totalNamedLibfunc;
-userfunc* userFuncs;
-unsigned totalUserFuncs;
+extern unsigned totalStrings ;
+extern unsigned totalNumConsts;
+extern unsigned totalLibFuncs ;
+extern unsigned totalUserFuncs;
 
-void emit_instruction(instructions);
+extern std::vector<std::string> strConsts;
+extern std::vector<double> numConsts;
+extern std::vector<std::string> libFuncs;
+extern std::vector<userfunc*> userFuncs;
+
+extern instruction* instructions;
+
+void emit_instruction(instruction);
 
 void make_operand(expr* , vmarg*);
 
@@ -69,19 +74,22 @@ void make_numberoperand(vmarg* , double );
 void make_booloperand(vmarg*, unsigned );
 
 void make_retvaloperand(vmarg*);
+unsigned nextInstructionLabel();
+void make_instructions(quad*);
 
-typedef struct{
-    unsigned instrNo;
-    unsigned iaddress;
-    incomplete_jump* next;
-}incomplete_jump;
+// typedef struct{
+//     unsigned instrNo;
+//     unsigned iaddress;
+//     incomplete_jump* next;
+// }incomplete_jump;
 
-incomplete_jump* ij_head=(incomplete_jump*) 0; //std::list??
-unsigned ij_total=0;
+// incomplete_jump* ij_head=(incomplete_jump*) 0; //std::list??
+//unsigned ij_total=0;
 
-void add_icomplete_jump(unsigned ,unsigned );
+//void add_icomplete_jump(unsigned ,unsigned );
 
 void generate(vmopcode,quad*);
+
 extern void generate_ADD (quad*);
 extern void generate_SUB (quad*);
 extern void generate_MUL (quad*);
@@ -109,30 +117,6 @@ extern void generate_FUNCEND (quad*);
 
 typedef void (*generator_func_t)(quad*);
 
-generator_func_t generators[] = {
- generate_ADD ,
- generate_SUB ,
- generate_MUL ,
- generate_DIV ,
- generate_MOD ,
- generate_NEWTABLE ,
- generate_TABLEGETELEM ,
- generate_TABLESETELEM ,
- generate_ASSIGN ,
- generate_NOP ,
- generate_JUMP ,
- generate_IF_EQ ,
- generate_IF_NOTEQ ,
- generate_IF_GREATER ,
- generate_IF_GREATEREQ,
- generate_IF_LESS ,
- generate_IF_LESSEQ ,
- generate_NOT ,
- generate_PARAM ,
- generate_CALL ,
- generate_GETRETVAL ,
- generate_FUNCSTART ,
- generate_RETURN ,
- generate_FUNCEND 
-};
+extern generator_func_t generators[] ;
+
 #endif
