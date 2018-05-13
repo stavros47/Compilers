@@ -37,7 +37,7 @@ unsigned userfuncs_newfunc (Symbol* sym){
 }
 
 void make_instructions(quad* quadsArray){
-    instructions =(instruction*) malloc((nextquadlabel()-1)*sizeof(instruction));
+    instructions =(instruction*) malloc((nextquadlabel())*sizeof(instruction));
 
     for(int i = 1; i < nextquadlabel(); i++){
         generators[quadsArray[i].op](&quadsArray[i]);
@@ -60,6 +60,7 @@ void make_operand(expr* e, vmarg* arg){
             case var_e :
             case tableitem_e:
             case arithexpr_e:
+            case assignexpr_e:
             case boolexpr_e:
             case newtable_e: {
 
@@ -99,7 +100,7 @@ void make_operand(expr* e, vmarg* arg){
                 arg->val = libfuncs_newused(e->sym->name);
                 arg->type = libfunc_a; break;
             }
-            default: assert(0);
+            default: std::cout<<e->type<<"dammee\n";assert(0);
         }
     
    
@@ -147,14 +148,28 @@ void make_retvaloperand(vmarg* arg){
 }
 
 void generate (vmopcode op,quad* quad) {
-	instruction t;
-	t.opcode = op;
-   // std::cout<<expr_toString(qua)<<std::endl; 
-	make_operand(quad->arg1, &t.arg1);
-	make_operand(quad->arg2, &t.arg2);
-	make_operand(quad->result, &t.result);
+	instruction *t = new instruction();
+	t->opcode = op;
+    if(quad->arg1){
+        make_operand(quad->arg1, &(t->arg1));
+    }else{
+         t->arg1.type = nil_a;
+    }
+    if(quad->arg2){
+        make_operand(quad->arg2, &(t->arg2));
+    }else{
+       t->arg2.type = nil_a;
+    }
+    if(quad->result){
+        make_operand(quad->result, &(t->result));
+    }else{
+         t->result.type = nil_a;
+    }
+	
+	
+	
 	quad->label = nextinstructionlabel(); //changed taddress to label
-	emit_instruction(t);
+	emit_instruction(*t);
    
 } 
 
@@ -291,7 +306,9 @@ std::string vmopcode_toString(vmopcode type){
 
 std::string vmarg_toString(vmarg temp){
 	switch(temp.type){
-	
+        case global_a:
+        case formal_a:
+        case local_a : return std::to_string(temp.val);
 		case number_a: return std::to_string(numConsts[temp.val]); 
 		case userfunc_a:return userFuncs[temp.val]->id; 
 		case libfunc_a: return libFuncs[temp.val]; 
@@ -306,7 +323,7 @@ std::string instr_to_String(){
 	std::ostringstream buffer;
 	int width = 15;
 	buffer<<"---------------------------------------------------------------------------------\n";
-	buffer<<"#Quad"<<std::setw(width)<<"OpCode"<<std::setw(width)<<"result"<<std::setw(width)<<"arg1"<<std::setw(width)<<"arg2"<<std::setw(width)<<"label"<<std::endl;
+	buffer<<"#Instr"<<std::setw(width)<<"OpCode"<<std::setw(width)<<"result"<<std::setw(width)<<"arg1"<<std::setw(width)<<"arg2"/*<<std::setw(width)<<"label"*/<<std::endl;
 	buffer<<"---------------------------------------------------------------------------------\n";
 	
 	for(int i=1;i < nextinstructionlabel();i++){

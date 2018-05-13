@@ -345,15 +345,18 @@ std::string quads_toString(){
 		buffer<<std::setw(width)<<iopcode_toString(quads[i].op);
 
 		if(quads[i].result){
-			buffer<<std::setw(15)<<expr_toString(quads[i].result);
+			std::string off = (quads[i].result->sym) ? std::to_string(quads[i].result->sym->offset) : "-1";
+			buffer<<std::setw(15)<<"("<<off<<")"<<expr_toString(quads[i].result);
 			labelWidth -= 15;
 		}
 		if(quads[i].arg1){
-			buffer<<std::setw(15)<<expr_toString(quads[i].arg1);
+			std::string off = (quads[i].arg1->sym) ? std::to_string(quads[i].arg1->sym->offset) : "-1";
+			buffer<<std::setw(15)<<"("<<off<<")"<<expr_toString(quads[i].arg1);
 			labelWidth -= 15;
 		}
 		if(quads[i].arg2){
-			buffer<<std::setw(15)<<expr_toString(quads[i].arg2);
+			std::string off = (quads[i].arg2->sym) ? std::to_string(quads[i].arg2->sym->offset) : "-1";
+			buffer<<std::setw(15)<<"("<<off<<")"<<expr_toString(quads[i].arg2);
 			labelWidth -= 15;
 		}
 		if(quads[i].label != 0){
