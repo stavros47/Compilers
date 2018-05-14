@@ -10,6 +10,7 @@ std::vector<double> numConsts;
 std::vector<std::string> libFuncs;
 std::vector<userfunc*> userFuncs;
 instruction* instructions;
+std::fstream instructionfile;
 
 unsigned consts_newstring (std::string s){
     strConsts.push_back(s);
@@ -27,6 +28,14 @@ unsigned libfuncs_newused (std::string s){
     return totalLibFuncs++;
 }
 unsigned userfuncs_newfunc (Symbol* sym){
+    unsigned position = 0;
+    for(userfunc *currFunc : userFuncs){
+        if(currFunc->id == sym->name){
+            return position;
+        }
+        position++;
+    }
+
     userfunc *usrFunc = new userfunc();
     usrFunc->address = sym->function.iaddress;
     usrFunc->localSize = sym->function.totallocals;
@@ -42,6 +51,40 @@ void make_instructions(quad* quadsArray){
     for(int i = 1; i < nextquadlabel(); i++){
         generators[quadsArray[i].op](&quadsArray[i]);
     }
+    instructionfile.open("instructionfile.txt",std::ios::out);
+    //TODO: Separate to functions
+    //Write Strings array
+    instructionfile <<"strConsts"<< std::endl;
+    instructionfile << "total : "<<strConsts.size() << std::endl;
+    for(int i=0;i<strConsts.size();i++){
+          instructionfile<<strConsts[i]<<"\n";
+    }
+    //numConsts array
+    instructionfile <<"numConsts"<< std::endl;
+    instructionfile << "total : "<<numConsts.size() << std::endl;
+    for(int i=0;i<numConsts.size();i++){
+          instructionfile<<numConsts[i]<<"\n";
+    }
+     //libfuncs array
+    instructionfile <<"libFuncs"<< std::endl;
+    instructionfile << "total : "<<libFuncs.size() << std::endl;
+    for(int i=0;i<libFuncs.size();i++){
+          instructionfile<<libFuncs[i]<<"\n";
+    }
+    //userFuncs array
+    instructionfile <<"userFuncs"<< std::endl;
+    instructionfile << "total : "<<userFuncs.size() << std::endl;
+    for(int i=0;i<userFuncs.size();i++){
+          instructionfile<<userFuncs[i]->id<<" "<<userFuncs[i]->address<<" "<<userFuncs[i]->localSize<<"\n";
+    }
+
+    instructionfile <<"\n"<<instr_to_String()<<std::endl;
+
+    instructionfile.close();
+}
+
+void vector_to_file(){
+    
 }
 
 unsigned nextinstructionlabel(){
@@ -189,16 +232,22 @@ void generate_NOP (quad* quad)	{ instruction t; t.opcode=nop_v; emit_instruction
 void generate_relational (vmopcode op,quad* quad) {
 	instruction t;
 	t.opcode = op;
-	make_operand(quad->arg1, &t.arg1);
-	make_operand(quad->arg2, &t.arg2);
+    //std::cout << t.opcode <<std::endl;
+    if(quad->arg1){
+       make_operand(quad->arg1, &t.arg1);
+    }else{
+         t.arg1.type = nil_a;
+    }
+	if(quad->arg2){
+      make_operand(quad->arg2, &t.arg2);
+    }else{
+         t.arg2.type = nil_a;
+    }
+	
 
 	t.result.type = label_a;
-	// if quad->label jump target < currprocessedquad() {
-    //     t.result.value = quads[quad->label]->taddress;   
-    // }else{
-    //     add_incomplete_jump(nextinstructionlabel(), quad->label);
-    // }
-		
+    t.result.val = quad->label;
+	
 	quad->label = nextinstructionlabel(); //taddres t label
 	emit_instruction(t);
 }
@@ -215,7 +264,13 @@ void generate_PARAM(quad* quad) {
 	quad->label = nextinstructionlabel();
 	instruction t;
 	t.opcode = pusharg_v;
-	make_operand(quad->arg1, &t.arg1);
+    if(quad->result){
+        make_operand(quad->result, &t.result);
+    }else{
+        t.result.type = nil_a;
+    }
+	
+    t.arg1.type = t.arg2.type = nil_a;
 	emit_instruction(t);
 }
 
@@ -223,108 +278,129 @@ void generate_CALL(quad* quad) {
 	quad->label = nextinstructionlabel();
 	instruction t;
 	t.opcode = call_v;
-	make_operand(quad->arg1, &t.arg1);
+	make_operand(quad->result, &t.result);
+    t.arg1.type = t.arg2.type = nil_a;
 	emit_instruction(t);
 }
 
 void generate_GETRETVAL(quad* quad) {
-	quad->label = nextinstructionlabel();
+	//quad->label = nextinstructionlabel();
 	instruction t;
 	t.opcode = assign_v;
-	make_operand(quad->result, &t.result);
+    if(quad->result){
+      	make_operand(quad->result, &t.result);
+    }else{
+         t.result.type = nil_a;
+    }
 	make_retvaloperand(&t.arg1);
+    t.arg2.type = nil_a; 
+
 	emit_instruction(t);
 }
 
 void generate_FUNCSTART (quad* quad){
-/*    Symbol* f = quad->result->sym;
-    f->taddress = nextinstructionlabel();
-    quad->taddress = nextinstructionlabel();
+    // Symbol* f = quad->result->sym;
+    // f->label = nextinstructionlabel();
+    // quad->label = nextinstructionlabel();
 
-    userfunctions.add(f->name,f->function->taddress,f->function->totallocals);
-    push(funcstack,f);
+    // userfunctions.add(f->name,f->function->taddress,f->function->totallocals);
+    // push(label,f);
 
     instruction t;
-    t.opcode = enterfunc;
-    make_operand(quad->result,t.result);
+    t.opcode = funcenter_v;
+    make_operand(quad->result,&t.result);
+    t.arg1.type = t.arg2.type = nil_a;
     emit_instruction(t);
-*/}
+}
 void generate_RETURN (quad* quad){
-  /*  quad->taddress = nextinstructionlabel();
+    //quad->taddress = nextinstructionlabel();
     
     instruction t;
-    t.opcode = assign;
-    make_retvaloperand(t.result);
-    make_operand(quad->arg1,t.arg1);
+    t.opcode = assign_v;
+    make_retvaloperand(&t.result);
+    if(quad->result){
+      make_operand(quad->result,&t.arg1);
+    }else{
+         t.arg1.type = nil_a;
+    }
+         t.arg2.type = nil_a;
+    
 
+    
+    
+     //t.arg1.type = t.arg2.type = nil_a;
     emit_instruction(t); 
 
-    f = top(funcstack);
-    append(f->returnList,nextinstructionlabel());
 
-    t.opcode = jump;
-    reset_operand(t.arg1);
-    reset_operand(t.arg2);
-    t.result.type = label_a;
-    emit_instruction(t);  
-*/}
-void generate_FUNCEND (quad*){
-  /*  f = pop(funcstack);
-    quad->taddress = nextinstructionlabel();
-    instructions t;
-    t.opcode = exitfunc;
-    make_operand(quad->result,t.result);
+}
+void generate_FUNCEND (quad* quad){
+    instruction t;
+    t.opcode = funcexit_v;
+    make_operand(quad->result,&t.result);
+    t.arg1.type = t.arg2.type = nil_a;
     emit_instruction(t);
-*/}
+}
 
 std::string vmopcode_toString(vmopcode type){
 	switch(type){
-		case 0:	return "assign";
-		case 1: return "add";
-		case 2:	return "sub";
-		case 3:	return "mul";
-		case 4:	return "Div";
-		case 5:	return "mod";
-		case 6:	return "Not";
-		case 7:	return "if_eq";
-		case 8:	return "if_noteq";
-		case 9:	return "if_lesseq";
-		case 10:	return "if_greatereq";
-		case 11:	return "if_less";
-		case 12:	return "if_greater";
-		case 13:	return "call";
-		case 14:	return "param";
-		case 15:	return "funcstart";
-		case 16:	return "funcend";
-		case 17:	return "tablecreate";
-		case 18:	return "tablegetelem";
-		case 19:	return "tablesetelem";
+		case 0:	return "assign_v";
+		case 1: return "add_v";
+		case 2:	return "sub_v";
+		case 3:	return "mul_v";
+		case 4:	return "Div_v";
+		case 5:	return "mod_v";
+		case 6:	return "Not_v";
+		case 7:	return "jeg_v";
+		case 8:	return "jne_v";
+		case 9:	return "jle_v";
+		case 10:	return "jge_v";
+		case 11:	return "jlt_v";
+		case 12:	return "jgt_v";
+		case 13:	return "call_v";
+		case 14:	return "pusharg_v";
+		case 15:	return "funcenter_v";
+		case 16:	return "funcexit_v";
+		case 17:	return "newtable_v";
+		case 18:	return "tablegetelem_v";
+		case 19:	return "tablesetelem_v";
 	
 		default:	assert(0);
 	}
 }
 
 std::string vmarg_toString(vmarg temp){
+    std::string out;
+    out = std::to_string(temp.type) + " ";
 	switch(temp.type){
+        case label_a:
+        case bool_a:
         case global_a:
         case formal_a:
-        case local_a : return std::to_string(temp.val);
-		case number_a: return std::to_string(numConsts[temp.val]); 
-		case userfunc_a:return userFuncs[temp.val]->id; 
+        case local_a :  out += std::to_string(temp.val);
+                        return out;
+        case retval_a: return "retVal"; //??
+		case number_a:  out += std::to_string(temp.val) + ":";
+                        out += std::to_string(numConsts[temp.val]);
+                        return out; 
+		case userfunc_a: out += std::to_string(temp.val) + ":";
+                         out += userFuncs[temp.val]->id;
+                         return out;
 		case libfunc_a: return libFuncs[temp.val]; 
-		case string_a:	return strConsts[temp.val];
+		case string_a:	out += std::to_string(temp.val) + ":";
+                        out += strConsts[temp.val];
+                        return out;
+        case nil_a: return "nil_a";
 
 		default: return "INVALID";
 	}
-
 }
 
 std::string instr_to_String(){
 	std::ostringstream buffer;
 	int width = 15;
-	buffer<<"---------------------------------------------------------------------------------\n";
-	buffer<<"#Instr"<<std::setw(width)<<"OpCode"<<std::setw(width)<<"result"<<std::setw(width)<<"arg1"<<std::setw(width)<<"arg2"/*<<std::setw(width)<<"label"*/<<std::endl;
-	buffer<<"---------------------------------------------------------------------------------\n";
+	// buffer<<"---------------------------------------------------------------------------------\n";
+	// buffer<<"#Instr"<<std::setw(width)<<"OpCode"<<std::setw(width)<<"result"<<std::setw(width)<<"arg1"<<std::setw(width)<<"arg2"/*<<std::setw(width)<<"label"*/<<std::endl;
+	// buffer<<"---------------------------------------------------------------------------------\n";
 	
 	for(int i=1;i < nextinstructionlabel();i++){
 		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<": ";
@@ -351,7 +427,7 @@ std::string instr_to_String(){
 		buffer<<std::endl;
 
 	}
-	buffer<<"--------------------------------------------------------------------------------\n";
+	//buffer<<"--------------------------------------------------------------------------------\n";
 
 	return buffer.str();
 }
