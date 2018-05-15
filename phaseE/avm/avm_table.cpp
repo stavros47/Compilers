@@ -1,5 +1,4 @@
-
-#include "avm.h"
+#include "headers/avm.h"
 
 static void avm_initstack(void){
         for(unsigned i = 0; i<AVM_STACKSIZE; ++i){
@@ -25,11 +24,11 @@ void avm_table_destroy(avm_table* t){
         free(t);
 }
 /****************************************************/
-avm_memcell* avm_tablegetelem(avm_memcell* key){
+avm_memcell* avm_tablegetelem(avm_table* table,avm_memcell* key){
 	return (avm_memcell*)0;
 }
 
-void avm_tablesetelem(avm_memcell* key,avm_memcell* value){
+void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
 	
 }
 /****************************************************/
