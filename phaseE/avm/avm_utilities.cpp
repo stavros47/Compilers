@@ -44,7 +44,11 @@ avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
         }
 }
 
-static void avm_initstack(void){}
+static void avm_initstack(void){
+        for (unsigned i = 0; i < AVM_STACKSIZE; ++i){
+                stack[i].type = undef_m;
+        }
+}
 
 void avm_dec_top(void){
         if(!top){
@@ -115,6 +119,7 @@ void avm_initialize(void){
         avm_registerlibfunc("typeof",libfunc_typeof);
         avm_registerlibfunc("totalarguments",libfunc_totalarguments);
 }
+
 
 void execute_cycle(void){
         if(executionFinished){

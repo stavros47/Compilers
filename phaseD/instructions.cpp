@@ -374,24 +374,30 @@ std::string vmarg_toString(vmarg temp){
     std::string out;
     out = std::to_string(temp.type) + " ";
 	switch(temp.type){
-        case label_a:
-        case bool_a:
-        case global_a:
-        case formal_a:
-        case local_a :  out += std::to_string(temp.val);
-                        return out;
-        case retval_a: return "retVal"; //??
-		case number_a:  out += std::to_string(temp.val) + ":";
-                        out += std::to_string(numConsts[temp.val]);
-                        return out; 
-		case userfunc_a: out += std::to_string(temp.val) + ":";
-                         out += userFuncs[temp.val]->id;
-                         return out;
-		case libfunc_a: return libFuncs[temp.val]; 
-		case string_a:	out += std::to_string(temp.val) + ":";
-                        out += strConsts[temp.val];
-                        return out;
-        case nil_a: return "nil_a";
+	        case label_a:
+        	case bool_a:
+	        case global_a:
+	        case formal_a:
+	        case local_a :  out += std::to_string(temp.val);
+	                        return out;
+
+	        case retval_a:  return out+="0 "; //??
+
+		case number_a:  out += std::to_string(temp.val) + " ";
+//        	                out += std::to_string(numConsts[temp.val]);
+	                        return out; 
+
+		case userfunc_a: out += std::to_string(temp.val) + " ";
+//        	                 out += userFuncs[temp.val]->id;
+	                         return out;
+
+		case libfunc_a:	 return out+=std::to_string(temp.val);
+
+		case string_a:	out += std::to_string(temp.val) + " ";
+//        	                out += strConsts[temp.val];
+                	        return out;
+
+	        case nil_a: 	return out+="0 ";
 
 		default: return "INVALID";
 	}
@@ -400,36 +406,25 @@ std::string vmarg_toString(vmarg temp){
 std::string instr_to_String(){
 	std::ostringstream buffer;
 	int width = 15;
-	// buffer<<"---------------------------------------------------------------------------------\n";
-	// buffer<<"#Instr"<<std::setw(width)<<"OpCode"<<std::setw(width)<<"result"<<std::setw(width)<<"arg1"<<std::setw(width)<<"arg2"/*<<std::setw(width)<<"label"*/<<std::endl;
-	// buffer<<"---------------------------------------------------------------------------------\n";
-	
+	buffer<<std::to_string(nextquadlabel()-1)<<std::endl;
 	for(int i=1;i < nextinstructionlabel();i++){
-		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<": ";
+		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<" ";
 
 		int labelWidth = 60;
-		buffer<<std::setw(width)<<vmopcode_toString(instructions[i].opcode);
+		buffer<<std::setw(width)<<instructions[i].opcode;/*vmopcode_toString(instructions[i].opcode);*/
 
-		//if(instructions[i].result){
-			buffer<<std::setw(15)<<vmarg_toString(instructions[i].result);
-			labelWidth -= 15;
-		//}
-		//if(instructions[i].arg1){
-			buffer<<std::setw(15)<<vmarg_toString(instructions[i].arg1);
-			labelWidth -= 15;
-	//	}
-	//	if(instructions[i].arg2){
-			buffer<<std::setw(15)<<vmarg_toString(instructions[i].arg2);
-			labelWidth -= 15;
-	//	}
-		// if(quads[i].label != 0){
-		// 	buffer<<std::setw(labelWidth)<<quads[i].label;
-		// }
+		buffer<<std::setw(15)<<vmarg_toString(instructions[i].result);
+		labelWidth -= 15;
+
+		buffer<<std::setw(15)<<vmarg_toString(instructions[i].arg1);
+		labelWidth -= 15;
+
+		buffer<<std::setw(15)<<vmarg_toString(instructions[i].arg2);
+		labelWidth -= 15;
 
 		buffer<<std::endl;
 
 	}
-	//buffer<<"--------------------------------------------------------------------------------\n";
 
 	return buffer.str();
 }
