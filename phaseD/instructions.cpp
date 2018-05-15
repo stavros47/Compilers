@@ -1,6 +1,6 @@
 #include "instructions.h"
-
-
+#include <algorithm>
+#include <iterator>
 unsigned currInstruction = 1;
 unsigned totalStrings = 0;
 unsigned totalNumConsts = 0;
@@ -14,9 +14,13 @@ instruction* instructions;
 std::fstream instructionfile;
 
 unsigned consts_newstring (std::string s){
-    strConsts.push_back(s);
-
-    return totalStrings++;
+    std::vector<std::string>::iterator it = std::find(strConsts.begin(), strConsts.end(), s);
+    if(it == strConsts.end()){
+    	strConsts.push_back(s);
+    	return totalStrings++;
+    }
+    
+    return it - strConsts.begin();
 }
 unsigned consts_newnumber (double n){
     numConsts.push_back(n);
