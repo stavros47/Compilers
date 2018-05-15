@@ -47,8 +47,8 @@ unsigned userfuncs_newfunc (Symbol* sym){
 }
 template <typename T>
 void vector_to_file(std::vector<T> constArray, std::string name){
-    instructionfile <<name<< std::endl;
-    instructionfile << "total : "<<constArray.size() << std::endl;
+    //instructionfile <<name<< std::endl;
+    instructionfile<<constArray.size() << std::endl;
     for(int i=0;i<constArray.size();i++){
           instructionfile<<constArray[i]<<"\n";
     }
@@ -56,8 +56,8 @@ void vector_to_file(std::vector<T> constArray, std::string name){
 
 template <>
 void vector_to_file<userfunc*>(std::vector<userfunc*> constArray, std::string name){
-    instructionfile <<name<< std::endl;
-    instructionfile << "total : "<<constArray.size() << std::endl;
+   // instructionfile <<name<< std::endl;
+    instructionfile<<constArray.size() << std::endl;
     for(int i=0;i<constArray.size();i++){
           instructionfile<<constArray[i]->id<<" "<<constArray[i]->address<<" "<<constArray[i]->localSize<<"\n";
     }
