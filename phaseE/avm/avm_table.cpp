@@ -1,5 +1,4 @@
-
-#include "avm.h"
+#include "headers/avm.h"
 
 static void avm_initstack(void){
         for(unsigned i = 0; i<AVM_STACKSIZE; ++i){

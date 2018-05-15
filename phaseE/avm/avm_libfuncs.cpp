@@ -1,4 +1,4 @@
-#include "avm.h"
+#include "headers/avm.h"
 
 void avm_calllibfunc(char* funcname){
         library_func_t f = avm_getlibraryfunc(funcname);

@@ -1,4 +1,4 @@
-#include "avm.h"
+#include "headers/avm.h"
 
 memclear_func_t memclearFuncs[] = {
         0,                      /*number*/
