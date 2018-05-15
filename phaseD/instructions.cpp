@@ -1,5 +1,6 @@
 #include "instructions.h"
 
+
 unsigned currInstruction = 1;
 unsigned totalStrings = 0;
 unsigned totalNumConsts = 0;
@@ -44,6 +45,23 @@ unsigned userfuncs_newfunc (Symbol* sym){
     
     return totalUserFuncs++;
 }
+template <typename T>
+void vector_to_file(std::vector<T> constArray, std::string name){
+    instructionfile <<name<< std::endl;
+    instructionfile << "total : "<<constArray.size() << std::endl;
+    for(int i=0;i<constArray.size();i++){
+          instructionfile<<constArray[i]<<"\n";
+    }
+}
+
+template <>
+void vector_to_file<userfunc*>(std::vector<userfunc*> constArray, std::string name){
+    instructionfile <<name<< std::endl;
+    instructionfile << "total : "<<constArray.size() << std::endl;
+    for(int i=0;i<constArray.size();i++){
+          instructionfile<<constArray[i]->id<<" "<<constArray[i]->address<<" "<<constArray[i]->localSize<<"\n";
+    }
+}
 
 void make_instructions(quad* quadsArray){
     instructions =(instruction*) malloc((nextquadlabel())*sizeof(instruction));
@@ -51,40 +69,22 @@ void make_instructions(quad* quadsArray){
     for(int i = 1; i < nextquadlabel(); i++){
         generators[quadsArray[i].op](&quadsArray[i]);
     }
-    instructionfile.open("instructionfile.txt",std::ios::out);
-    //TODO: Separate to functions
-    //Write Strings array
-    instructionfile <<"strConsts"<< std::endl;
-    instructionfile << "total : "<<strConsts.size() << std::endl;
-    for(int i=0;i<strConsts.size();i++){
-          instructionfile<<strConsts[i]<<"\n";
-    }
-    //numConsts array
-    instructionfile <<"numConsts"<< std::endl;
-    instructionfile << "total : "<<numConsts.size() << std::endl;
-    for(int i=0;i<numConsts.size();i++){
-          instructionfile<<numConsts[i]<<"\n";
-    }
-     //libfuncs array
-    instructionfile <<"libFuncs"<< std::endl;
-    instructionfile << "total : "<<libFuncs.size() << std::endl;
-    for(int i=0;i<libFuncs.size();i++){
-          instructionfile<<libFuncs[i]<<"\n";
-    }
-    //userFuncs array
-    instructionfile <<"userFuncs"<< std::endl;
-    instructionfile << "total : "<<userFuncs.size() << std::endl;
-    for(int i=0;i<userFuncs.size();i++){
-          instructionfile<<userFuncs[i]->id<<" "<<userFuncs[i]->address<<" "<<userFuncs[i]->localSize<<"\n";
-    }
 
+    generate_output();
+}
+void generate_output(){
+
+    instructionfile.open("instructionfile.txt",std::ios::out);
+    instructionfile << MAGIC_NUMBER << std::endl;
+    //Write arrays
+    vector_to_file(strConsts,"strConsts");
+    vector_to_file(numConsts,"numConsts");
+    vector_to_file(libFuncs,"libFuncs");
+    vector_to_file(userFuncs,"userFuncs");
+   
     instructionfile <<"\n"<<instr_to_String()<<std::endl;
 
     instructionfile.close();
-}
-
-void vector_to_file(){
-    
 }
 
 unsigned nextinstructionlabel(){
@@ -149,6 +149,22 @@ void make_operand(expr* e, vmarg* arg){
    
 
 }
+
+
+void make_numberoperand(vmarg* arg, double val){
+    arg->val = consts_newnumber(val);
+    arg->type = number_a;
+}
+
+void make_booloperand(vmarg* arg, unsigned val){
+    arg->val = val;
+    arg->type = bool_a;
+}
+
+void make_retvaloperand(vmarg* arg){
+    arg->type= retval_a;
+}
+
 generator_func_t generators[] = {
     generate_ASSIGN ,
     generate_ADD ,
@@ -175,20 +191,6 @@ generator_func_t generators[] = {
     generate_JUMP ,
     generate_NOP  
 };
-
-void make_numberoperand(vmarg* arg, double val){
-    arg->val = consts_newnumber(val);
-    arg->type = number_a;
-}
-
-void make_booloperand(vmarg* arg, unsigned val){
-    arg->val = val;
-    arg->type = bool_a;
-}
-
-void make_retvaloperand(vmarg* arg){
-    arg->type= retval_a;
-}
 
 void generate (vmopcode op,quad* quad) {
 	instruction *t = new instruction();
@@ -229,7 +231,7 @@ void generate_NOT (quad* quad)	{ instruction t; t.opcode=nop_v; emit_instruction
 void generate_NOP (quad* quad)	{ instruction t; t.opcode=nop_v; emit_instruction(t); } 
 
 
-void generate_relational (vmopcode op,quad* quad) {
+void generate_relational (vmopcode op,quad* quad) { //not declared in .h ??
 	instruction t;
 	t.opcode = op;
     //std::cout << t.opcode <<std::endl;
@@ -321,16 +323,12 @@ void generate_RETURN (quad* quad){
     if(quad->result){
       make_operand(quad->result,&t.arg1);
     }else{
-         t.arg1.type = nil_a;
+        t.arg1.type = nil_a;
     }
-         t.arg2.type = nil_a;
-    
-
-    
+    t.arg2.type = nil_a;   
     
      //t.arg1.type = t.arg2.type = nil_a;
     emit_instruction(t); 
-
 
 }
 void generate_FUNCEND (quad* quad){
