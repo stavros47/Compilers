@@ -19,7 +19,6 @@ enum expr_t{
 enum iopcode{
         assign,         add,            sub,
         mul,            Div,            mod,
-        uminus,         And,            Or,
         Not,            if_eq,          if_noteq,
         if_lesseq,      if_greatereq,   if_less,
 	if_greater,	call,		param,

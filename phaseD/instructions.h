@@ -2,6 +2,7 @@
 #define _INSTRUCTIONS_H_
 #include <vector>
 #include "quad.h"
+#define MAGIC_NUMBER 474747
 
 unsigned consts_newstring (std::string s);
 unsigned consts_newnumber (double n);
@@ -20,17 +21,10 @@ enum vmopcode{
 };
 
 enum vmarg_t{
-    label_a =0,
-    global_a=1,
-    formal_a=2,
-    local_a=3,
-    number_a=4,
-    string_a=5,
-    bool_a=6,
-    nil_a=7,
-    userfunc_a=8,
-    libfunc_a=9,
-    retval_a=10
+    label_a =0,    global_a=1,     formal_a=2,
+     local_a=3,    number_a=4,     string_a=5,
+      bool_a=6,       nil_a=7,   userfunc_a=8,
+   libfunc_a=9,    retval_a=10
 };
 
 typedef struct {
@@ -65,32 +59,21 @@ extern std::vector<userfunc*> userFuncs;
 
 extern instruction* instructions;
 
+template <class T>
+void vector_to_file(std::vector<T> constArray, std::string name);
+
+void make_instructions(quad*);
+void generate_output();
+unsigned nextinstructionlabel();
 void emit_instruction(instruction);
 
 void make_operand(expr* , vmarg*);
-
 void make_numberoperand(vmarg* , double );
-
 void make_booloperand(vmarg*, unsigned );
-
 void make_retvaloperand(vmarg*);
-unsigned nextinstructionlabel();
 
-void make_instructions(quad*);
-
-// typedef struct{
-//     unsigned instrNo;
-//     unsigned iaddress;
-//     incomplete_jump* next;
-// }incomplete_jump;
-
-// incomplete_jump* ij_head=(incomplete_jump*) 0; //std::list??
-//unsigned ij_total=0;
-
-//void add_icomplete_jump(unsigned ,unsigned );
-std::string vmopcode_toString();
-std::string vmarg_toString(vmarg temp);
-std::string instr_to_String();
+typedef void (*generator_func_t)(quad*);
+extern generator_func_t generators[] ;
 
 void generate(vmopcode,quad*);
 
@@ -119,8 +102,8 @@ extern void generate_FUNCSTART (quad*);
 extern void generate_RETURN (quad*);
 extern void generate_FUNCEND (quad*);
 
-typedef void (*generator_func_t)(quad*);
-
-extern generator_func_t generators[] ;
+std::string vmopcode_toString();
+std::string vmarg_toString(vmarg temp);
+std::string instr_to_String();
 
 #endif
