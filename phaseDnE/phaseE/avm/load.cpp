@@ -90,8 +90,6 @@ int main(int argc, char* argv[]){ // or char** argv
 				infile >> output;
 				p->arg2.val = (unsigned)std::stoi(output);
 				test_global(p->arg2);
-
-				//std::cout<<output<<"\n";
 		}
 	}
 	infile.close();

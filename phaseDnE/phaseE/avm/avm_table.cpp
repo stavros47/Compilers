@@ -1,6 +1,5 @@
 #include "headers/avm.h"
 
-
 avm_table* avm_tablenew(void){
         avm_table* t =(avm_table*)malloc(sizeof(avm_table));
         AVM_WIPEOUT(*t);
@@ -17,6 +16,7 @@ void avm_table_destroy(avm_table* t){
         avm_tablebucketdestroy(t->numIndexed);
         free(t);
 }
+
 /****************************************************/
 avm_memcell* avm_tablegetelem(avm_table* table,avm_memcell* key){
 	return (avm_memcell*)0;

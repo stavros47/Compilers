@@ -1,11 +1,9 @@
 #include "headers/avm.h"
 
-
-
 void avm_calllibfunc(char* funcname){
         library_func_t f = avm_getlibraryfunc(funcname);
         if(!f){
-                //avm_error("unsupported lib func '%s' called!",funcname");
+                avm_error("unsupported lib func '%s' called!",funcname);
                 executionFinished=1;
         }else{
                 topsp = top;
@@ -16,11 +14,10 @@ void avm_calllibfunc(char* funcname){
                 }
         }
 }
-/*************************************************/
+
 library_func_t avm_getlibraryfunc(char* id){
         std::unordered_map<std::string,library_func_t>::iterator it;
 
-       // std::string s(id) ;
         it = registry.find(id);
 
         if(it!=registry.end())
@@ -39,11 +36,8 @@ avm_memcell* avm_getactual(unsigned i){
 }
 
 void avm_registerlibfunc(std::string id,library_func_t addr){
-        //std::cout<<&addr<<":::register\n";
         registry.insert({id,addr});
 }
-
-/**********************************************************/
 
 void libfunc_print(void){
         unsigned n = avm_totalactuals();
@@ -59,7 +53,7 @@ void libfunc_typeof(void){
 	unsigned n = avm_totalactuals();
 
 	if(n!=1){
-		//avm_error("one argument (not %d) expected in 'typeof'!",n);
+		avm_error("one argument (not %d) expected in 'typeof'!",n);
 	}else{
 		avm_memcellclear(&retval);
 		retval.type = string_m;
@@ -72,7 +66,7 @@ void libfunc_totalarguments(void){
 	avm_memcellclear(&retval);
 
 	if(!p_topsp){
-		//avm_error("totalarguments' called outside a function!");
+		avm_error("totalarguments' called outside a function!");
 		retval.type = nil_m;
 	}else{
 		retval.type = number_m;

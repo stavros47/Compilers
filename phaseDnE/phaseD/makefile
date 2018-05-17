@@ -6,7 +6,7 @@ CC = g++
 %.o: %.cpp $(DEPS)
 	$(CC) -c $(FLAGS) $< -o $@ 
 
-al: $(obj) $(DEPS)
+../al: $(obj) $(DEPS)
 	$(CC) $(FLAGS) $^ -o $@ -g
 
 parser.cpp: parser.y
@@ -16,4 +16,6 @@ scanner.cpp : scanner.l
 	flex scanner.l
 
 clean:
-	rm al parser.cpp scanner.cpp parser.hpp parser.output *.o *.txt
+	#rm al *.txt
+	rm parser.cpp scanner.cpp parser.hpp parser.output *.o
+

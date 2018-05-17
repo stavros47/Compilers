@@ -6,8 +6,9 @@ CC = g++
 %.o: %.cpp $(DEPS)
 	$(CC) -c $(FLAGS) $< -o $@ 
 
-avm: $(obj) $(DEPS)
+../../avm: $(obj) $(DEPS)
 	$(CC) $(FLAGS) $^ -o $@ -g
 
 clean:
-	rm avm *.o 
+	#rm avm 
+	rm *.o 

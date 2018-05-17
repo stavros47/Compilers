@@ -1,5 +1,18 @@
 #include "headers/avm.h"
 
+std::string typeStrings[] = {
+        "number_m",
+        "string_m",
+        "bool_m",
+        "table_m",
+        "userfunc_m",
+        "libfunc_m",
+        "nil_m",
+        "undef_m"
+};
+
+
+
 double  consts_getnumber(unsigned u){
         return numConsts[u];
 }
@@ -10,6 +23,10 @@ char*   consts_getstring(unsigned u){
 
 char*   libfuncs_getused(unsigned u){
         return const_cast<char*>(libFuncs[u].c_str());
+}
+
+userfunc* avm_getfuncinfo(unsigned u){
+        return userFuncs[u];
 }
 
 avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
@@ -61,7 +78,7 @@ static void avm_initstack(void){
 
 void avm_dec_top(void){
         if(!top){
-//              avm_error("stack overflow\n");
+                avm_error("stack overflow\n");
                 executionFinished=1;
         }
         else
@@ -69,12 +86,13 @@ void avm_dec_top(void){
         
 }
 
-userfunc* avm_getfuncinfo(unsigned address){
-
+void avm_warning(const char* format,...){
+        std::cout<<"[WARNING]"<<format<<std::endl;
 }
 
-void avm_warning(char* format,...){}
-void avm_error(char*,...){}
+void avm_error(const char* format,...){
+        std::cout<<"[ERROR]"<<format<<std::endl;
+}
 
 void avm_callsaveenviroment(void){
         avm_pushenvvalue(totalActuals);
@@ -94,7 +112,7 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
                 return;
 
         if(rv->type == undef_m){
-                //avm_warning("assigning from 'undef' content!");
+                avm_warning("assigning from 'undef' content!");
         }
 
         avm_memcellclear(lv);
@@ -123,7 +141,10 @@ unsigned avm_getenvvalue(unsigned i){
 
 void avm_initialize(void){
         avm_initstack();
-        top = topsp = AVM_STACKSIZE - max_global_offset -1;/*simiosi paris*/
+
+        /* offsets start from 0    *
+         * AVM_STACKSIZE 4096(N-1) */
+        top = topsp = AVM_STACKSIZE - 1 - (max_global_offset+1);
 
         avm_registerlibfunc("print",libfunc_print);
         avm_registerlibfunc("typeof",libfunc_typeof);

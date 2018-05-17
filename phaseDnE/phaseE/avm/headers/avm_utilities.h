@@ -12,6 +12,8 @@ enum avm_memcell_t{
         undef_m         = 7,
 };
 
+extern std::string typeStrings[];
+
 struct avm_table;
 
 struct avm_memcell{
@@ -33,6 +35,7 @@ extern unsigned top,topsp;
 double  consts_getnumber(unsigned);
 char*   consts_getstring(unsigned);
 char*   libfuncs_getused(unsigned);
+userfunc* avm_getfuncinfo(unsigned);
 
 avm_memcell* avm_translate_operand(vmarg*,avm_memcell*);
 
@@ -45,7 +48,6 @@ extern avm_memcell stack[];
 
 static void avm_initstack(void);
 
-//extern unsigned char   executionFinished;
 extern unsigned        pc;
 extern unsigned        currLine;
 extern unsigned        codeSize;
@@ -64,7 +66,6 @@ extern void avm_assign(avm_memcell*,avm_memcell*);
 #define AVM_SAVEDTOP_OFFSET     1
 
 extern void avm_dec_top(void);
-extern userfunc* avm_getfuncinfo(unsigned);
 extern void avm_pushenvvalue(unsigned);
 extern unsigned avm_getenvvalue(unsigned);
 

@@ -45,7 +45,7 @@ std::string string_tostring(avm_memcell* m){
 std::string bool_tostring(avm_memcell* m){
         return (m->data.boolVal) ? "TRUE" : "FALSE";
 }
-
+/********************************************************/
 std::string table_tostring(avm_memcell* m){
         return "TABLE:GAMATO";
 }
@@ -68,6 +68,7 @@ std::string undef_tostring(avm_memcell* m){
 
 std::string avm_tostring(avm_memcell* m){
         assert(m->type >=0 && m->type < undef_m);
+        std::cout<<"DAAAAAAAAAAAA"<<m->type<<"\n";
         return (*tostringFuncs[m->type])(m);
 }
 
