@@ -34,31 +34,39 @@ tostring_func_t tostringFuncs[] = {
         undef_tostring
 };
 
-char* number_tostring(avm_memcell* m){
+std::string number_tostring(avm_memcell* m){
+        return std::to_string(m->data.numVal);
 }
 
-char* string_tostring(avm_memcell* m){
+std::string string_tostring(avm_memcell* m){
+        return m->data.strVal;
 }
 
-char* bool_tostring(avm_memcell* m){
+std::string bool_tostring(avm_memcell* m){
+        return (m->data.boolVal) ? "TRUE" : "FALSE";
 }
 
-char* table_tostring(avm_memcell* m){
+std::string table_tostring(avm_memcell* m){
+        return "TABLE:GAMATO";
 }
 
-char* userfunc_tostring(avm_memcell* m){
+std::string userfunc_tostring(avm_memcell* m){
+        return userFuncs[m->data.numVal]->id;
 }
 
-char* libfunc_tostring(avm_memcell* m){
+std::string libfunc_tostring(avm_memcell* m){
+        return m->data.libfuncVal;
 }
 
-char* nil_tostring(avm_memcell* m){
+std::string nil_tostring(avm_memcell* m){
+        return "nil";
 }
 
-char* undef_tostring(avm_memcell* m){
+std::string undef_tostring(avm_memcell* m){
+        return "undef";
 }
 
-char* avm_tostring(avm_memcell* m){
+std::string avm_tostring(avm_memcell* m){
         assert(m->type >=0 && m->type < undef_m);
         return (*tostringFuncs[m->type])(m);
 }
@@ -71,7 +79,6 @@ void avm_memcellclear(avm_memcell* m){
                 m->type=undef_m;
         }
 }
-
 
 arithmetic_func_t arithmeticFuncs[] = {
         add_impl,

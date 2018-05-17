@@ -1,11 +1,5 @@
 #include "headers/avm.h"
 
-static void avm_initstack(void){
-        for(unsigned i = 0; i<AVM_STACKSIZE; ++i){
-                AVM_WIPEOUT(stack[i]);
-                stack[i].type = undef_m;
-        }
-}
 
 avm_table* avm_tablenew(void){
         avm_table* t =(avm_table*)malloc(sizeof(avm_table));

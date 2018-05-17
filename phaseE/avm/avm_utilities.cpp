@@ -1,8 +1,16 @@
 #include "headers/avm.h"
 
-double  consts_getnumber(unsigned u){}
-char*   consts_getstring(unsigned u){}
-char*   libfuncs_getused(unsigned u){}
+double  consts_getnumber(unsigned u){
+        return numConsts[u];
+}
+
+char*   consts_getstring(unsigned u){
+        return const_cast<char*>(strConsts[u].c_str());
+}
+
+char*   libfuncs_getused(unsigned u){
+        return const_cast<char*>(libFuncs[u].c_str());
+}
 
 avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
 
@@ -45,7 +53,8 @@ avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
 }
 
 static void avm_initstack(void){
-        for (unsigned i = 0; i < AVM_STACKSIZE; ++i){
+        for(unsigned i = 0; i<AVM_STACKSIZE; ++i){
+                AVM_WIPEOUT(stack[i]);
                 stack[i].type = undef_m;
         }
 }
@@ -57,6 +66,7 @@ void avm_dec_top(void){
         }
         else
                 --top;
+        
 }
 
 userfunc* avm_getfuncinfo(unsigned address){
@@ -88,7 +98,6 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
         }
 
         avm_memcellclear(lv);
-
         std::memcpy(lv,rv,sizeof(avm_memcell));
 
         if( lv->type == string_m)
@@ -106,7 +115,7 @@ void avm_pushenvvalue(unsigned val){
 }
 
 unsigned avm_getenvvalue(unsigned i){
-        assert(stack[i].type = number_m);
+        assert(stack[i].type == number_m);
         unsigned val = (unsigned) stack[i].data.numVal;
         assert(stack[i].data.numVal == ((double) val));
         return val;
@@ -114,6 +123,7 @@ unsigned avm_getenvvalue(unsigned i){
 
 void avm_initialize(void){
         avm_initstack();
+        top = topsp = AVM_STACKSIZE - max_global_offset -1;/*simiosi paris*/
 
         avm_registerlibfunc("print",libfunc_print);
         avm_registerlibfunc("typeof",libfunc_typeof);
@@ -123,14 +133,17 @@ void avm_initialize(void){
 
 void execute_cycle(void){
         if(executionFinished){
+                std::cout<<"executionFinished\n"<<executionFinished<<"\n";
                 return;
         }else
         if (pc == AVM_ENDING_PC){
                 executionFinished  = 1;
+                std::cout<<"pc == AVM_ENDING_PC\n";
                 return;
         } else{
                 assert(pc < AVM_ENDING_PC);
                 instruction* instr = code + pc;
+
                 assert(
                         instr->opcode >= 0 &&
                         instr->opcode <= AVM_MAX_INSTRUCTIONS
@@ -138,6 +151,7 @@ void execute_cycle(void){
                 if(instr->srcLine)
                         currLine = instr->srcLine;
                 unsigned oldPC = pc;
+                
                 (*executeFuncs[instr->opcode])(instr);
                 if(pc==oldPC)   ++pc;
         }

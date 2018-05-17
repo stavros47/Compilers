@@ -10,20 +10,20 @@ extern void memclear_table(avm_memcell*);
 extern memclear_func_t memclearFuncs[];
 
 /***********TOSTRING*************************/
-typedef char* (*tostring_func_t)(avm_memcell*);
+typedef std::string (*tostring_func_t)(avm_memcell*);
 
 extern tostring_func_t tostringFuncs[];
 
-extern char* number_tostring(avm_memcell*);
-extern char* string_tostring(avm_memcell*);
-extern char* bool_tostring(avm_memcell*);
-extern char* table_tostring(avm_memcell*);
-extern char* userfunc_tostring(avm_memcell*);
-extern char* libfunc_tostring(avm_memcell*);
-extern char* nil_tostring(avm_memcell*);
-extern char* undef_tostring(avm_memcell*);
+extern std::string number_tostring(avm_memcell*);
+extern std::string string_tostring(avm_memcell*);
+extern std::string bool_tostring(avm_memcell*);
+extern std::string table_tostring(avm_memcell*);
+extern std::string userfunc_tostring(avm_memcell*);
+extern std::string libfunc_tostring(avm_memcell*);
+extern std::string nil_tostring(avm_memcell*);
+extern std::string undef_tostring(avm_memcell*);
 
-extern char* avm_tostring(avm_memcell*);
+extern std::string avm_tostring(avm_memcell*);
 /******************ARITHMETIC**********************/
 typedef double (*arithmetic_func_t)(double x,double y);
 

@@ -47,7 +47,7 @@ void execute_assign(instruction* instr){
         avm_memcell* lv = avm_translate_operand(&instr->result , (avm_memcell*)0);
         avm_memcell* rv = avm_translate_operand(&instr->arg1 , &ax);
 
-        assert(lv && (&stack[0] <= lv && &stack[top] > lv || lv == &retval));
+        assert(lv && (&stack[AVM_STACKSIZE] > lv && &stack[top] < lv || lv == &retval));
         assert(rv);
 
         avm_assign(lv,rv);
@@ -77,7 +77,7 @@ void execute_call( instruction* instr){
                 }
         
                 default:                {
-                        char* s = avm_tostring(func);
+                        char* s = const_cast<char*>(avm_tostring(func).c_str());
 //                      avm_error("call:cannot gind '%s' to function!");//,s);
                         free(s);
                         executionFinished=1;
@@ -123,11 +123,11 @@ void execute_jge(instruction* instr){}
 void execute_jlt(instruction* instr){}
 void execute_jgt(instruction* instr){}
 void execute_pusharg     (instruction* instr){
-        avm_memcell* arg = avm_translate_operand(&instr->arg1,&ax);
+        avm_memcell* arg = avm_translate_operand(&instr->result,&ax);
         assert(arg);
         avm_assign(&stack[top],arg);
         ++totalActuals;
-        avm_dec_top;
+        avm_dec_top();
 }
 
 void execute_funcenter   (instruction* instr){
@@ -182,8 +182,8 @@ void execute_tablegetelem(instruction* instr){
                 if(content)
                         avm_assign(lv,content);
                 else{
-                        char* ks = avm_tostring(k);
-                        char* vs = avm_tostring(v);
+                        char* ks = const_cast<char*>(avm_tostring(k).c_str());
+                        char* vs = const_cast<char*>(avm_tostring(v).c_str());
 
                         //avm_warning("%s[%s] not found!",ks,vs);
                         free(ks);

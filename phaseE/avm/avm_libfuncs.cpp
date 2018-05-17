@@ -1,5 +1,7 @@
 #include "headers/avm.h"
 
+
+
 void avm_calllibfunc(char* funcname){
         library_func_t f = avm_getlibraryfunc(funcname);
         if(!f){
@@ -16,7 +18,15 @@ void avm_calllibfunc(char* funcname){
 }
 /*************************************************/
 library_func_t avm_getlibraryfunc(char* id){
+        std::unordered_map<std::string,library_func_t>::iterator it;
 
+       // std::string s(id) ;
+        it = registry.find(id);
+
+        if(it!=registry.end())
+                return it->second;
+         
+        return NULL;
 }
 
 unsigned avm_totalactuals(void){
@@ -28,7 +38,9 @@ avm_memcell* avm_getactual(unsigned i){
         return &stack[topsp + AVM_STACKENV_SIZE+1];
 }
 
-void avm_registerlibfunc(const char* id,library_func_t addr){
+void avm_registerlibfunc(std::string id,library_func_t addr){
+        //std::cout<<&addr<<":::register\n";
+        registry.insert({id,addr});
 }
 
 /**********************************************************/
@@ -36,9 +48,9 @@ void avm_registerlibfunc(const char* id,library_func_t addr){
 void libfunc_print(void){
         unsigned n = avm_totalactuals();
         for(unsigned i = 0; i < n; ++i){
-                char* s = avm_tostring(avm_getactual(i));
+                char* s = const_cast<char*>(avm_tostring(avm_getactual(i)).c_str());
                 puts(s);
-                free(s);
+                //free(s);
         }
 }
 
