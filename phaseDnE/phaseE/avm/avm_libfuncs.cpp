@@ -4,7 +4,6 @@ void avm_calllibfunc(char* funcname){
         library_func_t f = avm_getlibraryfunc(funcname);
         if(!f){
                 avm_error("unsupported lib func '%s' called!",funcname);
-                executionFinished=1;
         }else{
                 topsp = top;
                 totalActuals = 0;

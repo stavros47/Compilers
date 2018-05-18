@@ -11,8 +11,6 @@ std::string typeStrings[] = {
         "undef_m"
 };
 
-
-
 double  consts_getnumber(unsigned u){
         return numConsts[u];
 }
@@ -36,7 +34,7 @@ avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
                 case local_a:   return &stack[topsp - arg->val];
                 case formal_a:  return &stack[topsp + AVM_STACKENV_SIZE + 1 + arg->val];
                 case retval_a:  return &retval;
-                case number_a:  { 
+                case number_a:  {
                         reg->type = number_m;
                         reg->data.numVal = consts_getnumber(arg->val);
                         return reg;
@@ -85,20 +83,22 @@ void avm_dec_top(void){
                 --top;
         
 }
-
+/*************************************************************/
 void avm_warning(const char* format,...){
         std::cout<<"[WARNING]"<<format<<std::endl;
 }
 
 void avm_error(const char* format,...){
+        executionFinished=1;
         std::cout<<"[ERROR]"<<format<<std::endl;
 }
+/*************************************************************/
 
 void avm_callsaveenviroment(void){
         avm_pushenvvalue(totalActuals);
         avm_pushenvvalue(pc+1);
-        avm_pushenvvalue(top + totalActuals + 2);
         avm_pushenvvalue(topsp);
+        avm_pushenvvalue(top + totalActuals + 2);        
 }
 
 void avm_assign(avm_memcell* lv,avm_memcell* rv){

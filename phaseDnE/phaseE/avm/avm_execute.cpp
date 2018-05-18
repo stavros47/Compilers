@@ -26,8 +26,8 @@ execute_func_t executeFuncs[]= {
 
 void execute_arithmetic(instruction* instr){
         avm_memcell* lv = avm_translate_operand(&instr->result,(avm_memcell*)0);
-        avm_memcell* rv1 = avm_translate_operand(&instr->result,&ax);
-        avm_memcell* rv2 = avm_translate_operand(&instr->result,&bx);
+        avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
+        avm_memcell* rv2 = avm_translate_operand(&instr->arg2,&bx);
 
         assert(lv && (&stack[AVM_STACKSIZE] > lv && &stack[top] < lv || lv ==&retval));
         assert(rv1 && rv2);
@@ -44,7 +44,7 @@ void execute_arithmetic(instruction* instr){
 }
 
 void execute_assign(instruction* instr){
-        avm_memcell* lv = avm_translate_operand(&instr->result , (avm_memcell*)0);
+        avm_memcell* lv = avm_translate_operand(&instr->result, (avm_memcell*)0);
         avm_memcell* rv = avm_translate_operand(&instr->arg1 , &ax);
 
         assert(lv && ((&stack[AVM_STACKSIZE] > lv && &stack[top] < lv) || lv == &retval));
@@ -60,7 +60,7 @@ void execute_call( instruction* instr){
 
         switch( func->type){
                 case userfunc_m:        {
-                        pc = func->data.funcVal;
+                        pc =avm_getfuncinfo(func->data.funcVal)->address;
                         assert(pc<AVM_ENDING_PC);
                         assert(code[pc].opcode == funcenter_v);
                         break;
@@ -80,45 +80,58 @@ void execute_call( instruction* instr){
                         char* s = const_cast<char*>(avm_tostring(func).c_str());
                         avm_error("call:cannot gind '%s' to function!",s);
                         //free(s);
-                        executionFinished=1;
                 }
         }
 }
 
-void execute_not(instruction* instr){}
+void execute_not(instruction* instr){}////////////////////////////////////////
 
-void execute_jeq(instruction* instr){
-        assert(instr->result.type == label_a);
-        avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
-        avm_memcell* rv2 = avm_translate_operand(&instr->arg1,&bx);
-
-        unsigned char result = 0;
-
+unsigned char jump_checks(avm_memcell* rv1,avm_memcell* rv2){
         if(rv1->type == undef_m || rv2->type ==undef_m){
                 avm_error("'undef' involved in equality!");
-                executionFinished=1;
         }else
         if(rv1->type == bool_m || rv2->type == bool_m){
-                result = (avm_tobool(rv1) == avm_tobool(rv2));
+                return (avm_tobool(rv1) == avm_tobool(rv2));
         }else
         if(rv1->type == nil_m || rv2->type == nil_m){
-                result = (avm_tobool(rv1) == avm_tobool(rv2));
+                return (avm_tobool(rv1) == avm_tobool(rv2));
         }else
         if(rv1->type != rv2->type){
         avm_error("%s==%s is illegal!",
                 typeStrings[rv1->type],
                 typeStrings[rv2->type]);
-                executionFinished = 1;
         }else{
-                /*Equality checkwith dispatching */
+                check_eq_func_t f = check_eqFuncs[rv1->type];
+                if(f)
+                        return (*f)(rv1,rv2);
+                else assert(0);
         }
+}
+
+void execute_jeq(instruction* instr){
+        assert(instr->result.type == label_a);
+        avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
+        avm_memcell* rv2 = avm_translate_operand(&instr->arg2,&bx);
+        unsigned char result = 0;
+
+        result = jump_checks(rv1,rv2);
                 
         if(!executionFinished && result)
                 pc = instr->result.val;
         
 }
 
-void execute_jne(instruction* instr){}
+void execute_jne(instruction* instr){
+        assert(instr->result.type == label_a);
+        avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
+        avm_memcell* rv2 = avm_translate_operand(&instr->arg2,&bx);
+        unsigned char result = 0;
+
+        result = jump_checks(rv1,rv2);
+                
+        if(!executionFinished && !result)
+                pc = instr->result.val;
+}
 void execute_jle(instruction* instr){}
 void execute_jge(instruction* instr){}
 void execute_jlt(instruction* instr){}
@@ -134,16 +147,17 @@ void execute_pusharg(instruction* instr){
 void execute_funcenter(instruction* instr){
         avm_memcell* func = avm_translate_operand(&instr->result,&ax);
         assert(func);
-        assert(pc==func->data.funcVal);
+        assert(pc==avm_getfuncinfo(func->data.funcVal)->address);
 
         totalActuals = 0;
-        userfunc* funcInfo = avm_getfuncinfo(pc);
+        userfunc* funcInfo = avm_getfuncinfo(func->data.funcVal);
         topsp = top;
         top = top - funcInfo -> localSize;
 }
 
 void execute_funcexit(instruction* instr){
         unsigned oldTop = top;
+
         top = avm_getenvvalue(topsp + AVM_SAVEDTOP_OFFSET);
         pc = avm_getenvvalue(topsp + AVM_SAVEDPC_OFFSET);
         topsp = avm_getenvvalue(topsp + AVM_SAVEDTOPSP_OFFSET);

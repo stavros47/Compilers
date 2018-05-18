@@ -51,4 +51,15 @@ extern unsigned char undef_tobool(avm_memcell*);
 
 unsigned char avm_tobool(avm_memcell*);
 
+typedef unsigned char (*check_eq_func_t)(avm_memcell*,avm_memcell*);
+
+extern check_eq_func_t check_eqFuncs[];
+
+unsigned char number_check_eq(avm_memcell* first,avm_memcell* second);
+
+unsigned char string_check_eq(avm_memcell*,avm_memcell*);
+unsigned char table_check_eq(avm_memcell*,avm_memcell*);
+unsigned char userfunc_check_eq(avm_memcell*,avm_memcell*);
+unsigned char libfunc_check_eq(avm_memcell*,avm_memcell*);
+
 #endif

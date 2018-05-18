@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){ // or char** argv
 		infile>>output;
     	codeSize = std::stoi(output);
 		code=(instruction*)malloc(codeSize*sizeof(instruction));
-		
+
 		while(!infile.eof()){
 				infile>>output;
 				instruction* p = code + currLine++;
@@ -96,8 +96,11 @@ int main(int argc, char* argv[]){ // or char** argv
 
 	//prints();
 
+
 	avm_initialize();
+	int cnt =1 ;
 	while(!executionFinished){
+		//std::cout<<cnt++<<"\tpc:"<<pc<<std::endl;
 		execute_cycle();	
 	}
 
@@ -128,7 +131,4 @@ void prints(){
 		printf("\t%d:", code[i].arg2.type);
 		printf("%d\n", code[i].arg2.val);
 	}
-
-	std::cout<<"MAX_GLOBAL_OFFSET:"<<max_global_offset<<"\n";
-
 }
