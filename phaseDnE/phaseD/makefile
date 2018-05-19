@@ -15,7 +15,7 @@ parser.cpp: parser.y
 scanner.cpp : scanner.l
 	flex scanner.l
 
-clean:
-	rm al *.txt
+clean:	
 	rm parser.cpp scanner.cpp parser.hpp parser.output *.o
+	rm al *.txt
 
