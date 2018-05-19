@@ -159,3 +159,4 @@ unsigned char userfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){
 }
 unsigned char libfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return unsigned(strcmp(rv1->data.libfuncVal,rv2->data.libfuncVal));
+}
