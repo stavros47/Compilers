@@ -24,25 +24,21 @@ int main(int argc, char* argv[]){ // or char** argv
 	std::string output;
 
 	if(infile.is_open()){
-		infile>>output;		std::cout<<output<<std::endl;
-
+		infile>>output;		
 		if(output.compare("474747")){
 			std::cout<<"Not an abc file\n";
 			return -1;
 		}
 		int size=0;
 
-		infile>>output;		std::cout<<output<<std::endl;
-
+		infile>>output;
 		size = std::stoi(output);
 		for(int i=0;i<size;i++){
-			infile>>output;		std::cout<<output<<std::endl;
-
+			infile>>output;
 			strConsts.push_back(output);
 		}
 
 		infile>>output;
-		std::cout<<output<<std::endl;
 		size = std::stoi(output);
 		for(int i=0;i<size;i++){
 			infile>>output;

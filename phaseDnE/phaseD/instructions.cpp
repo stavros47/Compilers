@@ -14,6 +14,7 @@ instruction* instructions;
 std::fstream instructionfile;
 
 unsigned consts_newstring (std::string s){
+    //s= "\"" + s + "\"";
     std::vector<std::string>::iterator it = std::find(strConsts.begin(), strConsts.end(), s);
     if(it == strConsts.end()){
     	strConsts.push_back(s);
