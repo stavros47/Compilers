@@ -157,12 +157,12 @@ void execute_cycle(void){
                 std::cout<<"executionFinished\n"<<executionFinished<<"\n";
                 return;
         }else
-        if (pc == AVM_ENDING_PC){
+        if (pc == AVM_ENDING_PC + 1){
                 executionFinished  = 1;
                 std::cout<<"pc == AVM_ENDING_PC\n";
                 return;
         } else{
-                assert(pc < AVM_ENDING_PC);
+                assert(pc < AVM_ENDING_PC+1);
                 instruction* instr = code + pc;
 
                 assert(

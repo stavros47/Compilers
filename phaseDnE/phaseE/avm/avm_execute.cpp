@@ -61,7 +61,7 @@ void execute_call( instruction* instr){
         switch( func->type){
                 case userfunc_m:        {
                         pc =avm_getfuncinfo(func->data.funcVal)->address;
-                        assert(pc<AVM_ENDING_PC);
+                        assert(pc<AVM_ENDING_PC+1);
                         assert(code[pc].opcode == funcenter_v);
                         break;
                 }
@@ -222,7 +222,6 @@ void execute_jlt(instruction* instr){
         avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
         avm_memcell* rv2 = avm_translate_operand(&instr->arg2,&bx);
         unsigned char result = 0;
-
         result = jump_geChecks(rv1,rv2);
                 
         if(!executionFinished && !result)

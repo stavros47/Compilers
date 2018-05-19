@@ -887,7 +887,7 @@ forprefix:	FOR'('elist ';' M expr ';'	{
 							e->test = $5;
 							e->enter = nextquadlabel();
 							$$ = e;
-							emit(if_eq,$6,newexpr_constbool_e(true),(expr*)0,0,yylineno);
+							emit(if_eq,newexpr_constbool_e(true),(expr*)0,$6,0,yylineno);
 
 							inside_loop++;
 							breakStack.push(breakList);

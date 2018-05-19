@@ -101,7 +101,6 @@ void emit_instruction(instruction t){
 
 
 void make_operand(expr* e, vmarg* arg){
-   // std::cout<<e->sym->name<<std::endl;    
 
         switch (e->type){
             case var_e :
@@ -147,7 +146,7 @@ void make_operand(expr* e, vmarg* arg){
                 arg->val = libfuncs_newused(e->sym->name);
                 arg->type = libfunc_a; break;
             }
-            default: std::cout<<e->type<<"dammee\n";assert(0);
+            default: assert(0);
         }
     
    
@@ -238,14 +237,13 @@ void generate_NOP (quad* quad)	{ instruction t; t.opcode=nop_v; emit_instruction
 void generate_relational (vmopcode op,quad* quad) { //not declared in .h ??
 	instruction t;
 	t.opcode = op;
-    //std::cout << t.opcode <<std::endl;
-    if(quad->arg1){
-       make_operand(quad->arg1, &t.arg1);
+    if(quad->result){
+       make_operand(quad->result, &t.arg1);
     }else{
          t.arg1.type = nil_a;
     }
-	if(quad->arg2){
-      make_operand(quad->arg2, &t.arg2);
+	if(quad->arg1){
+      make_operand(quad->arg1, &t.arg2);
     }else{
          t.arg2.type = nil_a;
     }

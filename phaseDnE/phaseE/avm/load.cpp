@@ -24,21 +24,25 @@ int main(int argc, char* argv[]){ // or char** argv
 	std::string output;
 
 	if(infile.is_open()){
-		infile>>output;
+		infile>>output;		std::cout<<output<<std::endl;
+
 		if(output.compare("474747")){
 			std::cout<<"Not an abc file\n";
 			return -1;
 		}
 		int size=0;
 
-		infile>>output;
+		infile>>output;		std::cout<<output<<std::endl;
+
 		size = std::stoi(output);
 		for(int i=0;i<size;i++){
-			infile>>output;
+			infile>>output;		std::cout<<output<<std::endl;
+
 			strConsts.push_back(output);
 		}
 
 		infile>>output;
+		std::cout<<output<<std::endl;
 		size = std::stoi(output);
 		for(int i=0;i<size;i++){
 			infile>>output;
@@ -94,7 +98,7 @@ int main(int argc, char* argv[]){ // or char** argv
 	}
 	infile.close();
 
-	//prints();
+	prints();
 
 
 	avm_initialize();
@@ -113,12 +117,16 @@ int main(int argc, char* argv[]){ // or char** argv
 }
 
 void prints(){
+	std::cout<<"string consts\n";
 	for(std::string i : strConsts)
 		std::cout<<i<<std::endl;
+	std::cout<<"num consts\n";
 	for(double i : numConsts)
 		std::cout<<i<<std::endl;
+	std::cout<<"lib funcs\n";
 	for(std::string i : libFuncs)
 		std::cout<<i<<std::endl;
+	std::cout<<"userfuncs\n";
 	for(userfunc* i : userFuncs)
 		std::cout<<i->id<<"\t"<<i->address<<"\t"<<i->localSize<<std::endl;
 	for(int i=0;i<codeSize;i++){
