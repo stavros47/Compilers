@@ -49,8 +49,8 @@ std::string string_tostring(avm_memcell* m){
 std::string bool_tostring(avm_memcell* m){
         return (m->data.boolVal) ? "TRUE" : "FALSE";
 }
-/********************************************************/
-std::string table_tostring(avm_memcell* m){
+
+std::string table_tostring(avm_memcell* m){ /////////////////////
         return "TABLE:GAMATO";
 }
 
@@ -74,7 +74,7 @@ std::string avm_tostring(avm_memcell* m){
         assert(m->type >=0 && m->type < undef_m);
         return (*tostringFuncs[m->type])(m);
 }
-
+/********************************************************/
 void avm_memcellclear(avm_memcell* m){
         if(m->type!=undef_m){
                 memclear_func_t f = memclearFuncs[m->type];
@@ -154,9 +154,67 @@ unsigned char table_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         /*TO BE CONTINUED */
         return 0;
 }
-unsigned char userfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){
+unsigned char userfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){ //??
         return (rv1->data.funcVal == rv2->data.funcVal);
 }
 unsigned char libfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){
+        return unsigned(strcmp(rv1->data.libfuncVal,rv2->data.libfuncVal));
+}
+
+check_le_func_t check_leFuncs[] = {
+        number_check_le,
+        string_check_le,
+        0,
+        table_check_le,
+        userfunc_check_le,
+        libfunc_check_le,
+        0,
+        0
+
+};
+
+unsigned char number_check_le(avm_memcell* rv1,avm_memcell* rv2){
+        return (rv1->data.numVal <= rv2->data.numVal);
+}
+unsigned char string_check_le(avm_memcell* rv1,avm_memcell* rv2){
+        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));
+}
+unsigned char table_check_le(avm_memcell* rv1,avm_memcell* rv2){
+        /*TO BE CONTINUED */
+        return 0;
+}
+unsigned char userfunc_check_le(avm_memcell* rv1,avm_memcell* rv2){ //??
+        return (rv1->data.funcVal <= rv2->data.funcVal);
+}
+unsigned char libfunc_check_le(avm_memcell* rv1,avm_memcell* rv2){
+        return unsigned(strcmp(rv1->data.libfuncVal,rv2->data.libfuncVal));
+}
+
+check_ge_func_t check_geFuncs[] = {
+        number_check_ge,
+        string_check_ge,
+        0,
+        table_check_ge,
+        userfunc_check_ge,
+        libfunc_check_ge,
+        0,
+        0
+
+};
+
+unsigned char number_check_ge(avm_memcell* rv1,avm_memcell* rv2){
+        return (rv1->data.numVal >= rv2->data.numVal);
+}
+unsigned char string_check_ge(avm_memcell* rv1,avm_memcell* rv2){
+        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));
+}
+unsigned char table_check_ge(avm_memcell* rv1,avm_memcell* rv2){
+        /*TO BE CONTINUED */
+        return 0;
+}
+unsigned char userfunc_check_ge(avm_memcell* rv1,avm_memcell* rv2){ //??
+        return (rv1->data.funcVal >= rv2->data.funcVal);
+}
+unsigned char libfunc_check_ge(avm_memcell* rv1,avm_memcell* rv2){
         return unsigned(strcmp(rv1->data.libfuncVal,rv2->data.libfuncVal));
 }
