@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string>
-#include "../../../phaseD/instructions.h"
+#include "../../phaseD/instructions.h"
 #include <unordered_map>
 
 #include "avm_utilities.h"
