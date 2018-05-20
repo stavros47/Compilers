@@ -17,15 +17,64 @@ void avm_table_destroy(avm_table* t){
         free(t);
 }
 
-/****************************************************/
+unsigned hashFunction(unsigned key){
+        return key%AVM_TABLE_HASHSIZE;
+}
+
+unsigned hashFunction(char* key){
+        unsigned int hash = 0U;
+	for (int i = 0; key[i] != '\0'; i++)
+		hash +=hash*3 + key[i]*7;
+
+	return (unsigned)hash%AVM_TABLE_HASHSIZE;
+}
+
+avm_table_bucket* insert(avm_table_bucket** p,unsigned pos, avm_memcell key, avm_memcell value){
+        avm_table_bucket* ptr = new avm_table_bucket();
+        ptr->key = key;
+        ptr->value = value;
+        ptr->next = p[pos];
+        p[pos] = ptr;        
+        return ptr;
+}
+
 avm_memcell* avm_tablegetelem(avm_table* table,avm_memcell* key){
-	return (avm_memcell*)0;
+        if(key->type==number_m){
+                return &table->numIndexed[hashFunction(key->data.numVal)]->value;
+        }else if(key->type==string_m){
+                return &table->strIndexed[hashFunction(key->data.strVal)]->value;
+        }
+
+        avm_error("Invalid type of key");
+        return (avm_memcell*)0;  
 }
 
 void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
-	
+        avm_table_bucket** p;
+        avm_table_bucket *tmp,*ptr;
+        unsigned pos;
+
+        if(key->type == number_m){
+                tmp=insert(table->numIndexed,hashFunction(key->data.numVal),*key,*value);
+        }
+        else if (key->type == string_m){
+                tmp=insert(table->strIndexed,hashFunction(key->data.strVal),*key,*value);
+        }                
+        else{
+                avm_error("Invalid type of key");
+                return;
+        }
+        if(table->head){
+                ptr = table->head;
+                while(ptr->next){
+                        ptr = ptr->next;
+                }
+
+                ptr->next=tmp;
+        }else{
+                table->head = tmp;
+        }
 }
-/****************************************************/
 
 void avm_tableincrefcounter(avm_table* t){
 	++t->refCounter;
@@ -35,7 +84,6 @@ void avm_tabledecrefcounter(avm_table* t){
 	assert(t->refCounter > 0);
         if(!--t->refCounter)
                 avm_table_destroy(t);
-	
 }
 
 void avm_table_bucketsinit(avm_table_bucket** p){

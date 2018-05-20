@@ -528,14 +528,9 @@ methodcall:	DOT_DOT ID '(' elist ')'{
 					}
 		;
 
-elist: 		elist exprs	{
-					expr* tmp;
-					tmp=$1;
-					while(tmp->next!=NULL)
-						tmp=tmp->next;
-
-					tmp->next=$2;
-					$$=$1;
+elist: 		elist exprs	{;
+					$2->next=$1;
+					$$=$2;
 					grammar_buffer<<"elist <- elist exprs"<<std::endl;
 				}
 		|expr		{
@@ -797,7 +792,7 @@ idlists: 	',' ID		{
 ifprefix:	IF '(' expr ')'	{
 					$3 = checkexpr($3);
 
-					emit(if_eq,$3,newexpr_constbool_e(true),(expr*)0,nextquadlabel()+2,yylineno);
+					emit(if_eq,newexpr_constbool_e(true),(expr*)0,$3,nextquadlabel()+2,yylineno);
 					$$=nextquadlabel();
 					emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
 					grammar_buffer<<"ifprefix <- IF ( expr )"<<std::endl;

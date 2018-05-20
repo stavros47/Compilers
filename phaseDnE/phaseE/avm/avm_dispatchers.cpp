@@ -50,8 +50,20 @@ std::string bool_tostring(avm_memcell* m){
         return (m->data.boolVal) ? "TRUE" : "FALSE";
 }
 
-std::string table_tostring(avm_memcell* m){ /////////////////////
-        return "TABLE:GAMATO";
+std::string table_tostring(avm_memcell* m){
+        avm_table_bucket* tmp;
+        std::stringstream buffer;
+
+        buffer<<"[";
+        tmp = m->data.tableVal->head;
+        while(tmp->next){
+                buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" },";
+                tmp=tmp->next;
+        }
+        buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" }";
+        buffer<<"]";
+
+        return buffer.str();
 }
 
 std::string userfunc_tostring(avm_memcell* m){
@@ -74,7 +86,7 @@ std::string avm_tostring(avm_memcell* m){
         assert(m->type >=0 && m->type < undef_m);
         return (*tostringFuncs[m->type])(m);
 }
-/********************************************************/
+
 void avm_memcellclear(avm_memcell* m){
         if(m->type!=undef_m){
                 memclear_func_t f = memclearFuncs[m->type];

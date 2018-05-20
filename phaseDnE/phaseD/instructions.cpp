@@ -405,7 +405,6 @@ std::string vmarg_toString(vmarg temp){
 std::string instr_to_String(){
 	std::ostringstream buffer;
 	int width = 15;
-	buffer<<std::to_string(nextquadlabel()-1)<<std::endl;
 	for(int i=1;i < nextinstructionlabel();i++){
 		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<" ";
 

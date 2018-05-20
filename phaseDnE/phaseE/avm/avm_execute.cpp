@@ -61,7 +61,7 @@ void execute_call( instruction* instr){
         switch( func->type){
                 case userfunc_m:        {
                         pc =avm_getfuncinfo(func->data.funcVal)->address;
-                        assert(pc<AVM_ENDING_PC+1);
+                        assert(pc<AVM_ENDING_PC);
                         assert(code[pc].opcode == funcenter_v);
                         break;
                 }
@@ -272,46 +272,46 @@ void execute_newtable    (instruction* instr){
 
 void execute_tablegetelem(instruction* instr){
         avm_memcell* lv = avm_translate_operand(&instr->result,(avm_memcell*)0);
-        avm_memcell* k = avm_translate_operand(&instr->arg1,(avm_memcell*)0);
-        avm_memcell* v = avm_translate_operand(&instr->arg2,&ax);
+        avm_memcell* table = avm_translate_operand(&instr->arg1,(avm_memcell*)0);
+        avm_memcell* key = avm_translate_operand(&instr->arg2,&ax);
 
         assert(lv && (&stack[AVM_STACKSIZE] > lv && &stack[top] < lv || lv ==&retval));
-        assert(k && (&stack[0] <= k && &stack[top] > k));
-        assert(v);
+        assert(table && (&stack[AVM_STACKSIZE] > table && &stack[top] < table));
+        assert(key);
 
         avm_memcellclear(lv);
         lv->type = nil_m;
 
-        if(k->type !=table_m){
-                avm_error("illegal use of type %s astable!",typeStrings[k->type]);
+        if(table->type !=table_m){
+                avm_error("illegal use of type %s astable!",typeStrings[table->type]);
                 executionFinished=1;
         }else{
-                avm_memcell* content = avm_tablegetelem(k->data.tableVal,v);
+                avm_memcell* content = avm_tablegetelem(table->data.tableVal,key);
                 if(content)
                         avm_assign(lv,content);
                 else{
-                        char* ks = const_cast<char*>(avm_tostring(k).c_str());
-                        char* vs = const_cast<char*>(avm_tostring(v).c_str());
+                        char* ks = const_cast<char*>(avm_tostring(table).c_str());
+                        char* vs = const_cast<char*>(avm_tostring(key).c_str());
 
                         avm_warning("%s[%s] not found!",ks,vs);
-                        free(ks);
-                        free(vs);
+                        // free(ks);
+                        // free(vs);
                 }
         }
 }
 
 void execute_tablesetelem(instruction* instr){
         avm_memcell* t = avm_translate_operand(&instr->result,(avm_memcell*)0);
-        avm_memcell* i = avm_translate_operand(&instr->arg1,&ax);
-        avm_memcell* c = avm_translate_operand(&instr->arg2,&bx);
+        avm_memcell* key = avm_translate_operand(&instr->arg1,&ax);
+        avm_memcell* value = avm_translate_operand(&instr->arg2,&bx);
         
-        assert(t && (&stack[0] <= t && &stack[top] > t));
-        assert(i && c);
+        assert(t && &stack[AVM_STACKSIZE] > t && &stack[top] < t);
+        assert(key && value);
 
         if(t->type!=table_m){
                 avm_error("illegal use of type %s as table!",typeStrings[t->type]);
         }else{
-                avm_tablesetelem(t->data.tableVal,i,c);
+                avm_tablesetelem(t->data.tableVal,key,value);
         }
 }
  void execute_nop(instruction* instr){}

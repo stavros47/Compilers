@@ -31,7 +31,7 @@ unsigned avm_totalactuals(void){
 
 avm_memcell* avm_getactual(unsigned i){
         assert(i<avm_totalactuals());
-        return &stack[topsp + AVM_STACKENV_SIZE+1];
+        return &stack[topsp + i +  AVM_STACKENV_SIZE+ 1];
 }
 
 void avm_registerlibfunc(std::string id,library_func_t addr){
@@ -41,9 +41,8 @@ void avm_registerlibfunc(std::string id,library_func_t addr){
 void libfunc_print(void){
         unsigned n = avm_totalactuals();
         for(unsigned i = 0; i < n; ++i){
-                char* s = const_cast<char*>(avm_tostring(avm_getactual(i)).c_str());
-                puts(s);
-                //free(s);
+                std::string s = avm_tostring(avm_getactual(i));
+                std::cout<<s;
         }
 }
 
@@ -56,7 +55,7 @@ void libfunc_typeof(void){
 	}else{
 		avm_memcellclear(&retval);
 		retval.type = string_m;
-//		retval.data.strVal = strdup(typeStrings[avm_getactual(0)->type]);
+		retval.data.strVal = strdup(typeStrings[avm_getactual(0)->type].c_str());
 	}
 }
 
