@@ -12,7 +12,6 @@ std::vector<std::string> strConsts;
 std::vector<double> numConsts;
 std::vector<std::string> libFuncs;
 std::vector<userfunc*> userFuncs;
-instruction* instr;
 
 void test_global(vmarg r){
 	if(r.type == global_a){
@@ -119,8 +118,6 @@ int main(int argc, char* argv[]){ // or char** argv
 		//std::cout<<cnt++<<"\tpc:"<<pc<<std::endl;
 		execute_cycle();	
 	}
-
-
 
 	// for(int i=AVM_STACKSIZE-1;i>=0;i--){
 	// 	if(stack[i].type != undef_m)

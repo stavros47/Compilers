@@ -283,7 +283,7 @@ void execute_tablegetelem(instruction* instr){
         lv->type = nil_m;
 
         if(table->type !=table_m){
-                avm_error("illegal use of type %s astable!",typeStrings[table->type]);
+                avm_error("illegal use of type %s as table!",typeStrings[table->type]);
                 executionFinished=1;
         }else{
                 avm_memcell* content = avm_tablegetelem(table->data.tableVal,key);
@@ -314,7 +314,8 @@ void execute_tablesetelem(instruction* instr){
                 avm_tablesetelem(t->data.tableVal,key,value);
         }
 }
- void execute_nop(instruction* instr){}
+
+void execute_nop(instruction* instr){}
 
 
 

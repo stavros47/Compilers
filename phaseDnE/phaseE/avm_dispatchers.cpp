@@ -56,9 +56,9 @@ std::string table_tostring(avm_memcell* m){
 
         buffer<<"[";
         tmp = m->data.tableVal->head;
-        while(tmp->next){
+        while(tmp && tmp->nextOrder){
                 buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" },";
-                tmp=tmp->next;
+                tmp=tmp->nextOrder;
         }
         buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" }";
         buffer<<"]";
@@ -160,7 +160,7 @@ unsigned char number_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.numVal == rv2->data.numVal);
 }
 unsigned char string_check_eq(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));
+        return unsigned(!strcmp(rv1->data.strVal,rv2->data.strVal));
 }
 unsigned char table_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         /*TO BE CONTINUED */
@@ -189,7 +189,7 @@ unsigned char number_check_le(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.numVal <= rv2->data.numVal);
 }
 unsigned char string_check_le(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));
+        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));//??
 }
 unsigned char table_check_le(avm_memcell* rv1,avm_memcell* rv2){
         /*TO BE CONTINUED */
@@ -218,7 +218,7 @@ unsigned char number_check_ge(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.numVal >= rv2->data.numVal);
 }
 unsigned char string_check_ge(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));
+        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));//??
 }
 unsigned char table_check_ge(avm_memcell* rv1,avm_memcell* rv2){
         /*TO BE CONTINUED */

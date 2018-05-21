@@ -38,11 +38,28 @@ avm_table_bucket* insert(avm_table_bucket** p,unsigned pos, avm_memcell key, avm
         return ptr;
 }
 
+avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
+        avm_table_bucket* tmp = p;
+        while(tmp){
+                check_eq_func_t f = check_eqFuncs[key->type];
+                if(f){
+                        
+                        if((*f)(&tmp->key,key))
+                                return &tmp->value;
+                }else{
+                        assert(0);
+                }
+                tmp=tmp->next;
+        }
+        return (avm_memcell*)0;
+
+}
+
 avm_memcell* avm_tablegetelem(avm_table* table,avm_memcell* key){
         if(key->type==number_m){
-                return &table->numIndexed[hashFunction(key->data.numVal)]->value;
+                return get(table->numIndexed[hashFunction(key->data.numVal)],key);
         }else if(key->type==string_m){
-                return &table->strIndexed[hashFunction(key->data.strVal)]->value;
+                return get(table->strIndexed[hashFunction(key->data.strVal)],key);
         }
 
         avm_error("Invalid type of key");
@@ -64,16 +81,30 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
                 avm_error("Invalid type of key");
                 return;
         }
+
         if(table->head){
                 ptr = table->head;
-                while(ptr->next){
-                        ptr = ptr->next;
+                while(ptr->nextOrder){
+                        ptr = ptr->nextOrder;
                 }
 
-                ptr->next=tmp;
+                ptr->nextOrder=tmp;
         }else{
                 table->head = tmp;
         }
+
+        // for(int i=0;i<AVM_TABLE_HASHSIZE;i++){
+        //         if(table->strIndexed[i])
+        //                 std::cout<<"KEY:"<<avm_tostring(&table->strIndexed[i]->key)
+        //                         <<"VALUE:"<<avm_tostring(&table->strIndexed[i]->value)<<std::endl;
+        // }
+
+        // for(int i=0;i<AVM_TABLE_HASHSIZE;i++){
+        //         if(table->numIndexed[i])
+        //                 std::cout<<"KEY:"<<avm_tostring(&table->numIndexed[i]->key)
+        //                         <<"VALUE:"<<avm_tostring(&table->numIndexed[i]->value)<<std::endl;
+        // }
+
 }
 
 void avm_tableincrefcounter(avm_table* t){
