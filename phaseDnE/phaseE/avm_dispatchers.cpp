@@ -43,7 +43,7 @@ tostring_func_t tostringFuncs[] = {
 };
 
 std::string avm_tostring(avm_memcell* m){
-        assert(m->type >=0 && m->type < undef_m);
+        assert(m->type >=0 && m->type <= undef_m);
         return (*tostringFuncs[m->type])(m);
 }
 
@@ -51,7 +51,11 @@ std::string number_tostring(avm_memcell* m){
         if((fmod(m->data.numVal,1)==0)){
                 return std::to_string((int)m->data.numVal);
         }else {
-                return std::to_string(m->data.numVal);
+                m->data.numVal *= 1000;
+                m->data.numVal=round(m->data.numVal);
+                m->data.numVal /= 1000;
+
+                return std::to_string(m->data.numVal).substr(0,5);
         }
 }
 
@@ -60,7 +64,7 @@ std::string string_tostring(avm_memcell* m){
 }
 
 std::string bool_tostring(avm_memcell* m){
-        return (m->data.boolVal) ? "TRUE" : "FALSE";
+        return (m->data.boolVal) ? "true" : "false";
 }
 
 std::string table_tostring(avm_memcell* m){
@@ -80,11 +84,11 @@ std::string table_tostring(avm_memcell* m){
 }
 
 std::string userfunc_tostring(avm_memcell* m){
-        return std::to_string(userFuncs[m->data.numVal]->address);
+        return "user function:" + std::to_string(userFuncs[m->data.numVal]->address);
 }
 
 std::string libfunc_tostring(avm_memcell* m){
-        return m->data.libfuncVal;
+        return "library function:" + std::string{m->data.libfuncVal};
 }
 
 std::string nil_tostring(avm_memcell* m){
@@ -92,10 +96,8 @@ std::string nil_tostring(avm_memcell* m){
 }
 
 std::string undef_tostring(avm_memcell* m){
-        return "undef";
+        return "undefined";
 }
-
-
 
 arithmetic_func_t arithmeticFuncs[] = {
         add_impl,
@@ -164,8 +166,7 @@ unsigned char string_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return unsigned(!strcmp(rv1->data.strVal,rv2->data.strVal));
 }
 unsigned char table_check_eq(avm_memcell* rv1,avm_memcell* rv2){
-        /*TO BE CONTINUED */
-        return 0;
+        return (rv1->data.tableVal->total == rv2->data.tableVal->total);
 }
 unsigned char userfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){ //??
         return (rv1->data.funcVal == rv2->data.funcVal);
@@ -193,8 +194,7 @@ unsigned char string_check_le(avm_memcell* rv1,avm_memcell* rv2){
         return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));//??
 }
 unsigned char table_check_le(avm_memcell* rv1,avm_memcell* rv2){
-        /*TO BE CONTINUED */
-        return 0;
+        return (rv1->data.tableVal->total <= rv2->data.tableVal->total);
 }
 unsigned char userfunc_check_le(avm_memcell* rv1,avm_memcell* rv2){ //??
         return (rv1->data.funcVal <= rv2->data.funcVal);
@@ -222,8 +222,7 @@ unsigned char string_check_ge(avm_memcell* rv1,avm_memcell* rv2){
         return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));//??
 }
 unsigned char table_check_ge(avm_memcell* rv1,avm_memcell* rv2){
-        /*TO BE CONTINUED */
-        return 0;
+        return (rv1->data.tableVal->total >= rv2->data.tableVal->total);
 }
 unsigned char userfunc_check_ge(avm_memcell* rv1,avm_memcell* rv2){ //??
         return (rv1->data.funcVal >= rv2->data.funcVal);

@@ -1,4 +1,4 @@
-#include "quad.h"
+ #include "quad.h"
 
 
 void expand(void){
@@ -242,7 +242,7 @@ expr* boolop_emits(iopcode op,expr* arg1,expr* arg2){
         result->trueList.push_back(nextquadlabel());
         result->falseList.push_back(nextquadlabel()+1);
 
-        emit(op,arg1,arg2,(expr*)0,0,yylineno);
+        emit(op,arg2,(expr*)0,arg1,0,yylineno);
         emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
 
         return result;

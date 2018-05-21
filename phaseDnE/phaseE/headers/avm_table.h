@@ -33,5 +33,6 @@ unsigned hashFunction(char*);
 avm_table_bucket* insert(avm_table_bucket**,unsigned,avm_memcell, avm_memcell);
 avm_memcell* get(avm_table_bucket*,avm_memcell*);
 std::string hash_toString(avm_table_bucket**);
-
+void mydelete(avm_table_bucket*,avm_memcell*);
+void deleteKey(avm_table* table,avm_memcell* key);
 #endif

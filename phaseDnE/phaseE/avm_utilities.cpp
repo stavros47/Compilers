@@ -1,5 +1,5 @@
 #include "headers/avm.h"
-
+#include <stdarg.h>
 avm_memcell stack[AVM_STACKSIZE];
 
 std::string typeStrings[] = {
@@ -76,16 +76,72 @@ static void avm_initstack(void){
         }
 }
 
-/*************************************************************/
-void avm_warning(const char* format,...){
-        std::cout<<"[WARNING]"<<format<<std::endl;
+void avm_warning(const char* fmt,...){
+        va_list args;
+        va_start(args, fmt);
+        std::cout<<"[WARNING]:";
+        while (*fmt != '\0') {
+                if(*fmt == '%'){
+                        ++fmt;
+                        if (*fmt == 'd') {
+                                int i = va_arg(args, int);
+                                printf("%d", i);
+                        } else if (*fmt == 'c') {
+                                // note automatic conversion to integral type
+                                int c = va_arg(args, int);
+                                printf("%c", c);
+                        } else if (*fmt == 'f') {
+                                double d = va_arg(args, double);
+                                printf("%f", d);
+                        } else if(*fmt == 's'){
+                                char* s = va_arg(args,char*);
+                                printf("%s",s);
+                        }else{
+                                printf("%%");
+                                printf("%c",*fmt);                        
+                        }
+                        
+                }else{
+                        printf("%c",*fmt);
+                }
+                ++fmt;
+        }
+        va_end(args);
 }
 
-void avm_error(const char* format,...){
+void avm_error(const char* fmt,...){
         executionFinished=1;
-        std::cout<<"[ERROR]"<<format<<std::endl;
+        va_list args;
+        va_start(args, fmt);
+        std::cout<<"[ERROR]:";
+        while (*fmt != '\0') {
+                if(*fmt == '%'){
+                        ++fmt;
+                        if (*fmt == 'd') {
+                                int i = va_arg(args, int);
+                                printf("%d", i);
+                        } else if (*fmt == 'c') {
+                                // note automatic conversion to integral type
+                                int c = va_arg(args, int);
+                                printf("%c", c);
+                        } else if (*fmt == 'f') {
+                                double d = va_arg(args, double);
+                                printf("%f", d);
+                        } else if(*fmt == 's'){
+                                char* s = va_arg(args,char*);
+                                printf("%s",s);
+                        }else{
+                                printf("%%");
+                                printf("%c",*fmt);                        
+                        }
+                        
+                }else{
+                        printf("%c",*fmt);
+                }
+                ++fmt;
+        }
+        va_end(args);
 }
-/*************************************************************/
 
 void avm_callsaveenviroment(void){
         avm_pushenvvalue(totalActuals);
@@ -154,6 +210,10 @@ void avm_initialize(void){
         avm_registerlibfunc("input",libfunc_input);
         avm_registerlibfunc("objecttotalmembers",libfunc_objecttotalmembers);
         avm_registerlibfunc("argument",libfunc_argument);
+        avm_registerlibfunc("sin",libfunc_sin);
+        avm_registerlibfunc("cos",libfunc_cos);
+        avm_registerlibfunc("sqrt",libfunc_sqrt);
+        avm_registerlibfunc("strtonum",libfunc_strtonum);
 }
 
 
@@ -177,9 +237,56 @@ void execute_cycle(void){
                 if(instr->srcLine)
                         currLine = instr->srcLine;
                 unsigned oldPC = pc;
-                
                 (*executeFuncs[instr->opcode])(instr);
                 if(pc==oldPC)   ++pc;
         }
 }
 
+void test_global(vmarg r){
+	if(r.type == global_a){
+		if(r.val>max_global_offset)
+			max_global_offset=r.val;
+	}
+}
+
+void expand(void){
+	instruction* p = (instruction*)malloc(I_NEW_SIZE);
+	if(code){
+		std::memcpy(p,code,I_CURR_SIZE);
+		free(code);
+	}
+	code = p;
+	totalInstr+=I_EXPAND_SIZE;
+}
+
+void print_stack(){
+	for(int i=AVM_STACKSIZE-1;i>=0;i--){
+		if(stack[i].type != undef_m)
+			std::cout<<avm_tostring(&stack[i])<<std::endl;
+	}
+}
+
+void print_info(){
+	std::cout<<"string consts\n";
+	for(std::string i : strConsts)
+		std::cout<<"\t"<<i<<std::endl;
+	std::cout<<"num consts\n";
+	for(double i : numConsts)
+		std::cout<<"\t"<<i<<std::endl;
+	std::cout<<"lib funcs\n";
+	for(std::string i : libFuncs)
+		std::cout<<"\t"<<i<<std::endl;
+	std::cout<<"userfuncs\n";
+	for(userfunc* i : userFuncs)
+		std::cout<<"\t"<<i->id<<"\t"<<i->address<<"\t"<<i->localSize<<std::endl;
+	for(int i=1;i<codeSize;i++){
+		printf("%d:", code[i].srcLine);
+		printf("\t%d", code[i].opcode);
+		printf("\t%d:", code[i].result.type);
+		printf("%d", code[i].result.val);
+		printf("\t%d:", code[i].arg1.type);
+		printf("%d", code[i].arg1.val);
+		printf("\t%d:", code[i].arg2.type);
+		printf("%d\n", code[i].arg2.val);
+	}
+}
