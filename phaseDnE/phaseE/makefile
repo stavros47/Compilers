@@ -1,5 +1,5 @@
 DEPS =  headers/avm.h ../phaseD/instructions.h
-obj = avm.o avm_utilities.o avm_table.o avm_dispatchers.o avm_execute.o avm_libfuncs.o load.o
+obj = avm.o avm_utilities.o avm_table.o avm_dispatchers.o avm_execute.o avm_libfuncs.o avm_load.o
 FLAGS = -std=c++11 -g
 CC = g++
 

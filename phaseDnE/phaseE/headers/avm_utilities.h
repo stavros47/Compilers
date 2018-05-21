@@ -12,6 +12,10 @@
 #define AVM_SAVEDTOPSP_OFFSET   2
 #define AVM_SAVEDTOP_OFFSET     1
 
+#define I_EXPAND_SIZE 128
+#define I_CURR_SIZE (totalInstr*sizeof(instruction))
+#define I_NEW_SIZE (I_EXPAND_SIZE*sizeof(instruction) + I_CURR_SIZE)
+
 enum avm_memcell_t{
         number_m        = 0,
         string_m        = 1,
@@ -61,5 +65,9 @@ unsigned avm_getenvvalue(unsigned);
 
 void avm_initialize(void);
 void execute_cycle(void);
+
+void test_global(vmarg);
+void print_stack();
+void print_info();
 
 #endif

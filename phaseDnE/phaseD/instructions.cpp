@@ -24,15 +24,23 @@ unsigned consts_newstring (std::string s){
     return it - strConsts.begin();
 }
 unsigned consts_newnumber (double n){
-    numConsts.push_back(n);
-    
-    return totalNumConsts++;
+    std::vector<double>::iterator it = std::find(numConsts.begin(), numConsts.end(), n);
+    if(it == numConsts.end()){
+        numConsts.push_back(n);
+        return totalNumConsts++;
+    }
+    return it - numConsts.begin();
 }
 unsigned libfuncs_newused (std::string s){
-    libFuncs.push_back(s);
-
-    return totalLibFuncs++;
+    std::vector<std::string>::iterator it = std::find(libFuncs.begin(), libFuncs.end(), s);
+    if(it == libFuncs.end()){
+    	libFuncs.push_back(s);
+    	return totalLibFuncs++;
+    }
+    
+    return it - libFuncs.begin();
 }
+
 unsigned userfuncs_newfunc (Symbol* sym){
     unsigned position = 0;
     for(userfunc *currFunc : userFuncs){

@@ -77,7 +77,7 @@ void libfunc_sin(void){
         if(n!=1){
 		avm_error("one argument (not %d) expected in 'sin'!",n);
 	}else{
-                if(avm_getactual(0)->type==string_m){
+                if(avm_getactual(0)->type!=number_m){
                         avm_error("numeric argument expected in 'sin'!",n);
                 }
                 else{
@@ -94,7 +94,7 @@ void libfunc_cos(void){
         if(n!=1){
 		avm_error("one argument (not %d) expected in 'cos'!",n);
 	}else{
-                if(avm_getactual(0)->type==string_m)
+                if(avm_getactual(0)->type!=number_m)
                         avm_error("numeric argument expected in 'cos'!",n);
                 else{
 		avm_memcellclear(&retval);
@@ -107,7 +107,7 @@ void libfunc_cos(void){
 void libfunc_sqrt(void){
         unsigned n = avm_totalactuals();
 
-        if(n!=1){ //error g type kai sta pupano
+        if(n!=1){ 
 		avm_error("one argument (not %d) expected in 'sqrt'!",n);
 	}else{
                 if(avm_getactual(0)->data.numVal<0)
@@ -124,11 +124,15 @@ void libfunc_sqrt(void){
 
 void libfunc_strtonum(void){
         unsigned n = avm_totalactuals();
-//check error from stavros       
-        if(avm_getactual(0)->type!=string_m){
-                avm_error("Type is wrong, expected string");
+        //check error from stavros       
+        if(n!=1){ 
+		avm_error("one argument (not %d) expected in 'sqrt'!",n);
+	}else{
+                if(avm_getactual(0)->type!=string_m){
+                        avm_error("Type is wrong, expected string\n");
+                }
+                avm_memcellclear(&retval);
+                retval.type = number_m;
+                retval.data.numVal = std::stod(avm_getactual(0)->data.strVal);
         }
-        avm_memcellclear(&retval);
-        retval.type = number_m;
-        retval.data.numVal = std::stod( avm_getactual(0)->data.strVal);
 }
