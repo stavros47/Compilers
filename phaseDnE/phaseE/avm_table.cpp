@@ -39,7 +39,6 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
                 return ;
         }
 
-
         if(key->type == number_m){
                 tmp=insert(table->numIndexed,hashFunction(key->data.numVal),*key,*value);
         }

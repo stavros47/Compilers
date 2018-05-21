@@ -150,22 +150,18 @@ void libfunc_argument(void){
 		avm_error("One argument (not %d) expected in 'argument'!",n);
 	}else{
 		if(!p_topsp){
-		        avm_error("'argument' called outside a function!");
 		        retval.type = nil_m;
-	        }else{
+	        }else if(n < avm_getactual(0)->data.numVal){
+		        avm_error("invalid number of arguments for current function");                        
+                }else{
+                        unsigned int pos = p_topsp + avm_getactual(0)->data.numVal +  AVM_NUMACTUALS_OFFSET +1;
 		        retval.type = number_m;
-                        for(int i=AVM_STACKSIZE-1;i>=0;i--){
-		        if(stack[i].type != undef_m)
-			        std::cout<<avm_tostring(&stack[i])<<std::endl;
-	                }
-                        unsigned int pos = p_topsp + avm_getactual(0)->data.numVal +  AVM_NUMACTUALS_OFFSET;
                         retval.data.numVal = stack[pos].data.numVal;//avm_getactual(p_topsp + avm_getactual(0)->data.numVal)->data.numVal;
                         
                         if(avm_getactual(0)->data.numVal <= avm_getenvvalue(p_topsp + AVM_NUMACTUALS_OFFSET)){
                                 //retval.data.numVal = avm_getactual(p_topsp + avm_getactual(0)->data.numVal)->data.numVal;
         
                         }
-                        
 	        }
 	}
 }

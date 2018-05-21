@@ -527,10 +527,17 @@ methodcall:	DOT_DOT ID '(' elist ')'{
 					}
 		;
 
-elist: 		elist exprs	{;
+elist: 		elist exprs	{
 					$2->next=$1;
 					$$=$2;
-					grammar_buffer<<"elist <- elist exprs"<<std::endl;
+/*					expr* tmp;
+					tmp=$1;
+					while(tmp->next!=NULL)
+						tmp=tmp->next;
+
+					tmp->next=$2;
+					$$=$1;
+*/					grammar_buffer<<"elist <- elist exprs"<<std::endl;
 				}
 		|expr		{
 					$$ = checkexpr($1);
