@@ -70,3 +70,58 @@ void libfunc_totalarguments(void){
 		retval.data.numVal = avm_getenvvalue(p_topsp + AVM_NUMACTUALS_OFFSET);
 	}
 }
+
+void libfunc_input(void){
+        std::string input;       
+        avm_memcellclear(&retval);
+        std::cin >> input;
+        std::istringstream iss(input);
+        double d;
+        int flag = 0; //0 string - 1 double - 2 integer -3 bool - 4 nil
+        iss >> std::noskipws >> d; // noskipws considers leading whitespace invalid        
+      
+        if(flag == 0){ //Integer
+                for(int i = 0; i < input.size();i++){
+                        flag = (std::isdigit(input[i])) ? 2 : 0;
+                        if(flag == 0){ break ;}
+                }
+                if(flag == 2){
+                        retval.type = number_m;
+                        retval.data.numVal = std::stoi(input);
+                        return;
+                }
+              
+        
+        }else if(iss.eof() && !iss.fail()){//Double - Check the entire string was consumed and if either failbit or badbit is set         
+                flag = 1;
+                retval.type = number_m;
+                retval.data.numVal = std::stod(input);
+                return;
+        }       
+
+        if(flag == 0){
+                if (input.find("true") != std::string::npos || input.find("TRUE") != std::string::npos) {
+                        flag = 3;
+                        retval.type = bool_m;
+                        retval.data.boolVal = 1;
+                        return;
+                }else if(input.find("false") != std::string::npos || input.find("FALSE") != std::string::npos){
+                        flag = 3;
+                        retval.type = bool_m;
+                        retval.data.boolVal = 0;
+                        return;
+                }else if(input.find("nil") != std::string::npos){
+                        flag = 4;
+                        retval.type = nil_m;
+                        return;
+                }else{
+                        retval.type = string_m;
+                        retval.data.strVal = strdup(const_cast<char*>(input.c_str()));
+                        return;
+                }
+        }
+       
+        
+       
+       // std::cout << "\nInput: " <<input<< '\n';
+}

@@ -151,6 +151,7 @@ void avm_initialize(void){
         avm_registerlibfunc("print",libfunc_print);
         avm_registerlibfunc("typeof",libfunc_typeof);
         avm_registerlibfunc("totalarguments",libfunc_totalarguments);
+        avm_registerlibfunc("input",libfunc_input);
 }
 
 
@@ -161,7 +162,7 @@ void execute_cycle(void){
         }else
         if (pc == AVM_ENDING_PC){
                 executionFinished  = 1;
-                std::cout<<"pc == AVM_ENDING_PC\n";
+                std::cout<<"\npc == AVM_ENDING_PC\n";
                 return;
         } else{
                 assert(pc < AVM_ENDING_PC);

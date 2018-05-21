@@ -207,7 +207,7 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 
 						grammar_buffer<<"expr and M expr"<<std::endl;
 					}
-		| term		{grammar_buffer<<"expr <- term"<<std::endl;}
+		| term		{;grammar_buffer<<"expr <- term"<<std::endl;}
 		;
 
 
@@ -228,7 +228,6 @@ term:		'('expr')'		{
 						grammar_buffer<<"term <- - expr (UMINUS)"<<std::endl;
 					}
 		| NOT expr		{
-						$2 = boolop_emits(if_eq,$2,newexpr_constbool_e(true));
 						$$ = newexpr(boolexpr_e);
 						$$->sym = $2->sym;
 						$$->trueList = $2->falseList;

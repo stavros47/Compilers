@@ -13,4 +13,5 @@ void avm_registerlibfunc(std::string id,library_func_t addr);
 void libfunc_print(void);
 void libfunc_typeof(void);
 void libfunc_totalarguments(void);
+void libfunc_input(void);
 #endif

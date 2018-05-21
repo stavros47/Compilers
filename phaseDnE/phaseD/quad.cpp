@@ -230,7 +230,7 @@ expr* relop_emits(iopcode op,expr* arg1,expr* arg2){
 	result->falseList.push_back(nextquadlabel()+1);
 	
 	emit(op,arg2,(expr*)0,arg1,0,yylineno);
-        emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
+    emit(jump,(expr*)0,(expr*)0,(expr*)0,0,yylineno);
 
 	return result;
 }
