@@ -3,7 +3,7 @@
 
 typedef void (*library_func_t)(void);
 
-extern void avm_calllibfunc(char* funcname);
+void avm_calllibfunc(char* funcname);
 library_func_t avm_getlibraryfunc(char*);
 unsigned avm_totalactuals(void);
 avm_memcell* avm_getactual(unsigned);

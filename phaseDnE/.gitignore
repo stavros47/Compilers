@@ -1,7 +1,7 @@
 *.o
 *.txt
 /tests
-easy.asc
+*.asc
 parser.cpp
 scanner.cpp
 parser.hpp

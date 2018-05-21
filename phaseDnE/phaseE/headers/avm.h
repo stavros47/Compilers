@@ -18,5 +18,12 @@ extern unsigned totalActuals;
 extern std::unordered_map< std::string,library_func_t> registry;
 extern unsigned max_global_offset;
 
+extern avm_memcell ax,bx,cx;
+extern avm_memcell retval;
+extern unsigned top,topsp;
 
+extern unsigned        pc;
+extern unsigned        currLine;
+extern unsigned        codeSize;
+extern instruction*    code;
 #endif

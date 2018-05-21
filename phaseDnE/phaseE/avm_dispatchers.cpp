@@ -12,16 +12,24 @@ memclear_func_t memclearFuncs[] = {
 
 };
 
-extern void memclear_string(avm_memcell* m){
+void memclear_string(avm_memcell* m){
         assert(m->data.strVal);
         free(m->data.strVal);
 }
 
-extern void memclear_table(avm_memcell* m){
+void memclear_table(avm_memcell* m){
         assert(m->data.tableVal);
         avm_tabledecrefcounter(m->data.tableVal);
 }
 
+void avm_memcellclear(avm_memcell* m){
+        if(m->type!=undef_m){
+                memclear_func_t f = memclearFuncs[m->type];
+                if(f)
+                        (*f)(m);
+                m->type=undef_m;
+        }
+}
 
 tostring_func_t tostringFuncs[] = {
         number_tostring,
@@ -33,6 +41,11 @@ tostring_func_t tostringFuncs[] = {
         nil_tostring,
         undef_tostring
 };
+
+std::string avm_tostring(avm_memcell* m){
+        assert(m->type >=0 && m->type < undef_m);
+        return (*tostringFuncs[m->type])(m);
+}
 
 std::string number_tostring(avm_memcell* m){
         if((fmod(m->data.numVal,1)==0)){
@@ -82,19 +95,7 @@ std::string undef_tostring(avm_memcell* m){
         return "undef";
 }
 
-std::string avm_tostring(avm_memcell* m){
-        assert(m->type >=0 && m->type < undef_m);
-        return (*tostringFuncs[m->type])(m);
-}
 
-void avm_memcellclear(avm_memcell* m){
-        if(m->type!=undef_m){
-                memclear_func_t f = memclearFuncs[m->type];
-                if(f)
-                        (*f)(m);
-                m->type=undef_m;
-        }
-}
 
 arithmetic_func_t arithmeticFuncs[] = {
         add_impl,

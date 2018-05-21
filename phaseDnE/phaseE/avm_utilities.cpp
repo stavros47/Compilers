@@ -1,5 +1,7 @@
 #include "headers/avm.h"
 
+avm_memcell stack[AVM_STACKSIZE];
+
 std::string typeStrings[] = {
         "number_m",
         "string_m",
@@ -74,15 +76,6 @@ static void avm_initstack(void){
         }
 }
 
-void avm_dec_top(void){
-        if(!top){
-                avm_error("stack overflow\n");
-                executionFinished=1;
-        }
-        else
-                --top;
-        
-}
 /*************************************************************/
 void avm_warning(const char* format,...){
         std::cout<<"[WARNING]"<<format<<std::endl;
@@ -125,6 +118,15 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
                 avm_tableincrefcounter(lv->data.tableVal);
 }
 
+void avm_dec_top(void){
+        if(!top){
+                avm_error("stack overflow\n");
+                executionFinished=1;
+        }
+        else
+                --top;
+        
+}
 
 void avm_pushenvvalue(unsigned val){
         stack[top].type = number_m;

@@ -46,7 +46,6 @@ void libfunc_print(void){
         }
 }
 
-
 void libfunc_typeof(void){
 	unsigned n = avm_totalactuals();
 
