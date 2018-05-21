@@ -70,3 +70,65 @@ void libfunc_totalarguments(void){
 		retval.data.numVal = avm_getenvvalue(p_topsp + AVM_NUMACTUALS_OFFSET);
 	}
 }
+
+void libfunc_sin(void){
+        unsigned n = avm_totalactuals();
+
+        if(n!=1){
+		avm_error("one argument (not %d) expected in 'sin'!",n);
+	}else{
+                if(avm_getactual(0)->type==string_m){
+                        avm_error("numeric argument expected in 'sin'!",n);
+                }
+                else{
+		avm_memcellclear(&retval);
+		retval.type = number_m;
+		retval.data.numVal = sin(avm_getactual(0)->data.numVal*(3.1415 / 180));
+                }
+	}
+}
+
+void libfunc_cos(void){
+        unsigned n = avm_totalactuals();
+
+        if(n!=1){
+		avm_error("one argument (not %d) expected in 'cos'!",n);
+	}else{
+                if(avm_getactual(0)->type==string_m)
+                        avm_error("numeric argument expected in 'cos'!",n);
+                else{
+		avm_memcellclear(&retval);
+		retval.type = number_m;
+		retval.data.numVal = cos(avm_getactual(0)->data.numVal*(3.1415 / 180));
+                }
+	}
+}
+
+void libfunc_sqrt(void){
+        unsigned n = avm_totalactuals();
+
+        if(n!=1){ //error g type kai sta pupano
+		avm_error("one argument (not %d) expected in 'sqrt'!",n);
+	}else{
+                if(avm_getactual(0)->data.numVal<0)
+                        avm_error("argument expected possitive in 'sqrt'!",n);
+                if(avm_getactual(0)->type==string_m)
+                        avm_error("numeric argument expected in 'sqrt'!",n);
+                else{
+		avm_memcellclear(&retval);
+		retval.type = number_m;
+		retval.data.numVal = sqrt(avm_getactual(0)->data.numVal);
+                }
+	}
+}
+
+void libfunc_strtonum(void){
+        unsigned n = avm_totalactuals();
+//check error from stavros       
+        if(avm_getactual(0)->type!=string_m){
+                avm_error("Type is wrong, expected string");
+        }
+        avm_memcellclear(&retval);
+        retval.type = number_m;
+        retval.data.numVal = std::stod( avm_getactual(0)->data.strVal);
+}
