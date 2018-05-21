@@ -1,38 +1,13 @@
 #include "headers/avm.h"
-#include <assert.h>
-#include <fstream>
-
-#define I_EXPAND_SIZE 128
-#define I_CURR_SIZE (totalInstr*sizeof(instruction))
-#define I_NEW_SIZE (I_EXPAND_SIZE*sizeof(instruction) + I_CURR_SIZE)
-
-unsigned totalInstr=0;
 
 std::vector<std::string> strConsts;
 std::vector<double> numConsts;
 std::vector<std::string> libFuncs;
 std::vector<userfunc*> userFuncs;
 
-void test_global(vmarg r){
-	if(r.type == global_a){
-		if(r.val>max_global_offset)
-			max_global_offset=r.val;
-	}
-}
+unsigned totalInstr=0;
 
-void expand(void){
-	instruction* p = (instruction*)malloc(I_NEW_SIZE);
-	if(code){
-		std::memcpy(p,code,I_CURR_SIZE);
-		free(code);
-	}
-	code = p;
-	totalInstr+=I_EXPAND_SIZE;
-}
-
-void prints();
-
-int main(int argc, char* argv[]){ // or char** argv 
+int main(int argc, char* argv[]){ 
 	if(argc<2) assert(false);
 
 	std::ifstream infile(argv[1],std::fstream::in);
@@ -104,14 +79,9 @@ int main(int argc, char* argv[]){ // or char** argv
 				p->arg2.val = (unsigned)std::stoi(output);
 				test_global(p->arg2);
 		}
-		//codeSize = currLine;
-
 	}
 	infile.close();
-
-	//prints();
-
-
+	//print_info();
 	avm_initialize();
 	int cnt =1 ;
 	while(!executionFinished){
@@ -119,35 +89,8 @@ int main(int argc, char* argv[]){ // or char** argv
 		execute_cycle();	
 	}
 
-	// for(int i=AVM_STACKSIZE-1;i>=0;i--){
-	// 	if(stack[i].type != undef_m)
-	// 		std::cout<<avm_tostring(&stack[i])<<std::endl;
-	// }
-
 	 return 0;
 }
 
-void prints(){
-	std::cout<<"string consts\n";
-	for(std::string i : strConsts)
-		std::cout<<i<<std::endl;
-	std::cout<<"num consts\n";
-	for(double i : numConsts)
-		std::cout<<i<<std::endl;
-	std::cout<<"lib funcs\n";
-	for(std::string i : libFuncs)
-		std::cout<<i<<std::endl;
-	std::cout<<"userfuncs\n";
-	for(userfunc* i : userFuncs)
-		std::cout<<i->id<<"\t"<<i->address<<"\t"<<i->localSize<<std::endl;
-	for(int i=1;i<codeSize;i++){
-		printf("%d:", code[i].srcLine);
-		printf("\t%d", code[i].opcode);
-		printf("\t%d:", code[i].result.type);
-		printf("%d", code[i].result.val);
-		printf("\t%d:", code[i].arg1.type);
-		printf("%d", code[i].arg1.val);
-		printf("\t%d:", code[i].arg2.type);
-		printf("%d\n", code[i].arg2.val);
-	}
-}
+
+

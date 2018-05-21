@@ -33,6 +33,13 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
         avm_table_bucket *tmp,*ptr;
         unsigned pos;
 
+        if(value->type == nil_m){
+                deleteKey(table,key);
+                table->total--;
+                return ;
+        }
+
+
         if(key->type == number_m){
                 tmp=insert(table->numIndexed,hashFunction(key->data.numVal),*key,*value);
         }
@@ -43,6 +50,8 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
                 avm_error("Invalid type of key");
                 return;
         }
+        
+        table->total++;
 
         if(table->head){
                 ptr = table->head;
@@ -120,6 +129,33 @@ avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
         }
         return (avm_memcell*)0;
 
+}
+
+void mydelete(avm_table_bucket* p,avm_memcell* key){
+        avm_table_bucket* tmp = p,*prev;
+        while(tmp){
+                check_eq_func_t f = check_eqFuncs[key->type];
+                if(f && (*f)(&tmp->key,key)){
+                        if(prev)prev->next = tmp->next;
+                        else p = tmp->next;
+                        break;
+                }
+                prev=tmp;
+                tmp=tmp->next;
+        }
+}
+
+void deleteKey(avm_table* table,avm_memcell* key){
+        if(key->type == number_m){
+                mydelete(table->numIndexed[hashFunction(key->data.numVal)],key);
+        }
+        else if (key->type == string_m){
+                mydelete(table->strIndexed[hashFunction(key->data.strVal)],key);
+        }                
+        else{
+                avm_error("Invalid type of key");
+                return;
+        }        
 }
 
 std::string hash_toString(avm_table_bucket** p){

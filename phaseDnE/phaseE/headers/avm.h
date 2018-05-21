@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string>
-#include "../../phaseD/instructions.h"
+#include <fstream>
 #include <unordered_map>
+#include "../../phaseD/instructions.h"
 
 #include "avm_utilities.h"
 #include "avm_table.h"
@@ -26,4 +27,7 @@ extern unsigned        pc;
 extern unsigned        currLine;
 extern unsigned        codeSize;
 extern instruction*    code;
+
+extern unsigned totalInstr;
+
 #endif

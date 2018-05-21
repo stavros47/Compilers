@@ -47,7 +47,8 @@ void execute_assign(instruction* instr){
         avm_memcell* lv = avm_translate_operand(&instr->result, (avm_memcell*)0);
         avm_memcell* rv = avm_translate_operand(&instr->arg1 , &ax);
 
-        assert(lv && ((&stack[AVM_STACKSIZE] > lv && &stack[top] < lv) || lv == &retval));
+        assert(lv);
+        assert(((&stack[AVM_STACKSIZE] > lv && &stack[top] < lv) || lv == &retval));
         assert(rv);
 
         avm_assign(lv,rv);
@@ -91,7 +92,6 @@ void execute_jeq(instruction* instr){
         avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
         avm_memcell* rv2 = avm_translate_operand(&instr->arg2,&bx);
         unsigned char result = 0;
-
         result = jump_eqChecks(rv1,rv2);
                 
         if(!executionFinished && result)
@@ -249,10 +249,12 @@ void execute_tablesetelem(instruction* instr){
 void execute_nop(instruction* instr){}
 
 unsigned char jump_eqChecks(avm_memcell* rv1,avm_memcell* rv2){
+        
         if(rv1->type == undef_m || rv2->type == undef_m){
                 avm_error("'undef' involved in equality!");
         }else
         if(rv1->type == bool_m || rv2->type == bool_m){
+
                 return (avm_tobool(rv1) == avm_tobool(rv2));
         }else
         if(rv1->type == nil_m || rv2->type == nil_m){
@@ -263,6 +265,7 @@ unsigned char jump_eqChecks(avm_memcell* rv1,avm_memcell* rv2){
                 typeStrings[rv1->type],
                 typeStrings[rv2->type]);
         }else{
+                
                 check_eq_func_t f = check_eqFuncs[rv1->type];
                 if(f){
                         return (*f)(rv1,rv2);
