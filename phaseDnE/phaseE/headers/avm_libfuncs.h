@@ -14,4 +14,6 @@ void libfunc_print(void);
 void libfunc_typeof(void);
 void libfunc_totalarguments(void);
 void libfunc_input(void);
+void libfunc_objecttotalmembers(void);
+void libfunc_argument(void);
 #endif

@@ -121,7 +121,52 @@ void libfunc_input(void){
                 }
         }
        
+}
+
+void libfunc_objecttotalmembers(void){
+        unsigned n = avm_totalactuals();
+
+	if(n!=1){
+		avm_error("one argument (not %d) expected in 'typeof'!",n);
+	}else{
+		avm_memcellclear(&retval);
+		avm_table_bucket * tempTableList = avm_getactual(0)->data.tableVal->head;
+                int memberCounter = 0;
+
+                while(tempTableList){ 
+                        memberCounter++;
+                        tempTableList = tempTableList->nextOrder;
+                }
+                retval.type = number_m;
+                retval.data.numVal = memberCounter;
+	}
+}
+
+void libfunc_argument(void){
+        unsigned n = avm_totalactuals();
+        unsigned p_topsp = avm_getenvvalue(topsp + AVM_SAVEDTOPSP_OFFSET);
+
+        if(n!=1){
+		avm_error("One argument (not %d) expected in 'argument'!",n);
+	}else{
+		if(!p_topsp){
+		        avm_error("'argument' called outside a function!");
+		        retval.type = nil_m;
+	        }else{
+		        retval.type = number_m;
+                        for(int i=AVM_STACKSIZE-1;i>=0;i--){
+		        if(stack[i].type != undef_m)
+			        std::cout<<avm_tostring(&stack[i])<<std::endl;
+	                }
+                        unsigned int pos = p_topsp + avm_getactual(0)->data.numVal +  AVM_NUMACTUALS_OFFSET;
+                        retval.data.numVal = stack[pos].data.numVal;//avm_getactual(p_topsp + avm_getactual(0)->data.numVal)->data.numVal;
+                        
+                        if(avm_getactual(0)->data.numVal <= avm_getenvvalue(p_topsp + AVM_NUMACTUALS_OFFSET)){
+                                //retval.data.numVal = avm_getactual(p_topsp + avm_getactual(0)->data.numVal)->data.numVal;
         
-       
-       // std::cout << "\nInput: " <<input<< '\n';
+                        }
+                        
+	        }
+	}
+
 }

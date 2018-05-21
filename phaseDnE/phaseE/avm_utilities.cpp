@@ -152,6 +152,8 @@ void avm_initialize(void){
         avm_registerlibfunc("typeof",libfunc_typeof);
         avm_registerlibfunc("totalarguments",libfunc_totalarguments);
         avm_registerlibfunc("input",libfunc_input);
+        avm_registerlibfunc("objecttotalmembers",libfunc_objecttotalmembers);
+        avm_registerlibfunc("argument",libfunc_argument);
 }
 
 
