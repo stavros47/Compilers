@@ -214,6 +214,7 @@ void avm_initialize(void){
         avm_registerlibfunc("cos",libfunc_cos);
         avm_registerlibfunc("sqrt",libfunc_sqrt);
         avm_registerlibfunc("strtonum",libfunc_strtonum);
+        avm_registerlibfunc("objectmemberkeys",libfunc_objectmemberkeys);
 }
 
 

@@ -126,6 +126,46 @@ void libfunc_input(void){
        
 }
 
+void libfunc_objectmemberkeys(void){
+        unsigned n = avm_totalactuals();
+
+	if(n!=1){
+		avm_error("one argument (not %d) expected in 'typeof'!",n);
+	}else{	
+                int memberCounter = 0;
+                avm_table * newTable = avm_tablenew();
+                avm_table_bucket * tempTableList = avm_getactual(0)->data.tableVal->head;
+                avm_table_bucket * tmp;
+                avm_table_bucket * ptr;
+
+                while(tempTableList){ 
+                        avm_memcell *key = new avm_memcell();
+                        key->type = number_m;
+                        key->data.numVal = memberCounter++;
+                        
+                        avm_memcell *value = new avm_memcell();                        
+                        avm_assign(value,&tempTableList->key);
+
+                        tmp = insert(newTable->numIndexed,key->data.numVal,*key,*value);
+
+                        ptr = newTable->head;
+                        if(ptr){
+                                while(ptr && ptr->nextOrder){
+                                        ptr = ptr->nextOrder;
+                                }
+                                        ptr->nextOrder = tmp;
+                        }else{
+                                newTable->head = tmp;
+                        }
+                        
+                        tempTableList = tempTableList->nextOrder;
+                }
+                avm_memcellclear(&retval);
+                retval.type = table_m;
+                retval.data.tableVal = newTable;
+	}
+}
+
 void libfunc_objecttotalmembers(void){
         unsigned n = avm_totalactuals();
 
