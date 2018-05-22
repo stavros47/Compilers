@@ -561,8 +561,15 @@ objectdef: 	'['elist']'	{
 						expr* e = newexpr(newtable_e);
 						e->sym = newtemp();
 						emit(tablecreate,(expr*)0,(expr*)0,e,0,yylineno);
+
+						expr* tmp = $2;
+						while(tmp){
+							table_cnt++;
+							tmp=tmp->next;
+						}
+						
 						while($2!=NULL){
-							emit(tablesetelem,newexpr_constnum_e(table_cnt++),$2,e,0,yylineno);
+							emit(tablesetelem,newexpr_constnum_e(--table_cnt),$2,e,0,yylineno);
 							$2=$2->next;
 						}
 						$$=e;

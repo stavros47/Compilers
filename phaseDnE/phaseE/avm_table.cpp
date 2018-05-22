@@ -52,16 +52,8 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
         
         table->total++;
 
-        if(table->head){
-                ptr = table->head;
-                while(ptr->nextOrder){
-                        ptr = ptr->nextOrder;
-                }
-
-                ptr->nextOrder=tmp;
-        }else{
-                table->head = tmp;
-        }
+        tmp->nextOrder = table->head;
+        table->head = tmp;
 }
 
 void avm_tableincrefcounter(avm_table* t){

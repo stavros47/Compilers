@@ -76,10 +76,11 @@ void execute_call( instruction* instr){
                                 avm_calllibfunc(func->data.libfuncVal);
                                 break;
                 }
-        
+                //case table_m:
+                                
                 default:                {
                         char* s = const_cast<char*>(avm_tostring(func).c_str());
-                        avm_error("call:cannot gind '%s' to function!",s);
+                        avm_error("call:cannot bind '%s' to function!",s);
                         //free(s);
                 }
         }
