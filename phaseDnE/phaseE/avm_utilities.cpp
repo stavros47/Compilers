@@ -262,7 +262,7 @@ void expand(void){
 void print_stack(){
 	for(int i=AVM_STACKSIZE-1;i>=0;i--){
 		if(stack[i].type != undef_m)
-			std::cout<<avm_tostring(&stack[i])<<std::endl;
+			std::cout<<"["<<i<<"]:"<<avm_tostring(&stack[i])<<std::endl;
 	}
 }
 

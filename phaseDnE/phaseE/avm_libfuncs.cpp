@@ -24,6 +24,9 @@ library_func_t avm_getlibraryfunc(char* id){
          
         return NULL;
 }
+unsigned avm_totalactuals(unsigned p_topsp){
+        return avm_getenvvalue(p_topsp + AVM_NUMACTUALS_OFFSET);
+}
 
 unsigned avm_totalactuals(void){
         return avm_getenvvalue(topsp + AVM_NUMACTUALS_OFFSET);
@@ -145,13 +148,14 @@ void libfunc_objecttotalmembers(void){
 void libfunc_argument(void){
         unsigned n = avm_totalactuals();
         unsigned p_topsp = avm_getenvvalue(topsp + AVM_SAVEDTOPSP_OFFSET);
+        unsigned previous_n = avm_totalactuals(p_topsp);
 
         if(n!=1){
 		avm_error("One argument (not %d) expected in 'argument'!",n);
 	}else{
 		if(!p_topsp){
 		        retval.type = nil_m;
-	        }else if(n < avm_getactual(0)->data.numVal){
+	        }else if(previous_n <= avm_getactual(0)->data.numVal){
 		        avm_error("invalid number of arguments for current function");                        
                 }else{
                         unsigned int pos = p_topsp + avm_getactual(0)->data.numVal +  AVM_NUMACTUALS_OFFSET +1;
