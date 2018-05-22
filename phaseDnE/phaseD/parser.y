@@ -481,8 +481,14 @@ call: 		call '(' elist ')'		{
 						if($2->method){
 							expr* self = $1; 
 							$1 = emit_iftableitem(member_item($1,$2->name));
-							self->next = $2->list;
-							$2->list=self;
+							expr* tmp = $2->list;
+							while(tmp->next){
+								tmp=tmp->next;
+							}
+							tmp->next = self;
+						
+							//self->next = $2->list;
+							//$2->list=self;
 						}
 
 						$$ = call_emits($2->list,$1);

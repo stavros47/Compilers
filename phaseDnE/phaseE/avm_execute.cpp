@@ -74,6 +74,14 @@ void execute_call( instruction* instr){
                         break;
                 }
                 case table_m:   {
+                        avm_memcell* t = &stack[top + AVM_STACKENV_SIZE];
+                        unsigned i =0;
+                        for(i = top;i<top+AVM_STACKENV_SIZE;i++){
+                                avm_assign(&stack[i],&stack[i+1]);
+                        }
+                        avm_assign(&stack[i],func);
+                        stack[i-1].data.numVal++;
+                        avm_dec_top();
                         pc = avm_getfuncinfo(get(func->data.tableVal->strIndexed[hashFunction("()")],"()")->data.funcVal)->address;
                         assert(pc<AVM_ENDING_PC);
                         assert(code[pc].opcode == funcenter_v);
@@ -219,9 +227,8 @@ void execute_tablegetelem(instruction* instr){
 
         avm_memcellclear(lv);
         lv->type = nil_m;
-
         if(table->type !=table_m){
-                avm_error("illegal use of type %s as table!",typeStrings[table->type].c_str());
+                avm_error("illegal use of type %s as table!!",typeStrings[table->type].c_str());
                 executionFinished=1;
         }else{
                 avm_memcell* content = avm_tablegetelem(table->data.tableVal,key);
