@@ -134,7 +134,7 @@ tobool_func_t toboolFuncs[] = {
 };
 
 unsigned char number_tobool(avm_memcell* m){return (m->data.numVal) ? 1 : 0;}
-unsigned char string_tobool(avm_memcell* m){return m->data.strVal[0]!=0;}
+unsigned char string_tobool(avm_memcell* m){return (m->data.strVal && !m->data.strVal[0]) ? 0 : 1;}
 unsigned char bool_tobool(avm_memcell* m){return m->data.boolVal;}
 unsigned char table_tobool(avm_memcell* m){return 1;}
 unsigned char userfunc_tobool(avm_memcell* m){return 1;}
@@ -168,7 +168,7 @@ unsigned char string_check_eq(avm_memcell* rv1,avm_memcell* rv2){
 unsigned char table_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.tableVal->total == rv2->data.tableVal->total);
 }
-unsigned char userfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){ //??
+unsigned char userfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.funcVal == rv2->data.funcVal);
 }
 unsigned char libfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){
@@ -180,8 +180,8 @@ check_le_func_t check_leFuncs[] = {
         string_check_le,
         0,
         table_check_le,
-        userfunc_check_le,
-        libfunc_check_le,
+        0,
+        0,
         0,
         0
 
@@ -196,20 +196,14 @@ unsigned char string_check_le(avm_memcell* rv1,avm_memcell* rv2){
 unsigned char table_check_le(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.tableVal->total <= rv2->data.tableVal->total);
 }
-unsigned char userfunc_check_le(avm_memcell* rv1,avm_memcell* rv2){ //??
-        return (rv1->data.funcVal <= rv2->data.funcVal);
-}
-unsigned char libfunc_check_le(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(strcmp(rv1->data.libfuncVal,rv2->data.libfuncVal));
-}
 
 check_ge_func_t check_geFuncs[] = {
         number_check_ge,
         string_check_ge,
         0,
         table_check_ge,
-        userfunc_check_ge,
-        libfunc_check_ge,
+        0,
+        0,
         0,
         0
 
@@ -223,10 +217,4 @@ unsigned char string_check_ge(avm_memcell* rv1,avm_memcell* rv2){
 }
 unsigned char table_check_ge(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.tableVal->total >= rv2->data.tableVal->total);
-}
-unsigned char userfunc_check_ge(avm_memcell* rv1,avm_memcell* rv2){ //??
-        return (rv1->data.funcVal >= rv2->data.funcVal);
-}
-unsigned char libfunc_check_ge(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(strcmp(rv1->data.libfuncVal,rv2->data.libfuncVal));
 }

@@ -58,26 +58,27 @@ void execute_call( instruction* instr){
         avm_memcell* func = avm_translate_operand(&instr->result,&ax);
         assert(func);
         avm_callsaveenviroment();
-
         switch( func->type){
                 case userfunc_m:        {
-                        pc =avm_getfuncinfo(func->data.funcVal)->address;
+                        pc = avm_getfuncinfo(func->data.funcVal)->address;
                         assert(pc<AVM_ENDING_PC);
                         assert(code[pc].opcode == funcenter_v);
                         break;
                 }
-
-                case string_m:          {
-                                avm_calllibfunc(func->data.strVal);
-                                break;
+                case string_m:  {
+                        avm_calllibfunc(func->data.strVal);
+                        break;
                 }
-
-                case libfunc_m:         {
-                                avm_calllibfunc(func->data.libfuncVal);
-                                break;
+                case libfunc_m: {
+                        avm_calllibfunc(func->data.libfuncVal);
+                        break;
                 }
-                //case table_m:
-                                
+                case table_m:   {
+                        pc = avm_getfuncinfo(get(func->data.tableVal->strIndexed[hashFunction("()")],"()")->data.funcVal)->address;
+                        assert(pc<AVM_ENDING_PC);
+                        assert(code[pc].opcode == funcenter_v);
+                        break;
+                }        
                 default:                {
                         char* s = const_cast<char*>(avm_tostring(func).c_str());
                         avm_error("call:cannot bind '%s' to function!",s);
@@ -142,6 +143,11 @@ void execute_jge(instruction* instr){
         assert(instr->result.type == label_a);
         avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
         avm_memcell* rv2 = avm_translate_operand(&instr->arg2,&bx);
+
+        assert(rv1->type == number_m && rv2->type == number_m);
+        assert(rv1->type == string_m && rv2->type == string_m);
+        assert(rv1->type == table_m && rv2->type == table_m);
+
         unsigned char result = 0;
 
         result = jump_geChecks(rv1,rv2);
@@ -215,7 +221,7 @@ void execute_tablegetelem(instruction* instr){
         lv->type = nil_m;
 
         if(table->type !=table_m){
-                avm_error("illegal use of type %s as table!",typeStrings[table->type]);
+                avm_error("illegal use of type %s as table!",typeStrings[table->type].c_str());
                 executionFinished=1;
         }else{
                 avm_memcell* content = avm_tablegetelem(table->data.tableVal,key);
