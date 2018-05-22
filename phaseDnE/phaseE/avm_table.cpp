@@ -125,7 +125,10 @@ avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
                 }
                 tmp=tmp->next;
         }
-        return (avm_memcell*)0;
+
+        avm_memcell* t = new avm_memcell();
+        t->type=nil_m;
+        return t;
 
 }
 

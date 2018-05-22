@@ -163,7 +163,7 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
         if(rv->type == undef_m){
                 avm_warning("assigning from 'undef' content!");
         }
-
+ 
         avm_memcellclear(lv);
         std::memcpy(lv,rv,sizeof(avm_memcell));
 
@@ -172,6 +172,7 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
         else
         if ( lv->type == table_m)
                 avm_tableincrefcounter(lv->data.tableVal);
+        
 }
 
 void avm_dec_top(void){

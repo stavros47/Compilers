@@ -86,6 +86,9 @@ int main(int argc, char* argv[]){
 	int cnt =1 ;
 	while(!executionFinished){
 		//std::cout<<cnt++<<"\tpc:"<<pc<<std::endl;
+        //  if(pc>18) print_stack();
+        //  std::cout<<"PCCCCC:"<<pc<<std::endl;
+		
 		execute_cycle();	
 	}
 
