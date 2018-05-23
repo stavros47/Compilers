@@ -14,20 +14,21 @@
 #include "avm_dispatchers.h"
 #include "avm_libfuncs.h"
 
-extern unsigned int   executionFinished;
-extern unsigned totalActuals;
 extern std::unordered_map< std::string,library_func_t> registry;
-extern unsigned max_global_offset;
 
-extern avm_memcell ax,bx,cx;
-extern avm_memcell retval;
-extern unsigned top,topsp;
+extern unsigned int executionFinished;
+extern unsigned     totalActuals;
+extern unsigned     max_global_offset;
 
-extern unsigned        pc;
-extern unsigned        currLine;
-extern unsigned        codeSize;
-extern instruction*    code;
+extern avm_memcell  ax,bx,cx;
+extern avm_memcell  retval;
+extern unsigned     top,topsp;
 
-extern unsigned totalInstr;
+extern unsigned     pc;
+extern unsigned     currLine;
+extern unsigned     codeSize;
+extern instruction* code;
+
+extern unsigned     totalInstr;
 
 #endif

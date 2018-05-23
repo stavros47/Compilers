@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
 		
 		while(!infile.eof()){
 				if(totalInstr == codeSize++)
-					expand();
+					expand_instr();
 				infile>>output;
 				instruction* p = code + currLine++;
 				p->srcLine = (unsigned)std::stoi(output);
@@ -85,6 +85,7 @@ int main(int argc, char* argv[]){
 
 	avm_initialize();
 	while(!executionFinished){
+		//std::cout<<"PC:"<<pc<<std::endl;
 		execute_cycle();
 	}
 
