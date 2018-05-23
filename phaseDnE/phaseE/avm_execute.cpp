@@ -50,8 +50,11 @@ void execute_assign(instruction* instr){
         assert(lv);
         assert(((&stack[AVM_STACKSIZE] > lv && &stack[top] < lv) || lv == &retval));
         assert(rv);
-
+        //if(rv==&retval)
+        //std::cout<<"BEFORE:"<<avm_tostring(rv)<<std::endl;
         avm_assign(lv,rv);
+        //if(rv==&retval)
+        //std::cout<<"AFTER:"<<avm_tostring(rv)<<std::endl;
 }
 
 void execute_call( instruction* instr){
@@ -201,8 +204,9 @@ void execute_funcexit(instruction* instr){
         pc = avm_getenvvalue(topsp + AVM_SAVEDPC_OFFSET);
         topsp = avm_getenvvalue(topsp + AVM_SAVEDTOPSP_OFFSET);
 
-        while(oldTop++<=top)
+        while(oldTop++<=top){
                 avm_memcellclear(&stack[oldTop]);
+        }
 }
 
 void execute_newtable    (instruction* instr){

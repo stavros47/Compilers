@@ -1,6 +1,6 @@
 *.o
 *.txt
-/tests
+testfiles
 *.asc
 parser.cpp
 scanner.cpp

@@ -60,7 +60,8 @@ std::string number_tostring(avm_memcell* m){
 }
 
 std::string string_tostring(avm_memcell* m){
-        return m->data.strVal;
+        std::string s = m->data.strVal;
+        return "\"" + s + "\"";
 }
 
 std::string bool_tostring(avm_memcell* m){
@@ -77,7 +78,7 @@ std::string table_tostring(avm_memcell* m){
                 buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" },";
                 tmp=tmp->nextOrder;
         }
-        buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" }";
+        if(tmp)buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" }";
         buffer<<"]";
 
         return buffer.str();
