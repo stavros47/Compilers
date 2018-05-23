@@ -4,10 +4,8 @@ al:
 	cd phaseD && make
 
 avm:
-	cd phaseE/avm && make
+	cd phaseE && make
 
 clean:	
 	cd phaseD && make clean
-	cd phaseE/avm && make clean
-	rm *.txt
-	rm al avm
+	cd phaseE && make clean

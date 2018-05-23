@@ -71,16 +71,8 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
         
         table->total++;
 
-        if(table->head){
-                ptr = table->head;
-                while(ptr->nextOrder){
-                        ptr = ptr->nextOrder;
-                }
-
-                ptr->nextOrder=tmp;
-        }else{
-                table->head = tmp;
-        }
+        tmp->nextOrder = table->head;
+        table->head = tmp;
 }
 
 void avm_tableincrefcounter(avm_table* t){
@@ -115,7 +107,7 @@ unsigned hashFunction(unsigned key){
         return key%AVM_TABLE_HASHSIZE;
 }
 
-unsigned hashFunction(char* key){
+unsigned hashFunction(const char* key){
         unsigned int hash = 0U;
 	for (int i = 0; key[i] != '\0'; i++)
 		hash +=hash*3 + key[i]*7;
@@ -132,6 +124,13 @@ avm_table_bucket* insert(avm_table_bucket** p,unsigned pos, avm_memcell key, avm
         return ptr;
 }
 
+avm_memcell* get(avm_table_bucket* p,const char* key){
+        avm_memcell *ps = new avm_memcell();
+        ps->data.strVal = const_cast<char*>(key);
+        ps->type = string_m;
+        return get(p,ps);
+}
+
 avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
         avm_table_bucket* tmp = p;
         while(tmp){
@@ -145,7 +144,10 @@ avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
                 }
                 tmp=tmp->next;
         }
-        return (avm_memcell*)0;
+
+        avm_memcell* t = new avm_memcell();
+        t->type=nil_m;
+        return t;
 
 }
 

@@ -29,6 +29,7 @@ enum avm_memcell_t{
 
 struct avm_memcell;
 struct avm_table;
+struct avm_table_bucket;
 
 extern std::string typeStrings[];
 extern avm_memcell stack[];
@@ -57,6 +58,9 @@ static void avm_initstack(void);
 void avm_warning(const char*,...);
 void avm_error(const char*,...);
 void avm_callsaveenviroment(void);
+
+void copy_to(avm_table*,avm_table*);
+void copy_tohash(avm_table_bucket**,avm_table_bucket**);
 void avm_assign(avm_memcell*,avm_memcell*);
 
 void avm_dec_top(void);

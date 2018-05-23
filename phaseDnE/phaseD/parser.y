@@ -495,8 +495,14 @@ call: 		call '(' elist ')'		{
 						if($2->method){
 							expr* self = $1; 
 							$1 = emit_iftableitem(member_item($1,$2->name));
-							self->next = $2->list;
-							$2->list=self;
+							expr* tmp = $2->list;
+							while(tmp->next){
+								tmp=tmp->next;
+							}
+							tmp->next = self;
+						
+							//self->next = $2->list;
+							//$2->list=self;
 						}
 
 						$$ = call_emits($2->list,$1);
@@ -575,8 +581,15 @@ objectdef: 	'['elist']'	{
 						expr* e = newexpr(newtable_e);
 						e->sym = newtemp();
 						emit(tablecreate,(expr*)0,(expr*)0,e,0,yylineno);
+
+						expr* tmp = $2;
+						while(tmp){
+							table_cnt++;
+							tmp=tmp->next;
+						}
+						
 						while($2!=NULL){
-							emit(tablesetelem,newexpr_constnum_e(table_cnt++),$2,e,0,yylineno);
+							emit(tablesetelem,newexpr_constnum_e(--table_cnt),$2,e,0,yylineno);
 							$2=$2->next;
 						}
 						$$=e;

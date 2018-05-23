@@ -150,6 +150,39 @@ void avm_callsaveenviroment(void){
         avm_pushenvvalue(top + totalActuals + 2);        
 }
 
+void copy_tohash(avm_table_bucket** dest,avm_table_bucket** src){
+        for(unsigned i = 0; i< AVM_TABLE_HASHSIZE;i++){
+                avm_table_bucket* b=src[i];
+                avm_table_bucket* dest_b=dest[i];
+                while(b){
+
+                        if(b->value.type == string_m){
+                                dest_b->value.data.strVal=strdup(b->value.data.strVal);                           
+                        }else if(b->value.type == libfunc_m){
+                                dest_b->value.data.libfuncVal=strdup(b->value.data.libfuncVal);                           
+                        }else if(b->value.type == table_m){
+                                copy_to(dest_b->value.data.tableVal,b->value.data.tableVal);
+                        }
+
+                        if(b->key.type == string_m){
+                                dest_b->key.data.strVal=strdup(b->key.data.strVal);                                                        
+                        }else if(b->value.type == libfunc_m){
+                                dest_b->key.data.libfuncVal=strdup(b->key.data.libfuncVal);                           
+                        }
+
+                        b=b->next; 
+                }
+        }
+}
+
+void copy_to(avm_table* dest,avm_table* src){
+        copy_tohash(dest->numIndexed,src->numIndexed);
+        copy_tohash(dest->strIndexed,src->strIndexed);
+        // copy_tohash(dest->boolIndexed,src->boolIndexed);
+        // copy_tohash(dest->userfuncIndexed,src->userfuncindexed);
+        // copy_tohash(dest->libfuncIndexed,src->libfuncIndexed);
+}
+
 void avm_assign(avm_memcell* lv,avm_memcell* rv){
 
         if(lv == rv)
@@ -163,15 +196,21 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
         if(rv->type == undef_m){
                 avm_warning("assigning from 'undef' content!");
         }
-
+ 
         avm_memcellclear(lv);
         std::memcpy(lv,rv,sizeof(avm_memcell));
+
+        if(lv==&retval && rv->type==table_m){
+                //if any (char*) value exists in hashtables
+                copy_to(lv->data.tableVal,rv->data.tableVal);
+        }
 
         if( lv->type == string_m)
                 lv->data.strVal = strdup(rv->data.strVal);
         else
         if ( lv->type == table_m)
                 avm_tableincrefcounter(lv->data.tableVal);
+        
 }
 
 void avm_dec_top(void){
@@ -214,6 +253,7 @@ void avm_initialize(void){
         avm_registerlibfunc("cos",libfunc_cos);
         avm_registerlibfunc("sqrt",libfunc_sqrt);
         avm_registerlibfunc("strtonum",libfunc_strtonum);
+        avm_registerlibfunc("objectmemberkeys",libfunc_objectmemberkeys);
 }
 
 

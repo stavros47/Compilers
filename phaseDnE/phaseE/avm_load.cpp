@@ -80,13 +80,12 @@ int main(int argc, char* argv[]){
 				test_global(p->arg2);
 		}
 	}
+
 	infile.close();
-	//print_info();
+
 	avm_initialize();
-	int cnt =1 ;
 	while(!executionFinished){
-		//std::cout<<cnt++<<"\tpc:"<<pc<<std::endl;
-		execute_cycle();	
+		execute_cycle();
 	}
 
 	 return 0;
