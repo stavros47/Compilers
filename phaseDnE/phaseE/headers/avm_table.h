@@ -17,6 +17,7 @@ struct avm_table{
         avm_table_bucket*       userfuncIndexed[AVM_TABLE_HASHSIZE];
         avm_table_bucket*       libfuncIndexed[AVM_TABLE_HASHSIZE];
         avm_table_bucket*       boolIndexed[AVM_TABLE_HASHSIZE];
+        avm_table_bucket*       tableIndexed[AVM_TABLE_HASHSIZE];
         avm_table_bucket*       head;
         unsigned                total;
 };
@@ -31,6 +32,7 @@ void avm_tabledecrefcounter(avm_table*);
 void avm_table_bucketsinit(avm_table_bucket**);
 void avm_tablebucketdestroy(avm_table_bucket**);
 
+unsigned hashFunction(avm_table*);
 unsigned hashFunction(unsigned);
 unsigned hashFunction(const char*);
 avm_table_bucket* insert(avm_table_bucket**,unsigned,avm_memcell, avm_memcell);

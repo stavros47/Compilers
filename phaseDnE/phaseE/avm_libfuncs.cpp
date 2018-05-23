@@ -45,7 +45,7 @@ void libfunc_print(void){
         unsigned n = avm_totalactuals();
         for(unsigned i = 0; i < n; ++i){
                 std::string s = avm_tostring(avm_getactual(i));
-                std::cout<<s;
+                std::cout<<s<<std::endl;
         }
 }
 
@@ -95,7 +95,8 @@ void libfunc_input(void){
                 }
               
         
-        }else if(iss.eof() && !iss.fail()){//Double - Check the entire string was consumed and if either failbit or badbit is set         
+        }else if(iss.eof() && !iss.fail()){
+                //Double - Check the entire string was consumed and if either failbit or badbit is set         
                 flag = 1;
                 retval.type = number_m;
                 retval.data.numVal = std::stod(input);
@@ -126,11 +127,31 @@ void libfunc_input(void){
        
 }
 
+void libfunc_objectcopy(void){
+        unsigned n = avm_totalactuals();
+
+        if(n!=1){
+		avm_error("one argument (not %d) expected in 'objectcopy'!",n);                
+        }else{
+                avm_memcell* oldTable = avm_getactual(0);        
+                if(oldTable->type!=table_m){
+		        avm_error("invalid type of argument in 'objectcopy'!",n);                
+                }else{
+                        avm_table *newTable = avm_tablenew();
+                        copy_to_from(newTable,oldTable->data.tableVal);
+                        
+                        avm_memcellclear(&retval);
+                        retval.type= table_m;
+                        retval.data.tableVal = newTable;
+                }
+        }
+}
+
 void libfunc_objectmemberkeys(void){
         unsigned n = avm_totalactuals();
 
 	if(n!=1){
-		avm_error("one argument (not %d) expected in 'typeof'!",n);
+		avm_error("one argument (not %d) expected in 'objectmemberkeys'!",n);
 	}else{	
                 int memberCounter = 0;
                 avm_table * newTable = avm_tablenew();
@@ -170,7 +191,7 @@ void libfunc_objecttotalmembers(void){
         unsigned n = avm_totalactuals();
 
 	if(n!=1){
-		avm_error("one argument (not %d) expected in 'typeof'!",n);
+		avm_error("one argument (not %d) expected in 'objecttotalmembers'!",n);
 	}else{
 		avm_memcellclear(&retval);
 		avm_table_bucket * tempTableList = avm_getactual(0)->data.tableVal->head;
@@ -200,12 +221,7 @@ void libfunc_argument(void){
                 }else{
                         unsigned int pos = p_topsp + avm_getactual(0)->data.numVal +  AVM_NUMACTUALS_OFFSET +1;
 		        retval.type = number_m;
-                        retval.data.numVal = stack[pos].data.numVal;//avm_getactual(p_topsp + avm_getactual(0)->data.numVal)->data.numVal;
-                        
-                        if(avm_getactual(0)->data.numVal <= avm_getenvvalue(p_topsp + AVM_NUMACTUALS_OFFSET)){
-                                //retval.data.numVal = avm_getactual(p_topsp + avm_getactual(0)->data.numVal)->data.numVal;
-        
-                        }
+                        retval.data.numVal = stack[pos].data.numVal;
 	        }
 	}
 }
@@ -264,15 +280,23 @@ void libfunc_sqrt(void){
 
 void libfunc_strtonum(void){
         unsigned n = avm_totalactuals();
-        //check error from stavros       
+
         if(n!=1){ 
-		avm_error("one argument (not %d) expected in 'sqrt'!",n);
+		avm_error("one argument (not %d) expected in 'strtonum'!",n);
 	}else{
                 if(avm_getactual(0)->type!=string_m){
                         avm_error("Type is wrong, expected string\n");
+                }else{
+                        char * t = avm_getactual(0)->data.strVal;
+                        for(int i =0;t[i]!='\0';i++){
+                                if(!isdigit(t[i])){
+                                        avm_error("corrupted string:not a number\n");
+                                        return;      
+                                }
+                        }
+                        avm_memcellclear(&retval);
+                        retval.type = number_m;
+                        retval.data.numVal = std::stod(avm_getactual(0)->data.strVal);
                 }
-                avm_memcellclear(&retval);
-                retval.type = number_m;
-                retval.data.numVal = std::stod(avm_getactual(0)->data.strVal);
         }
 }

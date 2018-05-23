@@ -166,9 +166,21 @@ expr* newexpr_conststring_e(char* str){
 
 }
 
-expr* newexpr_lib_e(std::string str){
+expr* newexpr_libfunc_e(Symbol* s){
 	expr* e = newexpr(libraryfunc_e);
-	e->sym->name = str;
+	e->sym = s;
+	return e;
+}
+
+expr* newexpr_programfunc_e(Symbol* s){
+	expr* e = newexpr(programfunc_e);
+	e->sym = s;
+	return e;
+}
+
+expr* newexpr_tableitem_e(Symbol* s){
+	expr* e = newexpr(tableitem_e);
+	e->sym = s;
 	return e;
 }
 
@@ -262,14 +274,6 @@ expr* member_item(expr* e1,char* e2){
 		return item;
 }
 
-expr* member_item(expr* e1,std::string e2){
-		e1 = emit_iftableitem(e1);
-		expr* item = newexpr(tableitem_e);
-		item->sym = e1->sym;
-		item->index=newexpr_lib_e(e2);
-		return item;
-}
-
 expr* member_item(expr* e1,double e2){
 		e1 = emit_iftableitem(e1);
 		expr* item = newexpr(tableitem_e);
@@ -337,7 +341,7 @@ std::string expr_toString(expr* temp){
 		case programfunc_e: 
 		case newtable_e:
 		case boolexpr_e:
-		case tableitem_e: std::cout<<"ONOMA: "<< temp->type <<std::endl; return temp->sym->name;
+		case tableitem_e: return temp->sym->name;
 		case constnum_e:	if((fmod(temp->numConst,1)==0)){
 						return std::to_string((int)temp->numConst);
 					}else {

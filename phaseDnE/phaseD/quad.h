@@ -21,7 +21,7 @@ enum iopcode{
         mul,            Div,            mod,
         Not,            if_eq,          if_noteq,
         if_lesseq,      if_greatereq,   if_less,
-	if_greater,	call,		param,
+		if_greater,		call,			param,
         ret,            getretval,      funcstart,
         funcend,        tablecreate,     tablegetelem,
         tablesetelem,	jump	
@@ -87,6 +87,9 @@ expr* newexpr(expr_t);
 expr* newexpr_constbool_e(bool);
 expr* newexpr_constnum_e(double);
 expr* newexpr_conststring_e(char*);
+expr* newexpr_libfunc_e(Symbol*);
+expr* newexpr_programfunc_e(Symbol*);
+expr* newexpr_tableitem_e(Symbol*);
 
 bool isValid_arithop(expr*);
 bool isValid_relop(expr*);

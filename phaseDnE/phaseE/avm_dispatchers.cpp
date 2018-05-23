@@ -48,13 +48,13 @@ std::string avm_tostring(avm_memcell* m){
 }
 
 std::string number_tostring(avm_memcell* m){
+        m->data.numVal *= 1000;
+        m->data.numVal=round(m->data.numVal);
+        m->data.numVal /= 1000;
+
         if((fmod(m->data.numVal,1)==0)){
                 return std::to_string((int)m->data.numVal);
         }else {
-                m->data.numVal *= 1000;
-                m->data.numVal=round(m->data.numVal);
-                m->data.numVal /= 1000;
-
                 return std::to_string(m->data.numVal).substr(0,5);
         }
 }
@@ -173,10 +173,10 @@ unsigned char table_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.tableVal->total == rv2->data.tableVal->total);
 }
 unsigned char userfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){
-        return (rv1->data.funcVal == rv2->data.funcVal);
+        return (avm_getfuncinfo(rv1->data.funcVal)->address == avm_getfuncinfo(rv2->data.funcVal)->address);
 }
 unsigned char libfunc_check_eq(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(strcmp(rv1->data.libfuncVal,rv2->data.libfuncVal));
+        return unsigned(!strcmp(rv1->data.libfuncVal,rv2->data.libfuncVal));
 }
 
 check_le_func_t check_leFuncs[] = {
