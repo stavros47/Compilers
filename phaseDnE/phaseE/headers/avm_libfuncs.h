@@ -6,6 +6,7 @@ typedef void (*library_func_t)(void);
 void avm_calllibfunc(char* funcname);
 library_func_t avm_getlibraryfunc(char*);
 unsigned avm_totalactuals(void);
+unsigned avm_totalactuals(unsigned);
 avm_memcell* avm_getactual(unsigned);
 
 void avm_registerlibfunc(std::string id,library_func_t addr);

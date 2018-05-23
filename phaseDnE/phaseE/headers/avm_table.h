@@ -35,10 +35,12 @@ void avm_tablebucketdestroy(avm_table_bucket**);
 unsigned hashFunction(avm_table*);
 unsigned hashFunction(unsigned);
 unsigned hashFunction(const char*);
+
 avm_table_bucket* insert(avm_table_bucket**,unsigned,avm_memcell, avm_memcell);
 avm_memcell* get(avm_table_bucket*,const char*);
 avm_memcell* get(avm_table_bucket*,avm_memcell*);
-std::string hash_toString(avm_table_bucket**);
 void mydelete(avm_table_bucket*,avm_memcell*);
 void deleteKey(avm_table* table,avm_memcell* key);
+std::string hash_toString(avm_table_bucket**);
+
 #endif

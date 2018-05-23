@@ -12,6 +12,15 @@ memclear_func_t memclearFuncs[] = {
 
 };
 
+void avm_memcellclear(avm_memcell* m){
+        if(m->type!=undef_m){
+                memclear_func_t f = memclearFuncs[m->type];
+                if(f)
+                        (*f)(m);
+                m->type=undef_m;
+        }
+}
+
 void memclear_string(avm_memcell* m){
         assert(m->data.strVal);
         free(m->data.strVal);
@@ -20,15 +29,6 @@ void memclear_string(avm_memcell* m){
 void memclear_table(avm_memcell* m){
         assert(m->data.tableVal);
         avm_tabledecrefcounter(m->data.tableVal);
-}
-
-void avm_memcellclear(avm_memcell* m){
-        if(m->type!=undef_m){
-                memclear_func_t f = memclearFuncs[m->type];
-                if(f)
-                        (*f)(m);
-                m->type=undef_m;
-        }
 }
 
 tostring_func_t tostringFuncs[] = {
@@ -100,22 +100,6 @@ std::string undef_tostring(avm_memcell* m){
         return "undefined";
 }
 
-arithmetic_func_t arithmeticFuncs[] = {
-        add_impl,
-        sub_impl,
-        mul_impl,
-        div_impl,
-        mod_impl
-};
-
-double add_impl(double x,double y){return x+y;}
-double sub_impl(double x,double y){return x-y;}
-double mul_impl(double x,double y){return x*y;}
-double div_impl(double x,double y){
-        if(!y) avm_error("Invalid operation");
-        return x/y;
-}
-
 double mod_impl(double x,double y){
         if(!y) avm_error("Invalid operation");
         return (unsigned)x%(unsigned)y;
@@ -134,6 +118,11 @@ tobool_func_t toboolFuncs[] = {
 
 };
 
+unsigned char avm_tobool(avm_memcell* m){
+        assert(m->type >=0  && m->type < undef_m);
+        return (*toboolFuncs[m->type])(m);
+}
+
 unsigned char number_tobool(avm_memcell* m){return (m->data.numVal) ? 1 : 0;}
 unsigned char string_tobool(avm_memcell* m){return (m->data.strVal && !m->data.strVal[0]) ? 0 : 1;}
 unsigned char bool_tobool(avm_memcell* m){return m->data.boolVal;}
@@ -142,11 +131,6 @@ unsigned char userfunc_tobool(avm_memcell* m){return 1;}
 unsigned char libfunc_tobool(avm_memcell* m){return 1;}
 unsigned char nil_tobool(avm_memcell* m){return 0;}
 unsigned char undef_tobool(avm_memcell* m){return 0;}
-
-unsigned char avm_tobool(avm_memcell* m){
-        assert(m->type >=0  && m->type < undef_m);
-        return (*toboolFuncs[m->type])(m);
-}
 
 check_eq_func_t check_eqFuncs[] = {
         number_check_eq,
@@ -221,4 +205,20 @@ unsigned char string_check_ge(avm_memcell* rv1,avm_memcell* rv2){
 }
 unsigned char table_check_ge(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.tableVal->total >= rv2->data.tableVal->total);
+}
+
+arithmetic_func_t arithmeticFuncs[] = {
+        add_impl,
+        sub_impl,
+        mul_impl,
+        div_impl,
+        mod_impl
+};
+
+double add_impl(double x,double y){return x+y;}
+double sub_impl(double x,double y){return x-y;}
+double mul_impl(double x,double y){return x*y;}
+double div_impl(double x,double y){
+        if(!y) avm_error("Invalid operation");
+        return x/y;
 }

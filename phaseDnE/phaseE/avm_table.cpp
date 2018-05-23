@@ -47,6 +47,7 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
         avm_table_bucket** p;
         avm_table_bucket *tmp,*ptr;
         unsigned pos;
+        
         if(value->type == nil_m){
                 deleteKey(table,key);
                 table->total--;
@@ -174,34 +175,62 @@ void mydelete(avm_table_bucket* p,avm_memcell* key){
         while(tmp){
                 check_eq_func_t f = check_eqFuncs[key->type];
                 if(f && (*f)(&tmp->key,key)){
-                        if(prev)prev->next = tmp->next;
-                        else p = tmp->next;
+                        if(prev){
+                                prev->next = tmp->next;
+                        }
+                        else{ 
+                                p = tmp->next;
+                        }
+
                         break;
                 }
                 prev=tmp;
                 tmp=tmp->next;
         }
+
 }
 
 void deleteKey(avm_table* table,avm_memcell* key){
         if(key->type == number_m){
                 mydelete(table->numIndexed[hashFunction(key->data.numVal)],key);
-        }
-        else if (key->type == string_m){
+        }else 
+        if (key->type == string_m){
                 mydelete(table->strIndexed[hashFunction(key->data.strVal)],key);
-        }else if(key->type==userfunc_m ){
-                mydelete(table->userfuncIndexed[hashFunction(key->data.funcVal)],key);
-        }else if(key->type==libfunc_m ){
+        }else 
+        if(key->type==userfunc_m ){
+                mydelete(table->userfuncIndexed[hashFunction(avm_getfuncinfo(key->data.funcVal)->address)],key);
+        }else 
+        if(key->type==libfunc_m ){
                 mydelete(table->libfuncIndexed[hashFunction(key->data.libfuncVal)],key);
-        }else if(key->type==bool_m ){
+        }else 
+        if(key->type==bool_m ){
                 mydelete(table->boolIndexed[hashFunction(key->data.boolVal)],key);
-        }else if(key->type==table_m ){
+        }else 
+        if(key->type==table_m ){
                 mydelete(table->tableIndexed[hashFunction(key->data.tableVal)],key);
         }                             
         else{
                 avm_error("Invalid type of key");
                 return;
-        }        
+        } 
+
+       avm_table_bucket* tmp = table->head,*prev=NULL;
+       while(tmp){
+                check_eq_func_t f = check_eqFuncs[key->type];
+                if(f && (*f)(&tmp->key,key)){
+                        if(prev){
+                                prev->nextOrder = tmp->nextOrder;
+                        }
+                        else{ 
+                                table->head = tmp->nextOrder;
+                        }
+
+                        free(tmp);
+                }
+                prev = tmp;
+                tmp = tmp->nextOrder;
+       }
+               
 }
 
 std::string hash_toString(avm_table_bucket** p){

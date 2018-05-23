@@ -59,9 +59,10 @@ void avm_warning(const char*,...);
 void avm_error(const char*,...);
 void avm_callsaveenviroment(void);
 
-void copy_to(avm_table*,avm_table*);
-void copy_tohash(avm_table_bucket**,avm_table_bucket**);
 void copy_to_from(avm_table*,avm_table*);
+void copy_tohash(avm_table_bucket**,avm_table_bucket**);
+
+void copy_to(avm_table*,avm_table*);
 void copy_deeptohash(avm_table_bucket**,avm_table_bucket**);
 void avm_assign(avm_memcell*,avm_memcell*);
 
@@ -73,6 +74,7 @@ void avm_initialize(void);
 void execute_cycle(void);
 
 void test_global(vmarg);
+void expand_instr(void);
 void print_stack();
 void print_info();
 

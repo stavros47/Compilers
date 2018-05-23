@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
 		
 		while(!infile.eof()){
 				if(totalInstr == codeSize++)
-					expand();
+					expand_instr();
 				infile>>output;
 				instruction* p = code + currLine++;
 				p->srcLine = (unsigned)std::stoi(output);
