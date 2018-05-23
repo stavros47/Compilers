@@ -2,7 +2,7 @@
 #include <stdarg.h>
 avm_memcell stack[AVM_STACKSIZE];
 
-std::string typeStrings[] = {
+const char* typeStrings[] = {
         "number_m",
         "string_m",
         "bool_m",

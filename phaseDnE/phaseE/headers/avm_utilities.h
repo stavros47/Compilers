@@ -31,7 +31,7 @@ struct avm_memcell;
 struct avm_table;
 struct avm_table_bucket;
 
-extern std::string typeStrings[];
+extern const char* typeStrings[];
 extern avm_memcell stack[];
 
 struct avm_memcell{

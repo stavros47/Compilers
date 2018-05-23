@@ -58,7 +58,7 @@ void libfunc_typeof(void){
 	}else{
 		avm_memcellclear(&retval);
 		retval.type = string_m;
-		retval.data.strVal = strdup(typeStrings[avm_getactual(0)->type].c_str());
+		retval.data.strVal = strdup(typeStrings[avm_getactual(0)->type]);
 	}
 }
 

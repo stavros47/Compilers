@@ -23,7 +23,7 @@ void execute_tablegetelem(instruction* instr){
         avm_memcellclear(lv);
         lv->type = nil_m;
         if(table->type !=table_m){
-                avm_error("illegal use of type %s as table!!",typeStrings[table->type].c_str());
+                avm_error("illegal use of type %s as table!!",typeStrings[table->type]);
                 executionFinished=1;
         }else{
                 avm_memcell* content = avm_tablegetelem(table->data.tableVal,key);
