@@ -6,12 +6,16 @@ unsigned totalStrings = 0;
 unsigned totalNumConsts = 0;
 unsigned totalLibFuncs = 0;
 unsigned totalUserFuncs = 0;
+
 std::vector<std::string> strConsts;
 std::vector<double> numConsts;
 std::vector<std::string> libFuncs;
 std::vector<userfunc*> userFuncs;
+
 instruction* instructions;
-std::fstream instructionfile;
+std::ofstream instructionfile;
+std::ofstream binaryFile;
+std::stringstream inStream;
 
 unsigned consts_newstring (std::string s){
     //s= "\"" + s + "\"";
@@ -58,12 +62,15 @@ unsigned userfuncs_newfunc (Symbol* sym){
     
     return totalUserFuncs++;
 }
+
 template <typename T>
 void vector_to_file(std::vector<T> constArray, std::string name){
     //instructionfile <<name<< std::endl;
     instructionfile<<constArray.size() << std::endl;
     for(int i=0;i<constArray.size();i++){
           instructionfile<<constArray[i]<<"\n";
+          inStream<<constArray[i]<<"\n";
+
     }
 }
 
@@ -73,6 +80,7 @@ void vector_to_file<userfunc*>(std::vector<userfunc*> constArray, std::string na
     instructionfile<<constArray.size() << std::endl;
     for(int i=0;i<constArray.size();i++){
           instructionfile<<constArray[i]->id<<" "<<constArray[i]->address<<" "<<constArray[i]->localSize<<"\n";
+          inStream<<constArray[i]->id<<" "<<constArray[i]->address<<" "<<constArray[i]->localSize<<"\n";
     }
 }
 
@@ -85,10 +93,21 @@ void make_instructions(quad* quadsArray){
 
     generate_output();
 }
+
 void generate_output(){
 
+    std::string openWarning; 
+
     instructionfile.open("instructionfile.txt",std::ios::out);
+    openWarning = (!binaryFile.is_open()) ? "ERROR: Text file did not open\n" : "Text file opened!\n";
+    std::cout<<openWarning;
     instructionfile << MAGIC_NUMBER << std::endl;
+
+    binaryFile.open("instructions.abc", std::ios::out | std::ios::binary); // | std::ios::app //append ?
+    openWarning = (!binaryFile.is_open()) ? "ERROR: Binary file did not open\n" : "Binary file opened!\n";
+    std::cout<<openWarning;
+    inStream << MAGIC_NUMBER << std::endl;
+    
     //Write arrays
     vector_to_file(strConsts,"strConsts");
     vector_to_file(numConsts,"numConsts");
@@ -97,8 +116,15 @@ void generate_output(){
    
     instructionfile <<"\n"<<instr_to_String()<<std::endl;
 
+    inStream <<"\n"<<instr_to_String()<<std::endl;
+    binaryFile.write((char*)inStream.str().c_str(),inStream.str().size());
+
+    
     instructionfile.close();
+    binaryFile.close();
 }
+
+
 
 unsigned nextinstructionlabel(){
     return currInstruction;
