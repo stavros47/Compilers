@@ -161,9 +161,15 @@ expr* newexpr_constnum_e(double x){
 
 expr* newexpr_conststring_e(char* str){
 	expr* e = newexpr(conststring_e);
-	e->strConst = strdup(str);
+	e->strConst = strdup(str); 
 	return e;
 
+}
+
+expr* newexpr_lib_e(std::string str){
+	expr* e = newexpr(libraryfunc_e);
+	e->sym->name = str;
+	return e;
 }
 
 bool isValid_arithop(expr* arg){
@@ -256,6 +262,14 @@ expr* member_item(expr* e1,char* e2){
 		return item;
 }
 
+expr* member_item(expr* e1,std::string e2){
+		e1 = emit_iftableitem(e1);
+		expr* item = newexpr(tableitem_e);
+		item->sym = e1->sym;
+		item->index=newexpr_lib_e(e2);
+		return item;
+}
+
 expr* member_item(expr* e1,double e2){
 		e1 = emit_iftableitem(e1);
 		expr* item = newexpr(tableitem_e);
@@ -263,6 +277,16 @@ expr* member_item(expr* e1,double e2){
 		item->index=newexpr_constnum_e(e2);
 		return item;
 }
+
+expr* member_item(expr* e1,unsigned char e2){
+		e1 = emit_iftableitem(e1);
+		expr* item = newexpr(tableitem_e);
+		item->sym = e1->sym;
+		item->index=newexpr_constbool_e(e2);
+		return item;
+}
+
+
 
 expr* emit_iftableitem(expr* e){
 	if(e->type != tableitem_e)
@@ -313,7 +337,7 @@ std::string expr_toString(expr* temp){
 		case programfunc_e: 
 		case newtable_e:
 		case boolexpr_e:
-		case tableitem_e: return temp->sym->name;
+		case tableitem_e: std::cout<<"ONOMA: "<< temp->type <<std::endl; return temp->sym->name;
 		case constnum_e:	if((fmod(temp->numConst,1)==0)){
 						return std::to_string((int)temp->numConst);
 					}else {

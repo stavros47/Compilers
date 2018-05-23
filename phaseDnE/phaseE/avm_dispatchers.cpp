@@ -150,7 +150,7 @@ unsigned char avm_tobool(avm_memcell* m){
 check_eq_func_t check_eqFuncs[] = {
         number_check_eq,
         string_check_eq,
-        0,
+        bool_check_eq,
         table_check_eq,
         userfunc_check_eq,
         libfunc_check_eq,
@@ -164,6 +164,9 @@ unsigned char number_check_eq(avm_memcell* rv1,avm_memcell* rv2){
 }
 unsigned char string_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return unsigned(!strcmp(rv1->data.strVal,rv2->data.strVal));
+}
+unsigned char bool_check_eq(avm_memcell* rv1,avm_memcell* rv2){
+        return (avm_tobool(rv1) == avm_tobool(rv2));
 }
 unsigned char table_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.tableVal->total == rv2->data.tableVal->total);
