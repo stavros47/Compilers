@@ -75,15 +75,13 @@ void libfunc_totalarguments(void){
 	}
 }
 
-void libfunc_input(void){
-        std::string input;       
-        avm_memcellclear(&retval);
+void libfunc_input(void){        
+        std::string input;        
         std::cin >> input;
-        std::istringstream iss(input);
-        double d;
+        avm_memcellclear(&retval);
+
         int flag = 0; //0 string - 1 double - 2 integer -3 bool - 4 nil
-        iss >> std::noskipws >> d; // noskipws considers leading whitespace invalid        
-      
+     
         if(flag == 0){ //Integer
                 for(int i = 0; i < input.size();i++){
                         flag = (std::isdigit(input[i])) ? 2 : 0;
@@ -93,18 +91,27 @@ void libfunc_input(void){
                         retval.type = number_m;
                         retval.data.numVal = std::stoi(input);
                         return;
-                }
-              
-        
-        }else if(iss.eof() && !iss.fail()){
-                //Double - Check the entire string was consumed and if either failbit or badbit is set         
+                }  
+        }
+
+        std::istringstream iss(input);
+        if(iss.eof()){
+                avm_error("parsing input - EOF!\n");
+        }
+
+        /* - Push stream into double. if it fails failbit is set. 
+           - noskipws considers leading whitespace invalid  */
+        double d;
+        iss >> std::noskipws >> d; //
+        if(!iss.fail()){  
                 flag = 1;
                 retval.type = number_m;
-                retval.data.numVal = std::stod(input);
+                retval.data.numVal = d;//std::stod(d);
                 return;
-        }       
+        }      
 
         if(flag == 0){
+               
                 if (input.find("true") != std::string::npos || input.find("TRUE") != std::string::npos) {
                         flag = 3;
                         retval.type = bool_m;
@@ -119,7 +126,7 @@ void libfunc_input(void){
                         flag = 4;
                         retval.type = nil_m;
                         return;
-                }else{
+                }else{                       
                         retval.type = string_m;
                         retval.data.strVal = strdup(const_cast<char*>(input.c_str()));
                         return;
