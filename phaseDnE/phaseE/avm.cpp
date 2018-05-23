@@ -15,3 +15,4 @@ unsigned	    currLine = 1;
 unsigned	    codeSize = 0;
 instruction*	code = (instruction*) 0;
 
+unsigned totalInstr=0;

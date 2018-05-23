@@ -42,9 +42,9 @@ void execute_jge(instruction* instr){
         avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
         avm_memcell* rv2 = avm_translate_operand(&instr->arg2,&bx);
 
-        assert(rv1->type == number_m && rv2->type == number_m);
-        assert(rv1->type == string_m && rv2->type == string_m);
-        assert(rv1->type == table_m && rv2->type == table_m);
+        // assert(rv1->type == number_m && rv2->type == number_m);
+        // assert(rv1->type == string_m && rv2->type == string_m);
+        // assert(rv1->type == table_m && rv2->type == table_m);
 
         unsigned char result = 0;
 

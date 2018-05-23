@@ -14,7 +14,7 @@ instruction* instructions;
 std::fstream instructionfile;
 
 unsigned consts_newstring (std::string s){
-    //s= "\"" + s + "\"";
+    s= "\"" + s + "\"";
     std::vector<std::string>::iterator it = std::find(strConsts.begin(), strConsts.end(), s);
     if(it == strConsts.end()){
     	strConsts.push_back(s);
@@ -60,7 +60,6 @@ unsigned userfuncs_newfunc (Symbol* sym){
 }
 template <typename T>
 void vector_to_file(std::vector<T> constArray, std::string name){
-    //instructionfile <<name<< std::endl;
     instructionfile<<constArray.size() << std::endl;
     for(int i=0;i<constArray.size();i++){
           instructionfile<<constArray[i]<<"\n";
@@ -69,7 +68,6 @@ void vector_to_file(std::vector<T> constArray, std::string name){
 
 template <>
 void vector_to_file<userfunc*>(std::vector<userfunc*> constArray, std::string name){
-   // instructionfile <<name<< std::endl;
     instructionfile<<constArray.size() << std::endl;
     for(int i=0;i<constArray.size();i++){
           instructionfile<<constArray[i]->id<<" "<<constArray[i]->address<<" "<<constArray[i]->localSize<<"\n";
@@ -87,7 +85,7 @@ void make_instructions(quad* quadsArray){
 }
 void generate_output(){
 
-    instructionfile.open("instructionfile.txt",std::ios::out);
+    instructionfile.open("alpha.abc",std::ios::out);
     instructionfile << MAGIC_NUMBER << std::endl;
     //Write arrays
     vector_to_file(strConsts,"strConsts");
@@ -161,7 +159,6 @@ void make_operand(expr* e, vmarg* arg){
    
 
 }
-
 
 void make_numberoperand(vmarg* arg, double val){
     arg->val = consts_newnumber(val);
@@ -297,7 +294,6 @@ void generate_CALL(quad* quad) {
 }
 
 void generate_GETRETVAL(quad* quad) {
-	//quad->label = nextinstructionlabel();
 	instruction t;
 	t.opcode = assign_v;
     if(quad->result){
@@ -312,13 +308,6 @@ void generate_GETRETVAL(quad* quad) {
 }
 
 void generate_FUNCSTART (quad* quad){
-    // Symbol* f = quad->result->sym;
-    // f->label = nextinstructionlabel();
-    // quad->label = nextinstructionlabel();
-
-    // userfunctions.add(f->name,f->function->taddress,f->function->totallocals);
-    // push(label,f);
-
     instruction t;
     t.opcode = funcenter_v;
     make_operand(quad->result,&t.result);
@@ -326,7 +315,6 @@ void generate_FUNCSTART (quad* quad){
     emit_instruction(t);
 }
 void generate_RETURN (quad* quad){
-    //quad->taddress = nextinstructionlabel();
     
     instruction t;
     t.opcode = assign_v;
@@ -338,7 +326,6 @@ void generate_RETURN (quad* quad){
     }
     t.arg2.type = nil_a;   
     
-     //t.arg1.type = t.arg2.type = nil_a;
     emit_instruction(t); 
 
 }
@@ -391,17 +378,14 @@ std::string vmarg_toString(vmarg temp){
 	        case retval_a:  return out+="0 "; //??
 
 		case number_a:  out += std::to_string(temp.val) + " ";
-//        	                out += std::to_string(numConsts[temp.val]);
 	                        return out; 
 
 		case userfunc_a: out += std::to_string(temp.val) + " ";
-//        	                 out += userFuncs[temp.val]->id;
 	                         return out;
 
 		case libfunc_a:	 return out+=std::to_string(temp.val);
 
 		case string_a:	out += std::to_string(temp.val) + " ";
-//        	                out += strConsts[temp.val];
                 	        return out;
 
 	        case nil_a: 	return out+="0 ";
@@ -417,7 +401,7 @@ std::string instr_to_String(){
 		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<" ";
 
 		int labelWidth = 60;
-		buffer<<std::setw(width)<<instructions[i].opcode;/*vmopcode_toString(instructions[i].opcode);*/
+		buffer<<std::setw(width)<<instructions[i].opcode;
 
 		buffer<<std::setw(15)<<vmarg_toString(instructions[i].result);
 		labelWidth -= 15;
