@@ -454,15 +454,16 @@ member:		lvalue'.'ID	{
 						}else{
 							$$ = member_item($1,const_cast<char*>($3->sym->name.c_str()));
 							if($3->type==libraryfunc_e){
-								expr* e = newexpr(libraryfunc_e);
+								expr* e = newexpr_libfunc_e($3->sym);
 								$$->index = e;
-								
-							}
+							}else
 							if($3->type==programfunc_e){
-									expr* e = newexpr(programfunc_e);
-									e->strConst = strdup(const_cast<char*>($3->sym->name.c_str())); 
-									$$->index = e;
-									$$->sym->name = $3->sym->name;
+								expr* e = newexpr_programfunc_e($3->sym);
+								$$->index = e;
+							}else
+							if($3->type = tableitem_e){
+								expr* e = newexpr_tableitem_e($3->sym);
+								$$->index = e;
 							}
 						}
 

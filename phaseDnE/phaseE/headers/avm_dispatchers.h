@@ -5,10 +5,10 @@
 typedef void (*memclear_func_t)(avm_memcell*);
 extern memclear_func_t memclearFuncs[];
 
+void avm_memcellclear(avm_memcell*);
+
 void memclear_string(avm_memcell*);
 void memclear_table(avm_memcell*);
-
-void avm_memcellclear(avm_memcell*);
 
 /***********TOSTRING*************************/
 typedef std::string (*tostring_func_t)(avm_memcell*);
@@ -29,6 +29,8 @@ std::string undef_tostring(avm_memcell*);
 typedef unsigned char (*tobool_func_t)(avm_memcell*);
 extern tobool_func_t toboolFuncs[];
 
+unsigned char avm_tobool(avm_memcell*);
+
 unsigned char number_tobool(avm_memcell*);
 unsigned char string_tobool(avm_memcell*);
 unsigned char bool_tobool(avm_memcell*);
@@ -37,9 +39,6 @@ unsigned char userfunc_tobool(avm_memcell*);
 unsigned char libfunc_tobool(avm_memcell*);
 unsigned char nil_tobool(avm_memcell*);
 unsigned char undef_tobool(avm_memcell*);
-
-unsigned char avm_tobool(avm_memcell*);
-
 
 /*******************Compare*************************/
 /*******************EQUAL*************************/
@@ -60,8 +59,6 @@ extern check_le_func_t check_leFuncs[];
 unsigned char number_check_le(avm_memcell* first,avm_memcell* second);
 unsigned char string_check_le(avm_memcell*,avm_memcell*);
 unsigned char table_check_le(avm_memcell*,avm_memcell*);
-unsigned char userfunc_check_le(avm_memcell*,avm_memcell*);
-unsigned char libfunc_check_le(avm_memcell*,avm_memcell*);
 
 /*******************GREATER EQUAL*************************/
 typedef unsigned char (*check_ge_func_t)(avm_memcell*,avm_memcell*);
@@ -70,8 +67,6 @@ extern check_ge_func_t check_geFuncs[];
 unsigned char number_check_ge(avm_memcell* first,avm_memcell* second);
 unsigned char string_check_ge(avm_memcell*,avm_memcell*);
 unsigned char table_check_ge(avm_memcell*,avm_memcell*);
-unsigned char userfunc_check_ge(avm_memcell*,avm_memcell*);
-unsigned char libfunc_check_ge(avm_memcell*,avm_memcell*);
 
 /******************ARITHMETIC**********************/
 typedef double (*arithmetic_func_t)(double x,double y);

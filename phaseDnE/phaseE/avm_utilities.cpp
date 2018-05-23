@@ -2,7 +2,7 @@
 #include <stdarg.h>
 avm_memcell stack[AVM_STACKSIZE];
 
-std::string typeStrings[] = {
+const char* typeStrings[] = {
         "number_m",
         "string_m",
         "bool_m",
@@ -150,7 +150,41 @@ void avm_callsaveenviroment(void){
         avm_pushenvvalue(top + totalActuals + 2);        
 }
 
+void copy_to_from(avm_table* dest,avm_table* src){
+        copy_tohash(dest->numIndexed,src->numIndexed);
+        copy_tohash(dest->strIndexed,src->strIndexed);
+        copy_tohash(dest->userfuncIndexed,src->userfuncIndexed);
+        copy_tohash(dest->libfuncIndexed,src->libfuncIndexed);     
+        copy_tohash(dest->boolIndexed,src->boolIndexed);
+        copy_tohash(dest->tableIndexed,src->tableIndexed);
+        dest -> refCounter = src -> refCounter;
+        dest -> total = src -> total;
+        dest -> head = src -> head;
+}
+
 void copy_tohash(avm_table_bucket** dest,avm_table_bucket** src){
+        for(unsigned i = 0; i< AVM_TABLE_HASHSIZE;i++){
+                avm_table_bucket* b=src[i];
+                while(b){
+                        insert(dest,i,b->key,b->value);
+                        b=b->next; 
+                }
+        }
+}
+
+void copy_to(avm_table* dest,avm_table* src){
+        copy_deeptohash(dest->numIndexed,src->numIndexed);
+        copy_deeptohash(dest->strIndexed,src->strIndexed);
+        copy_deeptohash(dest->boolIndexed,src->boolIndexed);
+        copy_deeptohash(dest->userfuncIndexed,src->userfuncIndexed);
+        copy_deeptohash(dest->libfuncIndexed,src->libfuncIndexed);
+        copy_tohash(dest->tableIndexed,src->tableIndexed);
+        dest -> refCounter = src -> refCounter;
+        dest -> total = src -> total;
+        dest -> head = src -> head;
+}
+
+void copy_deeptohash(avm_table_bucket** dest,avm_table_bucket** src){
         for(unsigned i = 0; i< AVM_TABLE_HASHSIZE;i++){
                 avm_table_bucket* b=src[i];
                 avm_table_bucket* dest_b=dest[i];
@@ -162,25 +196,23 @@ void copy_tohash(avm_table_bucket** dest,avm_table_bucket** src){
                                 dest_b->value.data.libfuncVal=strdup(b->value.data.libfuncVal);                           
                         }else if(b->value.type == table_m){
                                 copy_to(dest_b->value.data.tableVal,b->value.data.tableVal);
+                        }else{
+                                avm_assign(&dest_b->value,&b->value);
                         }
 
                         if(b->key.type == string_m){
                                 dest_b->key.data.strVal=strdup(b->key.data.strVal);                                                        
                         }else if(b->value.type == libfunc_m){
                                 dest_b->key.data.libfuncVal=strdup(b->key.data.libfuncVal);                           
+                        }else if(b->key.type == table_m){
+                                copy_to(dest_b->key.data.tableVal,b->key.data.tableVal);                                
+                        }else{
+                                avm_assign(&dest_b->key,&b->key);                                
                         }
 
                         b=b->next; 
                 }
         }
-}
-
-void copy_to(avm_table* dest,avm_table* src){
-        copy_tohash(dest->numIndexed,src->numIndexed);
-        copy_tohash(dest->strIndexed,src->strIndexed);
-        // copy_tohash(dest->boolIndexed,src->boolIndexed);
-        // copy_tohash(dest->userfuncIndexed,src->userfuncindexed);
-        // copy_tohash(dest->libfuncIndexed,src->libfuncIndexed);
 }
 
 void avm_assign(avm_memcell* lv,avm_memcell* rv){
@@ -254,8 +286,8 @@ void avm_initialize(void){
         avm_registerlibfunc("sqrt",libfunc_sqrt);
         avm_registerlibfunc("strtonum",libfunc_strtonum);
         avm_registerlibfunc("objectmemberkeys",libfunc_objectmemberkeys);
+        avm_registerlibfunc("objectcopy",libfunc_objectcopy);
 }
-
 
 void execute_cycle(void){
         if(executionFinished){
@@ -289,7 +321,7 @@ void test_global(vmarg r){
 	}
 }
 
-void expand(void){
+void expand_instr(void){
 	instruction* p = (instruction*)malloc(I_NEW_SIZE);
 	if(code){
 		std::memcpy(p,code,I_CURR_SIZE);

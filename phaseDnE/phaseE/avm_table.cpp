@@ -10,6 +10,7 @@ avm_table* avm_tablenew(void){
         avm_table_bucketsinit(t->userfuncIndexed);
         avm_table_bucketsinit(t->libfuncIndexed);
         avm_table_bucketsinit(t->boolIndexed);
+        avm_table_bucketsinit(t->tableIndexed);
         return t;
 }
 
@@ -19,25 +20,25 @@ void avm_table_destroy(avm_table* t){
         avm_tablebucketdestroy(t->userfuncIndexed);
         avm_tablebucketdestroy(t->libfuncIndexed);
         avm_tablebucketdestroy(t->boolIndexed);
+        avm_tablebucketdestroy(t->tableIndexed);
         free(t);
 }
 
 avm_memcell* avm_tablegetelem(avm_table* table,avm_memcell* key){
-                std::cout<<"mpeno stin GET"<<std::endl;
-                std::cout<<"to type : "<<key->type<<std::endl;
         
         if(key->type==number_m){
                 return get(table->numIndexed[hashFunction(key->data.numVal)],key);
         }else if(key->type==string_m){
                 return get(table->strIndexed[hashFunction(key->data.strVal)],key);
         }else if(key->type==userfunc_m ){
-                return get(table->userfuncIndexed[hashFunction(key->data.funcVal)],key);
+                return get(table->userfuncIndexed[hashFunction(avm_getfuncinfo(key->data.funcVal)->address)],key);
         }else if(key->type==libfunc_m ){
                 return get(table->libfuncIndexed[hashFunction(key->data.libfuncVal)],key);
         }else if(key->type==bool_m ){
                 return get(table->boolIndexed[hashFunction(key->data.boolVal)],key);
+        }else if(key->type==table_m){
+                return get(table->tableIndexed[hashFunction(key->data.tableVal)],key);
         }
-
         avm_error("Invalid type of key");
         return (avm_memcell*)0;  
 }
@@ -46,6 +47,7 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
         avm_table_bucket** p;
         avm_table_bucket *tmp,*ptr;
         unsigned pos;
+        
         if(value->type == nil_m){
                 deleteKey(table,key);
                 table->total--;
@@ -54,25 +56,32 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
 
         if(key->type == number_m){
                 tmp=insert(table->numIndexed,hashFunction(key->data.numVal),*key,*value);
-        }
-        else if (key->type == string_m){
+        }else
+        if (key->type == string_m){
                 tmp=insert(table->strIndexed,hashFunction(key->data.strVal),*key,*value);
-        }else if(key->type==userfunc_m ){
-                tmp=insert(table->userfuncIndexed,hashFunction(key->data.funcVal),*key,*value);
-        }else if(key->type==libfunc_m ){
+        }else
+        if(key->type==userfunc_m){
+                tmp=insert(table->userfuncIndexed,hashFunction(avm_getfuncinfo(key->data.funcVal)->address),*key,*value);
+        }else
+        if(key->type==libfunc_m){
                 tmp=insert(table->libfuncIndexed,hashFunction(key->data.libfuncVal),*key,*value);
-        }else if(key->type==bool_m ){
+        }else
+        if(key->type==bool_m){
                 tmp=insert(table->boolIndexed,hashFunction(key->data.boolVal),*key,*value);
-        }                                  
+        }else
+        if(key->type == table_m){
+                tmp=insert(table->tableIndexed,hashFunction(key->data.tableVal),*key,*value);
+        }
         else{
                 avm_error("Invalid type of key");
                 return;
         }
         
-        table->total++;
-
-        tmp->nextOrder = table->head;
-        table->head = tmp;
+        if(tmp){
+                table->total++;
+                tmp->nextOrder = table->head;
+                table->head = tmp;
+        }
 }
 
 void avm_tableincrefcounter(avm_table* t){
@@ -103,6 +112,10 @@ void avm_tablebucketdestroy(avm_table_bucket** p){
         }
 }
 
+unsigned hashFunction(avm_table* key){
+        return hashFunction(key->total + key->refCounter);
+}
+
 unsigned hashFunction(unsigned key){
         return key%AVM_TABLE_HASHSIZE;
 }
@@ -116,6 +129,12 @@ unsigned hashFunction(const char* key){
 }
 
 avm_table_bucket* insert(avm_table_bucket** p,unsigned pos, avm_memcell key, avm_memcell value){
+        avm_memcell* m = get(p[pos],&key);
+        if(m->type!=nil_m){
+                avm_assign(m,&value);
+                return NULL;
+        }
+                
         avm_table_bucket* ptr = new avm_table_bucket();
         ptr->key = key;
         ptr->value = value;
@@ -136,9 +155,9 @@ avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
         while(tmp){
                 check_eq_func_t f = check_eqFuncs[key->type];
                 if(f){
-                        
-                        if((*f)(&tmp->key,key))
+                        if((*f)(&tmp->key,key)){
                                 return &tmp->value;
+                        }
                 }else{
                         assert(0);
                 }
@@ -156,32 +175,62 @@ void mydelete(avm_table_bucket* p,avm_memcell* key){
         while(tmp){
                 check_eq_func_t f = check_eqFuncs[key->type];
                 if(f && (*f)(&tmp->key,key)){
-                        if(prev)prev->next = tmp->next;
-                        else p = tmp->next;
+                        if(prev){
+                                prev->next = tmp->next;
+                        }
+                        else{ 
+                                p = tmp->next;
+                        }
+
                         break;
                 }
                 prev=tmp;
                 tmp=tmp->next;
         }
+
 }
 
 void deleteKey(avm_table* table,avm_memcell* key){
         if(key->type == number_m){
                 mydelete(table->numIndexed[hashFunction(key->data.numVal)],key);
-        }
-        else if (key->type == string_m){
+        }else 
+        if (key->type == string_m){
                 mydelete(table->strIndexed[hashFunction(key->data.strVal)],key);
-        }else if(key->type==userfunc_m ){
-                mydelete(table->userfuncIndexed[hashFunction(key->data.funcVal)],key);
-        }else if(key->type==libfunc_m ){
+        }else 
+        if(key->type==userfunc_m ){
+                mydelete(table->userfuncIndexed[hashFunction(avm_getfuncinfo(key->data.funcVal)->address)],key);
+        }else 
+        if(key->type==libfunc_m ){
                 mydelete(table->libfuncIndexed[hashFunction(key->data.libfuncVal)],key);
-        }else if(key->type==bool_m ){
+        }else 
+        if(key->type==bool_m ){
                 mydelete(table->boolIndexed[hashFunction(key->data.boolVal)],key);
+        }else 
+        if(key->type==table_m ){
+                mydelete(table->tableIndexed[hashFunction(key->data.tableVal)],key);
         }                             
         else{
                 avm_error("Invalid type of key");
                 return;
-        }        
+        } 
+
+       avm_table_bucket* tmp = table->head,*prev=NULL;
+       while(tmp){
+                check_eq_func_t f = check_eqFuncs[key->type];
+                if(f && (*f)(&tmp->key,key)){
+                        if(prev){
+                                prev->nextOrder = tmp->nextOrder;
+                        }
+                        else{ 
+                                table->head = tmp->nextOrder;
+                        }
+
+                        free(tmp);
+                }
+                prev = tmp;
+                tmp = tmp->nextOrder;
+       }
+               
 }
 
 std::string hash_toString(avm_table_bucket** p){
