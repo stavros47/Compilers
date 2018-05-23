@@ -60,8 +60,7 @@ std::string number_tostring(avm_memcell* m){
 }
 
 std::string string_tostring(avm_memcell* m){
-        std::string s = m->data.strVal;
-        return "\"" + s + "\"";
+        return  m->data.strVal;
 }
 
 std::string bool_tostring(avm_memcell* m){
@@ -148,7 +147,7 @@ unsigned char number_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.numVal == rv2->data.numVal);
 }
 unsigned char string_check_eq(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(!strcmp(rv1->data.strVal,rv2->data.strVal));
+        return (unsigned(!strcmp(rv1->data.strVal,rv2->data.strVal)));
 }
 unsigned char bool_check_eq(avm_memcell* rv1,avm_memcell* rv2){
         return (avm_tobool(rv1) == avm_tobool(rv2));
@@ -179,7 +178,7 @@ unsigned char number_check_le(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.numVal <= rv2->data.numVal);
 }
 unsigned char string_check_le(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));//??
+        return (unsigned(strcmp(rv1->data.strVal,rv2->data.strVal)))==1 ? 0 : 1;
 }
 unsigned char table_check_le(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.tableVal->total <= rv2->data.tableVal->total);
@@ -201,7 +200,7 @@ unsigned char number_check_ge(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.numVal >= rv2->data.numVal);
 }
 unsigned char string_check_ge(avm_memcell* rv1,avm_memcell* rv2){
-        return unsigned(strcmp(rv1->data.strVal,rv2->data.strVal));//??
+        return (unsigned(strcmp(rv1->data.strVal,rv2->data.strVal)))==-1 ? 0 : 1;
 }
 unsigned char table_check_ge(avm_memcell* rv1,avm_memcell* rv2){
         return (rv1->data.tableVal->total >= rv2->data.tableVal->total);
