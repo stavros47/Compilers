@@ -448,8 +448,22 @@ member:		lvalue'.'ID	{
 						}
 						else if($3->type==conststring_e){
 							$$=member_item($1,const_cast<char*>($3->strConst.c_str()));
+						}else if($3->type==constbool_e){
+							$$=member_item($1,($3->boolConst));
+
 						}else{
 							$$ = member_item($1,const_cast<char*>($3->sym->name.c_str()));
+							if($3->type==libraryfunc_e){
+								expr* e = newexpr(libraryfunc_e);
+								$$->index = e;
+								
+							}
+							if($3->type==programfunc_e){
+									expr* e = newexpr(programfunc_e);
+									e->strConst = strdup(const_cast<char*>($3->sym->name.c_str())); 
+									$$->index = e;
+									$$->sym->name = $3->sym->name;
+							}
 						}
 
 						grammar_buffer<<"member <- lvalue [expr]"<<std::endl;

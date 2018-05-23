@@ -48,6 +48,7 @@ extern check_eq_func_t check_eqFuncs[];
 
 unsigned char number_check_eq(avm_memcell* first,avm_memcell* second);
 unsigned char string_check_eq(avm_memcell*,avm_memcell*);
+unsigned char bool_check_eq(avm_memcell*,avm_memcell*);
 unsigned char table_check_eq(avm_memcell*,avm_memcell*);
 unsigned char userfunc_check_eq(avm_memcell*,avm_memcell*);
 unsigned char libfunc_check_eq(avm_memcell*,avm_memcell*);

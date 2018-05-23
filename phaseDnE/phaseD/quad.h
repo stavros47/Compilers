@@ -98,6 +98,7 @@ expr* boolop_emits(iopcode,expr*,expr*);
 
 expr* member_item(expr*,char*);
 expr* member_item(expr*,double);
+expr* member_item(expr*,unsigned char);
 expr* emit_iftableitem(expr*);
 
 std::string iopcode_toString(iopcode);
