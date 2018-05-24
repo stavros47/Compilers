@@ -1021,7 +1021,7 @@ int main(int argc,char** argv){
 	error_buffer.close();
 	grammar_buffer.close();
 
-	std::cout<<SymTable.allscopestoString()<<std::endl;
+	//std::cout<<SymTable.allscopestoString()<<std::endl;
 
 	std::ifstream errors("alpha_errors.txt");
 	std::string line;
@@ -1037,7 +1037,6 @@ int main(int argc,char** argv){
 		std::cout<<quads_toString()<<std::endl;
 		make_instructions(quads);
 	} 
-	
-	std::cout<<instr_to_String()<<std::endl;
+	//std::cout<<instr_to_String()<<std::endl;
 return 0;
 }

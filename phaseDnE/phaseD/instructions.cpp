@@ -7,12 +7,16 @@ unsigned totalStrings = 0;
 unsigned totalNumConsts = 0;
 unsigned totalLibFuncs = 0;
 unsigned totalUserFuncs = 0;
+
 std::vector<std::string> strConsts;
 std::vector<double> numConsts;
 std::vector<std::string> libFuncs;
 std::vector<userfunc*> userFuncs;
+
 instruction* instructions;
-std::fstream instructionfile;
+std::ofstream instructionfile;
+std::ofstream binaryFile;
+std::stringstream inStream;
 
 unsigned consts_newstring (std::string s){
     std::vector<std::string>::iterator it = std::find(strConsts.begin(), strConsts.end(), s);
@@ -149,6 +153,7 @@ void generate_binary(){
     fclose(file);
 }
 
+<<<<<<< HEAD
 void instructions_tobinary(FILE* file){
 	for(int i=1;i < nextinstructionlabel();i++){
         unsigned u;
@@ -175,6 +180,7 @@ void generate_output(){
 
     instructionfile.open("alpha.txt",std::ios::out);
     instructionfile << MAGICNUMBER << std::endl;
+
     //Write arrays
     instructionfile<<"---------------------------CONSTS-------------------------\n";
     vector_to_file(strConsts,"strConsts");
@@ -185,8 +191,12 @@ void generate_output(){
     instructionfile<<"------------------------INSTRUCTIONS-----------------------\n";
     instructionfile <<"\n"<<instr_to_String()<<std::endl;
 
+    
     instructionfile.close();
+    binaryFile.close();
 }
+
+
 
 unsigned nextinstructionlabel(){
     return currInstruction;
