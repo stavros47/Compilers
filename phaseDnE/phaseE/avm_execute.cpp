@@ -32,7 +32,7 @@ void execute_arithmetic(instruction* instr){
         assert(rv1 && rv2);
 
         if(rv1->type != number_m || rv2->type != number_m){
-                avm_error("not a number in arithmetic - line: %d\n", instr->srcLine);
+                avm_error("[%d]not a number in arithmetic - line: %d\n",currLine,instr->srcLine);
                 executionFinished=1;
         }else{
                 arithmetic_func_t op = arithmeticFuncs[instr->opcode - add_v];

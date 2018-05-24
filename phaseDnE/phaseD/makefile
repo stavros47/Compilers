@@ -6,8 +6,9 @@ CC = g++
 %.o: %.cpp $(DEPS)
 	$(CC) -c $(FLAGS) $< -o $@ 
 
-../al: $(obj) $(DEPS)
+al: $(obj) $(DEPS)
 	$(CC) $(FLAGS) $^ -o $@ -g
+	cp al ../
 
 parser.cpp: parser.y
 	bison --yacc --defines --output=parser.cpp parser.y -v
@@ -17,5 +18,5 @@ scanner.cpp : scanner.l
 
 clean:	
 	rm parser.cpp scanner.cpp parser.hpp parser.output *.o
-	rm ../*.txt ../al
+	rm *.txt al ../al
 

@@ -39,7 +39,7 @@ avm_memcell* avm_tablegetelem(avm_table* table,avm_memcell* key){
         }else if(key->type==table_m){
                 return get(table->tableIndexed[hashFunction(key->data.tableVal)],key);
         }
-        avm_error("Invalid type of key");
+        avm_error("[%d]Invalid type of key\n",currLine);
         return (avm_memcell*)0;  
 }
 
@@ -73,7 +73,7 @@ void avm_tablesetelem(avm_table* table,avm_memcell* key,avm_memcell* value){
                 tmp=insert(table->tableIndexed,hashFunction(key->data.tableVal),*key,*value);
         }
         else{
-                avm_error("Invalid type of key");
+                avm_error("[%d]Invalid type of key\n",currLine);
                 return;
         }
         
@@ -210,7 +210,7 @@ void deleteKey(avm_table* table,avm_memcell* key){
                 mydelete(table->tableIndexed[hashFunction(key->data.tableVal)],key);
         }                             
         else{
-                avm_error("Invalid type of key");
+                avm_error("[%d]Invalid type of key\n",currLine);
                 return;
         } 
 

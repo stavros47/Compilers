@@ -10,17 +10,12 @@ std::vector<userfunc*> userFuncs;
 int main(int argc, char* argv[]){ 
 	if(argc<2) assert(false);
 
-	//open_txt(argv[1]);
 	read_binary(argv[1]);
 
 	avm_initialize();
 	while(!executionFinished){
-		std::cout<<"PC:"<<pc<<std::endl;
-		print_stack();
 		execute_cycle();
 	}
-
-	//remove(argv[1]);
 
 	 return 0;
 }
@@ -101,8 +96,6 @@ void read_binary(char* file){
 		test_global(p->arg2);
 		
 	}
-
-	print_info();
 
 }
 

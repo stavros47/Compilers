@@ -247,7 +247,7 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
 
 void avm_dec_top(void){
         if(!top){
-                avm_error("stack overflow\n");
+                avm_error("[%d]stack overflow\n",currLine);
                 executionFinished=1;
         }
         else

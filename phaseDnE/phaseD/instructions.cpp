@@ -153,7 +153,6 @@ void generate_binary(){
     fclose(file);
 }
 
-<<<<<<< HEAD
 void instructions_tobinary(FILE* file){
 	for(int i=1;i < nextinstructionlabel();i++){
         unsigned u;
@@ -195,8 +194,6 @@ void generate_output(){
     instructionfile.close();
     binaryFile.close();
 }
-
-
 
 unsigned nextinstructionlabel(){
     return currInstruction;
@@ -436,26 +433,26 @@ void generate_FUNCEND (quad* quad){
 
 std::string vmopcode_toString(vmopcode type){
 	switch(type){
-		case 0:	return "assign_v";
-		case 1: return "add_v";
-		case 2:	return "sub_v";
-		case 3:	return "mul_v";
-		case 4:	return "Div_v";
-		case 5:	return "mod_v";
-		case 6:	return "Not_v";
-		case 7:	return "jeg_v";
-		case 8:	return "jne_v";
-		case 9:	return "jle_v";
-		case 10:	return "jge_v";
-		case 11:	return "jlt_v";
-		case 12:	return "jgt_v";
-		case 13:	return "call_v";
-		case 14:	return "pusharg_v";
-		case 15:	return "funcenter_v";
-		case 16:	return "funcexit_v";
-		case 17:	return "newtable_v";
-		case 18:	return "tablegetelem_v";
-		case 19:	return "tablesetelem_v";
+		case 0:	return "assign";
+		case 1: return "add";
+		case 2:	return "sub";
+		case 3:	return "mul";
+		case 4:	return "Div";
+		case 5:	return "mod";
+		case 6:	return "Not";
+		case 7:	return "jeg";
+		case 8:	return "jne";
+		case 9:	return "jle";
+		case 10:	return "jge";
+		case 11:	return "jlt";
+		case 12:	return "jgt";
+		case 13:	return "call";
+		case 14:	return "pusharg";
+		case 15:	return "funcenter";
+		case 16:	return "funcexit";
+		case 17:	return "newtable";
+		case 18:	return "tablegetelem";
+		case 19:	return "tablesetelem";
 	
 		default:	assert(0);
 	}
@@ -463,23 +460,23 @@ std::string vmopcode_toString(vmopcode type){
 
 std::string vmarg_toString(vmarg temp){
     std::string out,type;
-	switch(temp.type){
-	        case label_a:   out = "(label)";break;
-        	case bool_a:	out="(bool)";break;
-	        case global_a:  out="(global)";break;
-	        case formal_a:  out="(formal)";break;
-	        case local_a :  out="(local)";break;
-		    case number_a:  out="(number)";break;
-	    	case userfunc_a: out="(userfunc)";break;
-		    case libfunc_a:	 out="(libfunc)";break;
-	    	case string_a:	 out="(string)";break;
-	        case retval_a:    out="(retval)";temp.val = 0;break;
-	        case nil_a: 	out="(nil)";temp.val = 0;break;
+	// switch(temp.type){
+	//         case label_a:   out = "(label)";break;
+    //     	case bool_a:	out="(bool)";break;
+	//         case global_a:  out="(global)";break;
+	//         case formal_a:  out="(formal)";break;
+	//         case local_a :  out="(local)";break;
+	// 	    case number_a:  out="(number)";break;
+	//     	case userfunc_a: out="(userfunc)";break;
+	// 	    case libfunc_a:	 out="(libfunc)";break;
+	//     	case string_a:	 out="(string)";break;
+	//         case retval_a:    out="(retval)";temp.val = 0;break;
+	//         case nil_a: 	out="(nil)";temp.val = 0;break;
 
-		    default: assert(0);
-	}
-    //out +=std::to_string(temp.type) + " " + std::to_string(temp.val) + " ";
-    out =std::to_string(temp.type) + " " + std::to_string(temp.val) + " ";
+	// 	    default: assert(0);
+	// }
+    if(temp.type == retval_a || temp.type == nil_a) temp.val=0;
+    out +=std::to_string(temp.type) + " " + std::to_string(temp.val) + " ";
     return out;
 }
 
@@ -488,19 +485,10 @@ std::string instr_to_String(){
 	int width = 15;
 	for(int i=1;i < nextinstructionlabel();i++){
 		buffer<<std::setw((i > 9) ? 1 : 2)<<std::to_string(i)<<" ";
-
-		int labelWidth = 60;
 		buffer<<std::setw(width)<</*"("<<vmopcode_toString(instructions[i].opcode)<<")"<<*/instructions[i].opcode;
-
 		buffer<<std::setw(15)<<vmarg_toString(instructions[i].result);
-		labelWidth -= 15;
-
 		buffer<<std::setw(15)<<vmarg_toString(instructions[i].arg1);
-		labelWidth -= 15;
-
 		buffer<<std::setw(15)<<vmarg_toString(instructions[i].arg2);
-		labelWidth -= 15;
-
 		buffer<<std::endl;
 
 	}

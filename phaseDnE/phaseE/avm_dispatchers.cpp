@@ -74,7 +74,20 @@ std::string table_tostring(avm_memcell* m){
         buffer<<"[";
         tmp = m->data.tableVal->head;
         while(tmp && tmp->nextOrder){
-                buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" },";
+                buffer<<"{ ";
+                if(tmp->key.type==string_m)
+                        buffer<<"\""<<avm_tostring(&tmp->key)<<"\"";
+                else{
+                        buffer<<avm_tostring(&tmp->key);
+                }
+                buffer<<" : ";
+                if(tmp->value.type==string_m){
+                        buffer<<"\""<<avm_tostring(&tmp->value)<<"\"";
+                }else{
+                        buffer<<avm_tostring(&tmp->value);
+                        
+                }
+                buffer<<" },";
                 tmp=tmp->nextOrder;
         }
         if(tmp)buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" }";
@@ -84,11 +97,11 @@ std::string table_tostring(avm_memcell* m){
 }
 
 std::string userfunc_tostring(avm_memcell* m){
-        return "user function:" + std::to_string(userFuncs[m->data.numVal]->address);
+        return "user function: " + std::to_string(userFuncs[m->data.numVal]->address);
 }
 
 std::string libfunc_tostring(avm_memcell* m){
-        return "library function:" + std::string{m->data.libfuncVal};
+        return "library function: " + std::string{m->data.libfuncVal};
 }
 
 std::string nil_tostring(avm_memcell* m){
@@ -98,12 +111,6 @@ std::string nil_tostring(avm_memcell* m){
 std::string undef_tostring(avm_memcell* m){
         return "undefined";
 }
-
-double mod_impl(double x,double y){
-        if(!y) avm_error("Invalid operation");
-        return (unsigned)x%(unsigned)y;
-}
-
 
 tobool_func_t toboolFuncs[] = {
         number_tobool,
@@ -218,6 +225,10 @@ double add_impl(double x,double y){return x+y;}
 double sub_impl(double x,double y){return x-y;}
 double mul_impl(double x,double y){return x*y;}
 double div_impl(double x,double y){
-        if(!y) avm_error("Invalid operation");
+        if(!y) avm_error("[%d]Invalid operation\n",currLine);
         return x/y;
+}
+double mod_impl(double x,double y){
+        if(!y) avm_error("[%d]Invalid operation\n",currLine);
+        return (unsigned)x%(unsigned)y;
 }
