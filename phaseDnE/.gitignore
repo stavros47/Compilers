@@ -1,8 +1,6 @@
 *.abc
 *.o
 *.txt
-testfiles
-*.asc
 parser.cpp
 scanner.cpp
 parser.hpp

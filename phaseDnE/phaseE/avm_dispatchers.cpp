@@ -90,7 +90,22 @@ std::string table_tostring(avm_memcell* m){
                 buffer<<" },";
                 tmp=tmp->nextOrder;
         }
-        if(tmp)buffer<<"{ "<<avm_tostring(&tmp->key)<<" : "<<avm_tostring(&tmp->value)<<" }";
+        if(tmp){
+                buffer<<"{ ";
+                if(tmp->key.type==string_m)
+                        buffer<<"\""<<avm_tostring(&tmp->key)<<"\"";
+                else{
+                        buffer<<avm_tostring(&tmp->key);
+                }
+                buffer<<" : ";
+                if(tmp->value.type==string_m){
+                        buffer<<"\""<<avm_tostring(&tmp->value)<<"\"";
+                }else{
+                        buffer<<avm_tostring(&tmp->value);
+                        
+                }
+                buffer<<" }";                
+        }
         buffer<<"]";
 
         return buffer.str();
