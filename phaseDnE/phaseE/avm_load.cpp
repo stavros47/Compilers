@@ -1,7 +1,6 @@
 #include "headers/avm.h"
 #include <iterator>
-
-#define MAGICNUMBER "474747"
+#include <stdlib.h>
 
 std::vector<std::string> strConsts;
 std::vector<double> numConsts;
@@ -11,14 +10,111 @@ std::vector<userfunc*> userFuncs;
 int main(int argc, char* argv[]){ 
 	if(argc<2) assert(false);
 
-	std::ifstream infile(argv[1],std::fstream::in);
+	//open_txt(argv[1]);
+	read_binary(argv[1]);
+
+	avm_initialize();
+	while(!executionFinished){
+		std::cout<<"PC:"<<pc<<std::endl;
+		print_stack();
+		execute_cycle();
+	}
+
+	//remove(argv[1]);
+
+	 return 0;
+}
+
+void read_binary(char* file){
+	unsigned num,size,p;
+	double d;
+	char* str;
+	FILE* fp;
+
+	fp = fopen(file,"rb");
+
+	fread(&num, sizeof(unsigned), 1, fp);
+	if(num!=474747){
+			std::cout<<"Not an abc file\n"<<num<<std::endl;
+			return;		
+	}
+
+	fread(&num,sizeof(unsigned),1,fp);
+	for(unsigned i=0;i<num;i++){
+		fread(&size,sizeof(unsigned),1,fp);
+		str = (char*)malloc(size * sizeof(char));
+		fread(str, size * sizeof(char) , 1, fp);
+		strConsts.push_back(str);
+	}
+
+	fread(&num,sizeof(unsigned),1,fp);
+	for(unsigned i=0;i<num;i++){
+		fread(&d,sizeof(double),1,fp);
+		numConsts.push_back(d);
+	}
+
+	fread(&num,sizeof(unsigned),1,fp);
+	for(unsigned i=0;i<num;i++){
+		fread(&size,sizeof(unsigned),1,fp);
+		str = (char*)malloc(size * sizeof(char));		
+		fread(str, size * sizeof(char) , 1, fp);
+		libFuncs.push_back(str);
+	}
+
+	fread(&num,sizeof(unsigned),1,fp);
+	for(unsigned i=0;i<num;i++){
+		userfunc* us = new userfunc();
+		fread(&size,sizeof(unsigned),1,fp);
+
+		str = (char*)malloc(size * sizeof(char));		
+		fread(str, size * sizeof(char) , 1, fp);
+		us->id=str;
+		fread(&size,sizeof(unsigned),1,fp);		
+		us->address = size;
+		fread(&size,sizeof(unsigned),1,fp);				
+		us->localSize = size;
+		userFuncs.push_back(us);
+	}
+
+	while(!feof(fp)){
+		if(totalInstr == codeSize++)
+			expand_instr();
+		instruction* p = code + currLine++;	
+		fread(&num,sizeof(unsigned),1,fp);		
+		p->srcLine = num;
+		fread(&num,sizeof(unsigned),1,fp);		
+		p->opcode =(vmopcode) num;
+		fread(&num,sizeof(unsigned),1,fp);		
+		p->result.type = (vmarg_t)num;
+		fread(&num,sizeof(unsigned),1,fp);		
+		p->result.val = num;
+		test_global(p->result);		
+		fread(&num,sizeof(unsigned),1,fp);		
+		p->arg1.type = (vmarg_t)num;
+		fread(&num,sizeof(unsigned),1,fp);		
+		p->arg1.val = num;
+		test_global(p->arg1);		
+		fread(&num,sizeof(unsigned),1,fp);		
+		p->arg2.type = (vmarg_t)num;
+		fread(&num,sizeof(unsigned),1,fp);		
+		p->arg2.val = num;
+		test_global(p->arg2);
+		
+	}
+
+	print_info();
+
+}
+
+void open_txt(std::string file){
+	std::ifstream infile(file,std::fstream::in);
 	std::string output,line;
 	int size=0;
 
 	std::getline(infile,line);
-	if(line.compare(MAGICNUMBER)){
+	if(line.compare(std::to_string(MAGICNUMBER))){
 			std::cout<<"Not an abc file\n";
-			return -1;		
+			return;		
 	}
 
 	std::string s;
@@ -102,14 +198,4 @@ int main(int argc, char* argv[]){
 
 	infile.close();
 
-	avm_initialize();
-	while(!executionFinished){
-		//std::cout<<"PC:"<<pc<<std::endl;
-		execute_cycle();
-	}
-
-	 return 0;
 }
-
-
-

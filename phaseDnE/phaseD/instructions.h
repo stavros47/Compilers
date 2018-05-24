@@ -2,7 +2,7 @@
 #define _INSTRUCTIONS_H_
 #include <vector>
 #include "quad.h"
-#define MAGIC_NUMBER 474747
+#define MAGICNUMBER (unsigned)474747
 
 unsigned consts_newstring (std::string s);
 unsigned consts_newnumber (double n);
@@ -66,6 +66,15 @@ void make_instructions(quad*);
 void generate_output();
 unsigned nextinstructionlabel();
 void emit_instruction(instruction);
+
+void generate_binary();
+void instructions_tobinary(FILE*);
+void vmarg_tobinary(vmarg,FILE*);
+void vectors_tobinary(FILE*);
+void num_tobinary(FILE*);
+void str_tobinary(FILE*);
+void libfunc_tobinary(FILE*);
+void userfunc_tobinary(FILE*);
 
 void make_operand(expr* , vmarg*);
 void make_numberoperand(vmarg* , double );

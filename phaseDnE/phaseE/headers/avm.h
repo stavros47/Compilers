@@ -14,6 +14,9 @@
 #include "avm_dispatchers.h"
 #include "avm_libfuncs.h"
 
+void read_binary(char*);
+void open_txt(std::string);
+
 extern std::unordered_map< std::string,library_func_t> registry;
 
 extern unsigned int executionFinished;

@@ -352,7 +352,8 @@ void print_info(){
 	for(userfunc* i : userFuncs)
 		std::cout<<"\t"<<i->id<<"\t"<<i->address<<"\t"<<i->localSize<<std::endl;
 	for(int i=1;i<codeSize;i++){
-		printf("%d:", code[i].srcLine);
+		printf("%d:", i);
+		//printf("%d:", code[i].srcLine);
 		printf("\t%d", code[i].opcode);
 		printf("\t%d:", code[i].result.type);
 		printf("%d", code[i].result.val);

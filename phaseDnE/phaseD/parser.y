@@ -1037,6 +1037,7 @@ int main(int argc,char** argv){
 		std::cout<<quads_toString()<<std::endl;
 		make_instructions(quads);
 	} 
+	
 	std::cout<<instr_to_String()<<std::endl;
 return 0;
 }
