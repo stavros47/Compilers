@@ -30,7 +30,6 @@ userfunc* avm_getfuncinfo(unsigned u){
 }
 
 avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
-
         switch(arg->type){
                 case global_a:  return &stack[AVM_STACKSIZE - 1 - arg->val];
                 case local_a:   return &stack[topsp - arg->val];
@@ -43,7 +42,7 @@ avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
                 }
                 case string_a:  { 
                         reg->type = string_m;
-                        reg->data.strVal = strdup(consts_getstring(arg->val));
+                        reg->data.strVal = consts_getstring(arg->val);
                         return reg;
                 }
                 case bool_a:    { 
@@ -65,7 +64,7 @@ avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
                         reg->data.libfuncVal = libfuncs_getused(arg->val);
                         return reg;
                 }
-                default:        assert(0);
+                default:       std::cout<<pc<<std::endl<<arg->type<<std::endl; assert(0);
         }
 }
 
@@ -157,9 +156,15 @@ void copy_to_from(avm_table* dest,avm_table* src){
         copy_tohash(dest->libfuncIndexed,src->libfuncIndexed);     
         copy_tohash(dest->boolIndexed,src->boolIndexed);
         copy_tohash(dest->tableIndexed,src->tableIndexed);
-        dest -> refCounter = src -> refCounter;
         dest -> total = src -> total;
-        dest -> head = src -> head;
+        avm_table_bucket *d,*s = src->head;
+        dest->head = new avm_table_bucket();
+        d= dest->head;
+        while(s){
+                d = get_bucket(d,&s->key);
+                d = d->nextOrder;
+                s = s->nextOrder;
+        }
 }
 
 void copy_tohash(avm_table_bucket** dest,avm_table_bucket** src){
@@ -170,6 +175,7 @@ void copy_tohash(avm_table_bucket** dest,avm_table_bucket** src){
                         b=b->next; 
                 }
         }
+
 }
 
 void copy_to(avm_table* dest,avm_table* src){
@@ -181,7 +187,7 @@ void copy_to(avm_table* dest,avm_table* src){
         copy_tohash(dest->tableIndexed,src->tableIndexed);
         dest -> refCounter = src -> refCounter;
         dest -> total = src -> total;
-        dest -> head = src -> head;
+       // dest -> head = src -> head;
 }
 
 void copy_deeptohash(avm_table_bucket** dest,avm_table_bucket** src){
@@ -226,7 +232,7 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
                 return;
 
         if(rv->type == undef_m){
-                avm_warning("assigning from 'undef' content!");
+                avm_warning("[%d]assigning from 'undef' content!\n",currLine);
         }
  
         avm_memcellclear(lv);
@@ -322,10 +328,10 @@ void test_global(vmarg r){
 }
 
 void expand_instr(void){
-	instruction* p = (instruction*)malloc(I_NEW_SIZE);
+	instruction* p = new instruction[I_NEW_SIZE];
 	if(code){
 		std::memcpy(p,code,I_CURR_SIZE);
-		free(code);
+		delete[] code;
 	}
 	code = p;
 	totalInstr+=I_EXPAND_SIZE;

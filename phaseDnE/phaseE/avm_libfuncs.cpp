@@ -188,6 +188,8 @@ void libfunc_objectmemberkeys(void){
                         }
                         
                         tempTableList = tempTableList->nextOrder;
+                        free(key);
+                        free(value);
                 }
                 avm_memcellclear(&retval);
                 retval.type = table_m;
@@ -297,7 +299,7 @@ void libfunc_strtonum(void){
                 }else{
                         char * t = avm_getactual(0)->data.strVal;
                         for(int i =0;t[i]!='\0';i++){
-                                if(!isdigit(t[i])){
+                                if(!isdigit(t[i]) && t[i]!='.'){
                                         avm_error("[%d]corrupted string:not a number\n",currLine);
                                         return;      
                                 }

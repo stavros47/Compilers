@@ -7,7 +7,7 @@ CC = g++
 	$(CC) -c $(FLAGS) $< -o $@ 
 
 avm: $(obj) $(DEPS)
-	$(CC) $(FLAGS) $^ -o $@ -g
+	$(CC) $(FLAGS) $^ -o $@ 
 	cp avm ../
 
 clean:

@@ -12,7 +12,7 @@
 #define AVM_SAVEDTOPSP_OFFSET   2
 #define AVM_SAVEDTOP_OFFSET     1
 
-#define I_EXPAND_SIZE 128
+#define I_EXPAND_SIZE 2048
 #define I_CURR_SIZE (totalInstr*sizeof(instruction))
 #define I_NEW_SIZE (I_EXPAND_SIZE*sizeof(instruction) + I_CURR_SIZE)
 
