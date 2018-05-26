@@ -18,5 +18,5 @@ scanner.cpp : scanner.l
 
 clean:	
 	rm parser.cpp scanner.cpp parser.hpp parser.output *.o
-	rm *.txt al ../al
+	rm al ../al
 

@@ -12,8 +12,7 @@ int main(int argc, char* argv[]){
 
 	read_binary(argv[1]);
 
-	print_info();
-code[128].opcode=(vmopcode)0;
+	//print_info();
 	avm_initialize();
 	while(!executionFinished){
 		execute_cycle();

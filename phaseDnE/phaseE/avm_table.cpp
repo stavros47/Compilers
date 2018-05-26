@@ -156,10 +156,9 @@ avm_table_bucket* get(avm_table* t , avm_memcell* key){
 }
 
 avm_memcell* get(avm_table_bucket* p,const char* key){
-        avm_memcell *ps = new avm_memcell();
-        ps->data.strVal = const_cast<char*>(key);
-        ps->type = string_m;
-        return get(p,ps);
+        cx.data.strVal = const_cast<char*>(key);
+        cx.type = string_m;
+        return get(p,&cx);
 }
 
 avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
