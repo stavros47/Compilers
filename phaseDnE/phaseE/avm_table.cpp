@@ -27,7 +27,13 @@ void avm_table_destroy(avm_table* t){
 avm_memcell* avm_tablegetelem(avm_table* table,avm_memcell* key){
         
         if(key->type==number_m){
-                return get(table->numIndexed[hashFunction(key->data.numVal)],key);
+                avm_table_bucket* t=table->head;
+                unsigned i = 0;
+                while(t && i < key->data.numVal){
+                        t = t->nextOrder;
+                        i++;
+                }
+                return &t->value;
         }else if(key->type==string_m){
                 return get(table->strIndexed[hashFunction(key->data.strVal)],key);
         }else if(key->type==userfunc_m ){
