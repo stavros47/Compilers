@@ -3,7 +3,7 @@
 
 #include "HashTable.h"
 
-#define EXPAND_SIZE 1024
+#define EXPAND_SIZE 2048
 #define CURR_SIZE (total*sizeof(quad))
 #define NEW_SIZE (EXPAND_SIZE*sizeof(quad) + CURR_SIZE)
 

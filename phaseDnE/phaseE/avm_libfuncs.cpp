@@ -3,7 +3,7 @@
 void avm_calllibfunc(char* funcname){
         library_func_t f = avm_getlibraryfunc(funcname);
         if(!f){
-                avm_error("unsupported lib func '%s' called!",funcname);
+                avm_error("[%d]unsupported lib func '%s' called!\n",currLine,funcname);
         }else{
                 topsp = top;
                 totalActuals = 0;
@@ -46,7 +46,7 @@ void libfunc_print(void){
         unsigned n = avm_totalactuals();
         for(unsigned i = 0; i < n; ++i){
                 std::string s = avm_tostring(avm_getactual(i));
-                std::cout<<s<<std::endl;
+                std::cout<<s;
         }
 }
 
@@ -54,7 +54,7 @@ void libfunc_typeof(void){
 	unsigned n = avm_totalactuals();
 
 	if(n!=1){
-		avm_error("one argument (not %d) expected in 'typeof'!",n);
+		avm_error("[%d]one argument (not %d) expected in 'typeof'!\n",currLine,n);
 	}else{
 		avm_memcellclear(&retval);
 		retval.type = string_m;
@@ -67,7 +67,7 @@ void libfunc_totalarguments(void){
 	avm_memcellclear(&retval);
 
 	if(!p_topsp){
-		avm_error("totalarguments' called outside a function!");
+		avm_error("[%d]totalarguments' called outside a function!\n",currLine);
 		retval.type = nil_m;
 	}else{
 		retval.type = number_m;
@@ -75,15 +75,13 @@ void libfunc_totalarguments(void){
 	}
 }
 
-void libfunc_input(void){
-        std::string input;       
-        avm_memcellclear(&retval);
+void libfunc_input(void){        
+        std::string input;        
         std::cin >> input;
-        std::istringstream iss(input);
-        double d;
+        avm_memcellclear(&retval);
+
         int flag = 0; //0 string - 1 double - 2 integer -3 bool - 4 nil
-        iss >> std::noskipws >> d; // noskipws considers leading whitespace invalid        
-      
+     
         if(flag == 0){ //Integer
                 for(int i = 0; i < input.size();i++){
                         flag = (std::isdigit(input[i])) ? 2 : 0;
@@ -93,18 +91,27 @@ void libfunc_input(void){
                         retval.type = number_m;
                         retval.data.numVal = std::stoi(input);
                         return;
-                }
-              
-        
-        }else if(iss.eof() && !iss.fail()){
-                //Double - Check the entire string was consumed and if either failbit or badbit is set         
+                }  
+        }
+
+        std::istringstream iss(input);
+        if(iss.eof()){
+                avm_error("[%d]parsing input - EOF!\n",currLine);
+        }
+
+        /* - Push stream into double. if it fails failbit is set. 
+           - noskipws considers leading whitespace invalid  */
+        double d;
+        iss >> std::noskipws >> d; 
+        if(!iss.fail()){  
                 flag = 1;
                 retval.type = number_m;
-                retval.data.numVal = std::stod(input);
+                retval.data.numVal = d;
                 return;
-        }       
+        }      
 
         if(flag == 0){
+               
                 if (input.find("true") != std::string::npos || input.find("TRUE") != std::string::npos) {
                         flag = 3;
                         retval.type = bool_m;
@@ -119,7 +126,7 @@ void libfunc_input(void){
                         flag = 4;
                         retval.type = nil_m;
                         return;
-                }else{
+                }else{                       
                         retval.type = string_m;
                         retval.data.strVal = strdup(const_cast<char*>(input.c_str()));
                         return;
@@ -132,11 +139,11 @@ void libfunc_objectcopy(void){
         unsigned n = avm_totalactuals();
 
         if(n!=1){
-		avm_error("one argument (not %d) expected in 'objectcopy'!",n);                
+		avm_error("[%d]one argument (not %d) expected in 'objectcopy'!\n",currLine,n);                
         }else{
                 avm_memcell* oldTable = avm_getactual(0);        
                 if(oldTable->type!=table_m){
-		        avm_error("invalid type of argument in 'objectcopy'!",n);                
+		        avm_error("[%d]invalid type of argument in 'objectcopy'!\n",currLine,n);                
                 }else{
                         avm_table *newTable = avm_tablenew();
                         copy_to_from(newTable,oldTable->data.tableVal);
@@ -152,7 +159,7 @@ void libfunc_objectmemberkeys(void){
         unsigned n = avm_totalactuals();
 
 	if(n!=1){
-		avm_error("one argument (not %d) expected in 'objectmemberkeys'!",n);
+		avm_error("[%d]one argument (not %d) expected in 'objectmemberkeys'!\n",currLine,n);
 	}else{	
                 int memberCounter = 0;
                 avm_table * newTable = avm_tablenew();
@@ -181,6 +188,8 @@ void libfunc_objectmemberkeys(void){
                         }
                         
                         tempTableList = tempTableList->nextOrder;
+                        free(key);
+                        free(value);
                 }
                 avm_memcellclear(&retval);
                 retval.type = table_m;
@@ -192,7 +201,7 @@ void libfunc_objecttotalmembers(void){
         unsigned n = avm_totalactuals();
 
 	if(n!=1){
-		avm_error("one argument (not %d) expected in 'objecttotalmembers'!",n);
+		avm_error("[%d]one argument (not %d) expected in 'objecttotalmembers'!\n",currLine,n);
 	}else{
 		avm_memcellclear(&retval);
 		avm_table_bucket * tempTableList = avm_getactual(0)->data.tableVal->head;
@@ -213,12 +222,12 @@ void libfunc_argument(void){
         unsigned previous_n = avm_totalactuals(p_topsp);
 
         if(n!=1){
-		avm_error("One argument (not %d) expected in 'argument'!",n);
+		avm_error("[%d]One argument (not %d) expected in 'argument'!\n",currLine,n);
 	}else{
 		if(!p_topsp){
 		        retval.type = nil_m;
 	        }else if(previous_n <= avm_getactual(0)->data.numVal){
-		        avm_error("invalid number of arguments for current function");                        
+		        avm_error("[%d]invalid number of arguments for current function!\n",currLine);                        
                 }else{
                         unsigned int pos = p_topsp + avm_getactual(0)->data.numVal +  AVM_NUMACTUALS_OFFSET +1;
 		        retval.type = number_m;
@@ -232,10 +241,10 @@ void libfunc_sin(void){
         unsigned n = avm_totalactuals();
 
         if(n!=1){
-		avm_error("one argument (not %d) expected in 'sin'!",n);
+		avm_error("[%d]one argument (not %d) expected in 'sin'!\n",currLine,n);
 	}else{
                 if(avm_getactual(0)->type!=number_m){
-                        avm_error("numeric argument expected in 'sin'!",n);
+                        avm_error("[%d]numeric argument expected in 'sin'!\n",currLine,n);
                 }
                 else{
 		avm_memcellclear(&retval);
@@ -249,10 +258,10 @@ void libfunc_cos(void){
         unsigned n = avm_totalactuals();
 
         if(n!=1){
-		avm_error("one argument (not %d) expected in 'cos'!",n);
+		avm_error("[%d]one argument (not %d) expected in 'cos'!\n",currLine,n);
 	}else{
                 if(avm_getactual(0)->type!=number_m)
-                        avm_error("numeric argument expected in 'cos'!",n);
+                        avm_error("[%d]numeric argument expected in 'cos'!\n",currLine,n);
                 else{
 		avm_memcellclear(&retval);
 		retval.type = number_m;
@@ -265,12 +274,12 @@ void libfunc_sqrt(void){
         unsigned n = avm_totalactuals();
 
         if(n!=1){ 
-		avm_error("one argument (not %d) expected in 'sqrt'!",n);
+		avm_error("[%d]one argument (not %d) expected in 'sqrt'!\n",currLine,n);
 	}else{
                 if(avm_getactual(0)->data.numVal<0)
-                        avm_error("argument expected possitive in 'sqrt'!",n);
+                        avm_error("[%d]argument expected possitive in 'sqrt'!\n",currLine,n);
                 if(avm_getactual(0)->type==string_m)
-                        avm_error("numeric argument expected in 'sqrt'!",n);
+                        avm_error("[%d]numeric argument expected in 'sqrt'!\n",currLine,n);
                 else{
 		avm_memcellclear(&retval);
 		retval.type = number_m;
@@ -283,15 +292,15 @@ void libfunc_strtonum(void){
         unsigned n = avm_totalactuals();
 
         if(n!=1){ 
-		avm_error("one argument (not %d) expected in 'strtonum'!",n);
+		avm_error("[%d]one argument (not %d) expected in 'strtonum'!\n",currLine,n);
 	}else{
                 if(avm_getactual(0)->type!=string_m){
-                        avm_error("Type is wrong, expected string\n");
+                        avm_error("[%d]Type is wrong, expected string\n",currLine);
                 }else{
                         char * t = avm_getactual(0)->data.strVal;
                         for(int i =0;t[i]!='\0';i++){
-                                if(!isdigit(t[i])){
-                                        avm_error("corrupted string:not a number\n");
+                                if(!isdigit(t[i]) && t[i]!='.'){
+                                        avm_error("[%d]corrupted string:not a number\n",currLine);
                                         return;      
                                 }
                         }

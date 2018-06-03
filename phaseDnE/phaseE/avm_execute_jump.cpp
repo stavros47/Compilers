@@ -41,11 +41,6 @@ void execute_jge(instruction* instr){
         assert(instr->result.type == label_a);
         avm_memcell* rv1 = avm_translate_operand(&instr->arg1,&ax);
         avm_memcell* rv2 = avm_translate_operand(&instr->arg2,&bx);
-
-        assert(rv1->type == number_m && rv2->type == number_m);
-        assert(rv1->type == string_m && rv2->type == string_m);
-        assert(rv1->type == table_m && rv2->type == table_m);
-
         unsigned char result = 0;
 
         result = jump_geChecks(rv1,rv2);
@@ -81,7 +76,7 @@ void execute_jgt(instruction* instr){
 unsigned char jump_eqChecks(avm_memcell* rv1,avm_memcell* rv2){
         
         if(rv1->type == undef_m || rv2->type == undef_m){
-                avm_error("'undef' involved in equality!");
+                avm_error("[%d]'undef' involved in equality!\n",currLine);
         }else
         if(rv1->type == bool_m || rv2->type == bool_m){
 
@@ -91,7 +86,7 @@ unsigned char jump_eqChecks(avm_memcell* rv1,avm_memcell* rv2){
                 return (avm_tobool(rv1) == avm_tobool(rv2));
         }else
         if(rv1->type != rv2->type){
-        avm_error("%s==%s is illegal!",
+        avm_error("[%d]%s==%s is illegal!\n",currLine,
                 typeStrings[rv1->type],
                 typeStrings[rv2->type]);
         }else{
@@ -107,7 +102,7 @@ unsigned char jump_eqChecks(avm_memcell* rv1,avm_memcell* rv2){
 
 unsigned char jump_leChecks(avm_memcell* rv1,avm_memcell* rv2){ //??
         if(rv1->type == undef_m || rv2->type == undef_m){
-                avm_error("'undef' involved in equality!");
+                avm_error("[%d]'undef' involved in equality!\n",currLine);
         }else
         if(rv1->type == bool_m || rv2->type == bool_m){
                 return (avm_tobool(rv1) <= avm_tobool(rv2));
@@ -116,7 +111,7 @@ unsigned char jump_leChecks(avm_memcell* rv1,avm_memcell* rv2){ //??
                 return (avm_tobool(rv1) <= avm_tobool(rv2));
         }else
         if(rv1->type != rv2->type){
-        avm_error("%s<=%s is illegal!",
+        avm_error("[%d]%s<=%s is illegal!\n",currLine,
                 typeStrings[rv1->type],
                 typeStrings[rv2->type]);
         }else{
@@ -131,7 +126,7 @@ unsigned char jump_leChecks(avm_memcell* rv1,avm_memcell* rv2){ //??
 
 unsigned char jump_geChecks(avm_memcell* rv1,avm_memcell* rv2){ //??
         if(rv1->type == undef_m || rv2->type == undef_m){
-                avm_error("'undef' involved in equality!");
+                avm_error("[%d]'undef' involved in equality!\n",currLine);
         }else
         if(rv1->type == bool_m || rv2->type == bool_m){
                 return (avm_tobool(rv1) >= avm_tobool(rv2));
@@ -140,7 +135,7 @@ unsigned char jump_geChecks(avm_memcell* rv1,avm_memcell* rv2){ //??
                 return (avm_tobool(rv1) >= avm_tobool(rv2));
         }else
         if(rv1->type != rv2->type){
-        avm_error("%s>=%s is illegal!",
+        avm_error("[%d]%s>=%s is illegal!\n",currLine,
                 typeStrings[rv1->type],
                 typeStrings[rv2->type]);
         }else{

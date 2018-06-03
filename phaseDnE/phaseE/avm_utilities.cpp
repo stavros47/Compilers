@@ -30,7 +30,6 @@ userfunc* avm_getfuncinfo(unsigned u){
 }
 
 avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
-
         switch(arg->type){
                 case global_a:  return &stack[AVM_STACKSIZE - 1 - arg->val];
                 case local_a:   return &stack[topsp - arg->val];
@@ -43,7 +42,7 @@ avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
                 }
                 case string_a:  { 
                         reg->type = string_m;
-                        reg->data.strVal = strdup(consts_getstring(arg->val));
+                        reg->data.strVal = consts_getstring(arg->val);
                         return reg;
                 }
                 case bool_a:    { 
@@ -65,7 +64,7 @@ avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
                         reg->data.libfuncVal = libfuncs_getused(arg->val);
                         return reg;
                 }
-                default:        assert(0);
+                default:       std::cout<<pc<<std::endl<<arg->type<<std::endl; assert(0);
         }
 }
 
@@ -151,24 +150,45 @@ void avm_callsaveenviroment(void){
 }
 
 void copy_to_from(avm_table* dest,avm_table* src){
-        copy_tohash(dest->numIndexed,src->numIndexed);
-        copy_tohash(dest->strIndexed,src->strIndexed);
-        copy_tohash(dest->userfuncIndexed,src->userfuncIndexed);
-        copy_tohash(dest->libfuncIndexed,src->libfuncIndexed);     
-        copy_tohash(dest->boolIndexed,src->boolIndexed);
-        copy_tohash(dest->tableIndexed,src->tableIndexed);
-        dest -> refCounter = src -> refCounter;
-        dest -> total = src -> total;
-        dest -> head = src -> head;
-}
-
-void copy_tohash(avm_table_bucket** dest,avm_table_bucket** src){
-        for(unsigned i = 0; i< AVM_TABLE_HASHSIZE;i++){
-                avm_table_bucket* b=src[i];
-                while(b){
-                        insert(dest,i,b->key,b->value);
-                        b=b->next; 
+        avm_table_bucket *tmp,*s = src->head;
+        
+        while(s){
+                switch(s->key.type){
+                        case number_m:  
+                                tmp=insert(dest->numIndexed,hashFunction(s->key.data.numVal),s->key,s->value);
+                                break;
+                        case string_m:  
+                                tmp=insert(dest->strIndexed,hashFunction(s->key.data.strVal),s->key,s->value);
+                                break;
+                        case bool_m:  
+                                tmp=insert(dest->boolIndexed,hashFunction(s->key.data.boolVal),s->key,s->value);
+                                break;
+                        case userfunc_m:  
+                                tmp=insert(dest->userfuncIndexed,hashFunction(avm_getfuncinfo(s->key.data.funcVal)->address),s->key,s->value);
+                                break;
+                        case libfunc_m:  
+                                tmp=insert(dest->libfuncIndexed,hashFunction(s->key.data.libfuncVal),s->key,s->value);
+                                break;
+                        case table_m:  
+                                tmp=insert(dest->tableIndexed,hashFunction(s->key.data.tableVal),s->key,s->value);
+                                break;
+                        default : assert(0);
                 }
+                if(tmp){
+                        dest->total++;
+                        avm_table_bucket* t = dest->head;
+                        if(!t) dest->head = tmp;
+                        else{
+
+                                while(t->nextOrder){
+                                        t=t->nextOrder;
+                                }
+                                t->nextOrder=tmp;
+                        }
+                        tmp->nextOrder=NULL;
+                        
+                }
+                s=s->nextOrder;
         }
 }
 
@@ -178,7 +198,7 @@ void copy_to(avm_table* dest,avm_table* src){
         copy_deeptohash(dest->boolIndexed,src->boolIndexed);
         copy_deeptohash(dest->userfuncIndexed,src->userfuncIndexed);
         copy_deeptohash(dest->libfuncIndexed,src->libfuncIndexed);
-        copy_tohash(dest->tableIndexed,src->tableIndexed);
+        copy_deeptohash(dest->tableIndexed,src->tableIndexed);
         dest -> refCounter = src -> refCounter;
         dest -> total = src -> total;
         dest -> head = src -> head;
@@ -186,31 +206,31 @@ void copy_to(avm_table* dest,avm_table* src){
 
 void copy_deeptohash(avm_table_bucket** dest,avm_table_bucket** src){
         for(unsigned i = 0; i< AVM_TABLE_HASHSIZE;i++){
-                avm_table_bucket* b=src[i];
+                avm_table_bucket* s=src[i];
                 avm_table_bucket* dest_b=dest[i];
-                while(b){
+                while(s){
 
-                        if(b->value.type == string_m){
-                                dest_b->value.data.strVal=strdup(b->value.data.strVal);                           
-                        }else if(b->value.type == libfunc_m){
-                                dest_b->value.data.libfuncVal=strdup(b->value.data.libfuncVal);                           
-                        }else if(b->value.type == table_m){
-                                copy_to(dest_b->value.data.tableVal,b->value.data.tableVal);
+                        if(s->value.type == string_m){
+                                dest_b->value.data.strVal=strdup(s->value.data.strVal);                           
+                        }else if(s->value.type == libfunc_m){
+                                dest_b->value.data.libfuncVal=strdup(s->value.data.libfuncVal);                           
+                        }else if(s->value.type == table_m){
+                                copy_to(dest_b->value.data.tableVal,s->value.data.tableVal);
                         }else{
-                                avm_assign(&dest_b->value,&b->value);
+                                avm_assign(&dest_b->value,&s->value);
                         }
 
-                        if(b->key.type == string_m){
-                                dest_b->key.data.strVal=strdup(b->key.data.strVal);                                                        
-                        }else if(b->value.type == libfunc_m){
-                                dest_b->key.data.libfuncVal=strdup(b->key.data.libfuncVal);                           
-                        }else if(b->key.type == table_m){
-                                copy_to(dest_b->key.data.tableVal,b->key.data.tableVal);                                
+                        if(s->key.type == string_m){
+                                dest_b->key.data.strVal=strdup(s->key.data.strVal);                                                        
+                        }else if(s->value.type == libfunc_m){
+                                dest_b->key.data.libfuncVal=strdup(s->key.data.libfuncVal);                           
+                        }else if(s->key.type == table_m){
+                                copy_to(dest_b->key.data.tableVal,s->key.data.tableVal);                                
                         }else{
-                                avm_assign(&dest_b->key,&b->key);                                
+                                avm_assign(&dest_b->key,&s->key);                                
                         }
 
-                        b=b->next; 
+                        s=s->next; 
                 }
         }
 }
@@ -224,17 +244,18 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
             rv->type == table_m &&
             lv->data.tableVal == rv->data.tableVal)
                 return;
-
         if(rv->type == undef_m){
-                avm_warning("assigning from 'undef' content!");
+                avm_warning("[%d]assigning from 'undef' content!\n",currLine);
         }
  
         avm_memcellclear(lv);
         std::memcpy(lv,rv,sizeof(avm_memcell));
 
-        if(lv==&retval && rv->type==table_m){
-                //if any (char*) value exists in hashtables
-                copy_to(lv->data.tableVal,rv->data.tableVal);
+        if(lv==&retval){
+                if(rv->type==table_m){
+                        //if any (char*) value exists in hashtables
+                        copy_to(lv->data.tableVal,rv->data.tableVal);
+                }
         }
 
         if( lv->type == string_m)
@@ -247,7 +268,7 @@ void avm_assign(avm_memcell* lv,avm_memcell* rv){
 
 void avm_dec_top(void){
         if(!top){
-                avm_error("stack overflow\n");
+                avm_error("[%d]stack overflow\n",currLine);
                 executionFinished=1;
         }
         else
@@ -322,10 +343,10 @@ void test_global(vmarg r){
 }
 
 void expand_instr(void){
-	instruction* p = (instruction*)malloc(I_NEW_SIZE);
+	instruction* p = new instruction[I_NEW_SIZE];
 	if(code){
 		std::memcpy(p,code,I_CURR_SIZE);
-		free(code);
+		delete[] code;
 	}
 	code = p;
 	totalInstr+=I_EXPAND_SIZE;
@@ -352,7 +373,8 @@ void print_info(){
 	for(userfunc* i : userFuncs)
 		std::cout<<"\t"<<i->id<<"\t"<<i->address<<"\t"<<i->localSize<<std::endl;
 	for(int i=1;i<codeSize;i++){
-		printf("%d:", code[i].srcLine);
+		printf("%d:", i);
+		//printf("%d:", code[i].srcLine);
 		printf("\t%d", code[i].opcode);
 		printf("\t%d:", code[i].result.type);
 		printf("%d", code[i].result.val);

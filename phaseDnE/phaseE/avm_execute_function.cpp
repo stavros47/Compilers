@@ -20,7 +20,6 @@ void execute_call( instruction* instr){
                         break;
                 }
                 case table_m:   {
-                        avm_memcell* t = &stack[top + AVM_STACKENV_SIZE];
                         unsigned i =0;
                         for(i = top;i<top+AVM_STACKENV_SIZE;i++){
                                 avm_assign(&stack[i],&stack[i+1]);
@@ -28,15 +27,19 @@ void execute_call( instruction* instr){
                         avm_assign(&stack[i],func);
                         stack[i-1].data.numVal++;
                         avm_dec_top();
-                        pc = avm_getfuncinfo(get(func->data.tableVal->strIndexed[hashFunction("()")],"()")->data.funcVal)->address;
-                        assert(pc<AVM_ENDING_PC);
-                        assert(code[pc].opcode == funcenter_v);
+                        avm_memcell* t;
+                        t = get(func->data.tableVal->strIndexed[hashFunction("()")],"()");
+                        if(t->type!=userfunc_m){
+                                avm_error("[line:%d]Invalid call operation on non-functor table\n",currLine);
+                        }else{
+                                pc = avm_getfuncinfo(t->data.funcVal)->address;
+                                assert(pc<AVM_ENDING_PC);
+                                assert(code[pc].opcode == funcenter_v);
+                        }
                         break;
-                }        
-                default:                {
-                        char* s = const_cast<char*>(avm_tostring(func).c_str());
-                        avm_error("call:cannot bind '%s' to function!",s);
-                        //free(s);
+                }  
+                default:  {
+                        avm_error("[%d]call:cannot bind '%s' to function!\n",currLine,avm_tostring(func).c_str());
                 }
         }
 }
