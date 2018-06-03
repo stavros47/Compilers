@@ -64,7 +64,7 @@ avm_memcell* avm_translate_operand(vmarg* arg,avm_memcell* reg){
                         reg->data.libfuncVal = libfuncs_getused(arg->val);
                         return reg;
                 }
-                default:       std::cout<<pc<<std::endl<<arg->type<<std::endl; assert(0);
+                default:      assert(0);
         }
 }
 
@@ -312,12 +312,10 @@ void avm_initialize(void){
 
 void execute_cycle(void){
         if(executionFinished){
-                std::cout<<"executionFinished\n"<<executionFinished<<"\n";
                 return;
         }else
         if (pc == AVM_ENDING_PC){
                 executionFinished  = 1;
-                std::cout<<"\npc == AVM_ENDING_PC\n";
                 return;
         } else{
                 assert(pc < AVM_ENDING_PC);
