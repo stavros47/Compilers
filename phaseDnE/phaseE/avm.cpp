@@ -11,7 +11,7 @@ avm_memcell     ax,bx,cx;
 unsigned        top,topsp;
 
 unsigned	    pc = 1;
-unsigned	    currLine = 1;
+unsigned	    currLine = 2;
 unsigned	    codeSize = 0;
 instruction*	code = (instruction*) 0;
 

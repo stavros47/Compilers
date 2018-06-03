@@ -123,7 +123,6 @@ std::list<unsigned> mergeList(std::list<unsigned> dest,std::list<unsigned> src){
 expr* lvalue_expr(Symbol *sym){
 	assert(sym);
 	expr* e = new expr();
-	std::memset(e,0,sizeof(expr));
 
 	e->next = (expr*)0;
 	e->sym = sym;

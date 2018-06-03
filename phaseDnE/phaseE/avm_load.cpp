@@ -12,12 +12,17 @@ int main(int argc, char* argv[]){
 
 	read_binary(argv[1]);
 
+	//print_info();
 	avm_initialize();
 	while(!executionFinished){
 		execute_cycle();
 	}
 
-	 return 0;
+	for(userfunc* i : userFuncs){
+		delete i;
+	}
+
+	return 0;
 }
 
 void read_binary(char* file){
@@ -40,6 +45,7 @@ void read_binary(char* file){
 		str = (char*)malloc(size * sizeof(char));
 		fread(str, size * sizeof(char) , 1, fp);
 		strConsts.push_back(str);
+		free(str);
 	}
 
 	fread(&num,sizeof(unsigned),1,fp);
@@ -54,6 +60,7 @@ void read_binary(char* file){
 		str = (char*)malloc(size * sizeof(char));		
 		fread(str, size * sizeof(char) , 1, fp);
 		libFuncs.push_back(str);
+		free(str);
 	}
 
 	fread(&num,sizeof(unsigned),1,fp);
@@ -64,6 +71,7 @@ void read_binary(char* file){
 		str = (char*)malloc(size * sizeof(char));		
 		fread(str, size * sizeof(char) , 1, fp);
 		us->id=str;
+		free(str);
 		fread(&size,sizeof(unsigned),1,fp);		
 		us->address = size;
 		fread(&size,sizeof(unsigned),1,fp);				
@@ -71,9 +79,12 @@ void read_binary(char* file){
 		userFuncs.push_back(us);
 	}
 
+	
 	while(!feof(fp)){
-		if(totalInstr == codeSize++)
+		if(totalInstr == codeSize++){
 			expand_instr();
+			currLine--;
+		}
 		instruction* p = code + currLine++;	
 		fread(&num,sizeof(unsigned),1,fp);		
 		p->srcLine = num;

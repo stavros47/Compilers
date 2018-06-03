@@ -12,7 +12,7 @@
 #define AVM_SAVEDTOPSP_OFFSET   2
 #define AVM_SAVEDTOP_OFFSET     1
 
-#define I_EXPAND_SIZE 128
+#define I_EXPAND_SIZE 2048
 #define I_CURR_SIZE (totalInstr*sizeof(instruction))
 #define I_NEW_SIZE (I_EXPAND_SIZE*sizeof(instruction) + I_CURR_SIZE)
 
@@ -60,8 +60,6 @@ void avm_error(const char*,...);
 void avm_callsaveenviroment(void);
 
 void copy_to_from(avm_table*,avm_table*);
-void copy_tohash(avm_table_bucket**,avm_table_bucket**);
-
 void copy_to(avm_table*,avm_table*);
 void copy_deeptohash(avm_table_bucket**,avm_table_bucket**);
 void avm_assign(avm_memcell*,avm_memcell*);

@@ -27,7 +27,13 @@ void avm_table_destroy(avm_table* t){
 avm_memcell* avm_tablegetelem(avm_table* table,avm_memcell* key){
         
         if(key->type==number_m){
-                return get(table->numIndexed[hashFunction(key->data.numVal)],key);
+                avm_table_bucket* t=table->head;
+                unsigned i = 0;
+                while(t && i < key->data.numVal){
+                        t = t->nextOrder;
+                        i++;
+                }
+                return &t->value;
         }else if(key->type==string_m){
                 return get(table->strIndexed[hashFunction(key->data.strVal)],key);
         }else if(key->type==userfunc_m ){
@@ -143,20 +149,39 @@ avm_table_bucket* insert(avm_table_bucket** p,unsigned pos, avm_memcell key, avm
         return ptr;
 }
 
+avm_table_bucket* get(avm_table* t , avm_memcell* key){
+        switch(key->type){
+                case number_m: return get_bucket(t->numIndexed[hashFunction(key->data.numVal)],key);
+                case string_m: return get_bucket(t->strIndexed[hashFunction(key->data.strVal)],key);
+                case bool_m:  return get_bucket(t->boolIndexed[hashFunction(key->data.boolVal)],key);
+                case userfunc_m: return get_bucket(t->userfuncIndexed[hashFunction(avm_getfuncinfo(key->data.funcVal)->address)],key);
+                case libfunc_m: return get_bucket(t->libfuncIndexed[hashFunction(key->data.libfuncVal)],key);
+                case table_m : return get_bucket(t->tableIndexed[hashFunction(key->data.tableVal)],key);
+                default : avm_error("[%d]Invalid type of key\n",currLine);
+        }
+}
+
 avm_memcell* get(avm_table_bucket* p,const char* key){
-        avm_memcell *ps = new avm_memcell();
-        ps->data.strVal = const_cast<char*>(key);
-        ps->type = string_m;
-        return get(p,ps);
+        cx.data.strVal = const_cast<char*>(key);
+        cx.type = string_m;
+        return get(p,&cx);
 }
 
 avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
+        avm_table_bucket* t;
+        t = get_bucket(p,key);
+        if(t) return &(t->value);
+        cx.type=nil_m;
+        return &cx;
+}
+
+avm_table_bucket* get_bucket(avm_table_bucket* p,avm_memcell* key){
         avm_table_bucket* tmp = p;
         while(tmp){
                 check_eq_func_t f = check_eqFuncs[key->type];
                 if(f){
                         if((*f)(&tmp->key,key)){
-                                return &tmp->value;
+                                return tmp;
                         }
                 }else{
                         assert(0);
@@ -164,10 +189,7 @@ avm_memcell* get(avm_table_bucket* p,avm_memcell* key){
                 tmp=tmp->next;
         }
 
-        avm_memcell* t = new avm_memcell();
-        t->type=nil_m;
-        return t;
-
+        return NULL;
 }
 
 void mydelete(avm_table_bucket* p,avm_memcell* key){

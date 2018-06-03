@@ -207,7 +207,10 @@ expr:		assignexpr	{grammar_buffer<<"expr <- assignexpr"<<std::endl;}
 
 						grammar_buffer<<"expr and M expr"<<std::endl;
 					}
-		| term		{;grammar_buffer<<"expr <- term"<<std::endl;}
+		| term		{
+						grammar_buffer<<"expr <- term"<<std::endl;
+						$$=$1;
+					}
 		;
 
 
@@ -228,13 +231,13 @@ term:		'('expr')'		{
 						grammar_buffer<<"term <- - expr (UMINUS)"<<std::endl;
 					}
 		| NOT expr		{
-						$$ = newexpr(boolexpr_e);
-						$$->sym = $2->sym;
-						$$->trueList = $2->falseList;
-						$$->falseList = $2->trueList;
-						
-						
-						grammar_buffer<<"term <- ! expr"<<std::endl;}
+							$$ = newexpr(boolexpr_e);
+							$$->sym = $2->sym;
+							$$->trueList = $2->falseList;
+							$$->falseList = $2->trueList;
+							
+							grammar_buffer<<"term <- ! expr"<<std::endl;
+						}
 		| PLUS_PLUS lvalue	{
 						if(!isValid_arithop($2)){
 							error_buffer << "Line: "<< yylineno <<" \n\t";
